@@ -32,13 +32,9 @@
 
 #endregion
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -49,7 +45,9 @@ namespace HKW.Libs.TOML;
 public abstract class TomlNode : IEnumerable
 {
     public virtual bool HasValue { get; } = false;
+
     #region TypeCheck
+
     public virtual bool IsTomlArray { get; } = false;
     public virtual bool IsTomlTable { get; } = false;
     public virtual bool IsTomlString { get; } = false;
@@ -59,10 +57,14 @@ public abstract class TomlNode : IEnumerable
     public virtual bool IsTomlDateTimeLocal { get; } = false;
     public virtual bool IsTomlDateTimeOffset { get; } = false;
     public virtual bool IsTomlBoolean { get; } = false;
+
     #endregion
+
     public virtual string Comment { get; set; } = null!;
     public virtual int CollapseLevel { get; set; }
+
     #region VanillaType
+
     public virtual int AsInteger => AsTomlInteger;
     public virtual double AsFloat => AsTomlFloat;
     public virtual string AsString => AsTomlString;
@@ -72,8 +74,11 @@ public abstract class TomlNode : IEnumerable
     public virtual DateTimeOffset AsDateTimeOffset => AsTomlDateTimeOffset;
     public virtual List<TomlNode> AsList => AsTomlArray.RawArray;
     public virtual Dictionary<string, TomlNode> AsDictionary => AsTomlTable.RawTable;
+
     #endregion
+
     #region TomlType
+
     public virtual TomlTable AsTomlTable => (this as TomlTable)!;
     public virtual TomlString AsTomlString => (this as TomlString)!;
     public virtual TomlInteger AsTomlInteger => (this as TomlInteger)!;
@@ -83,7 +88,9 @@ public abstract class TomlNode : IEnumerable
     public virtual TomlDateTimeLocal AsTomlDateTimeLocal => (this as TomlDateTimeLocal)!;
     public virtual TomlDateTimeOffset AsTomlDateTimeOffset => (this as TomlDateTimeOffset)!;
     public virtual TomlArray AsTomlArray => (this as TomlArray)!;
+
     #endregion
+
     public virtual int ChildrenCount => 0;
 
     public virtual TomlNode this[string key]
@@ -120,15 +127,20 @@ public abstract class TomlNode : IEnumerable
 
     public virtual bool HasItemAt(int index) => false;
 
-    public virtual void Add(string key, TomlNode node) { }
+    public virtual void Add(string key, TomlNode node)
+    { }
 
-    public virtual void Add(TomlNode node) { }
+    public virtual void Add(TomlNode node)
+    { }
 
-    public virtual void Delete(TomlNode node) { }
+    public virtual void Delete(TomlNode node)
+    { }
 
-    public virtual void Delete(string key) { }
+    public virtual void Delete(string key)
+    { }
 
-    public virtual void Delete(int index) { }
+    public virtual void Delete(int index)
+    { }
 
     public virtual void AddRange(IEnumerable<TomlNode> nodes)
     {
@@ -186,41 +198,6 @@ public abstract class TomlNode : IEnumerable
     public static implicit operator DateTimeOffset(TomlNode value) =>
         value.AsTomlDateTimeOffset.Value;
 
-    #endregion
-    #region TypeName
-    public string TypeName()
-    {
-        return this switch
-        {
-            { IsTomlTable: true } => "class",
-            { IsTomlArray: true } => "List",
-            { IsTomlBoolean: true } => "bool",
-            { IsTomlString: true } => "string",
-            { IsTomlFloat: true } => "double",
-            { IsTomlInteger: true } => "int",
-            { IsTomlDateTimeLocal: true } => "DateTime",
-            { IsTomlDateTimeOffset: true } => "DateTimeOffset",
-            { IsTomlDateTime: true } => "DateTime",
-            _ => ""
-        };
-    }
-
-    public string TomlTypeName()
-    {
-        return this switch
-        {
-            { IsTomlTable: true } => nameof(TomlTable),
-            { IsTomlArray: true } => nameof(TomlArray),
-            { IsTomlBoolean: true } => nameof(TomlBoolean),
-            { IsTomlString: true } => nameof(TomlString),
-            { IsTomlFloat: true } => nameof(TomlFloat),
-            { IsTomlInteger: true } => nameof(TomlInteger),
-            { IsTomlDateTimeLocal: true } => nameof(TomlDateTimeLocal),
-            { IsTomlDateTimeOffset: true } => nameof(TomlDateTimeOffset),
-            { IsTomlDateTime: true } => nameof(TomlDateTime),
-            _ => ""
-        };
-    }
     #endregion
 }
 
@@ -807,8 +784,10 @@ public class TOMLParser : IDisposable
 
     private readonly TextReader reader;
     private ParseState currentState;
+
     private int line,
         col;
+
     private List<TomlSyntaxException> syntaxErrors = null!;
 
     public TOMLParser(TextReader reader)
