@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -25,19 +26,69 @@ public class TomlSerializer
         {
             var name = ToPascal(kv.Key);
             var node = kv.Value;
-            if (node.IsTomlTable)
+            if (type.GetProperty(name) is not PropertyInfo propertyInfo)
+                continue;
+            DeserializeTableValue(target, node, propertyInfo);
+        }
+    }
+    private static void DeserializeTableValue(object target, TomlNode node, PropertyInfo propertyInfo)
+    {
+        var propertyType = propertyInfo.PropertyType;
+        if (node.IsTomlTable)
+        {
+            if (propertyType.Assembly.CreateInstance(propertyType.FullName!) is not object nestedTarget)
+                return;
+            propertyInfo.SetValue(target, nestedTarget);
+            DeserializeTable(nestedTarget, propertyType, node.AsTomlTable);
+        }
+        else if (node.IsTomlArray)
+        {
+            if (propertyType.Assembly.CreateInstance(propertyType.FullName!) is not IList nestedTarget)
+                return;
+            propertyInfo.SetValue(target, nestedTarget);
+            DeserializeArray(propertyType, nestedTarget, node.AsTomlArray);
+        }
+        else
+        {
+            var value = GetNodeVale(node);
+            propertyInfo.SetValue(target, value);
+        }
+    }
+    private static void DeserializeArray(Type type, IList list, TomlArray array)
+    {
+        foreach (var node in array)
+        {
+            DeserializeArrayValue(type, list, node);
+        }
+    }
+    private static void DeserializeArrayValue(Type type, IList list, TomlNode node)
+    {
+        if (node.IsTomlTable)
+        {
+            if (type.GetGenericArguments()[0] is not Type elementType)
+                return;
+            if (elementType.Assembly.CreateInstance(elementType.FullName!) is not object nestedTarget)
+                return;
+            list.Add(nestedTarget);
+            DeserializeTable(nestedTarget, nestedTarget.GetType(), node.AsTomlTable);
+        }
+        else if (node.IsTomlArray)
+        {
+            if (type.GetGenericArguments()[0] is not Type elementType)
+                return;
+            if (elementType == typeof(TomlNode))
             {
-                if (type.GetProperty(name) is not PropertyInfo propertyInfo)
-                    continue;
-                DeserializeTable(target, propertyInfo.PropertyType, table);
+                list.Add(GetNodeVale(node));
+                return;
             }
-            else
-            {
-                if (type.GetProperty(name) is not PropertyInfo propertyInfo)
-                    continue;
-                var value = GetNodeVale(node);
-                propertyInfo.SetValue(target, value);
-            }
+            if (elementType.Assembly.CreateInstance(elementType.FullName!) is not IList nestedTarget)
+                return;
+            list.Add(nestedTarget);
+            DeserializeArray(elementType, nestedTarget, node.AsTomlArray);
+        }
+        else
+        {
+            list.Add(GetNodeVale(node));
         }
     }
     private static object GetNodeVale(TomlNode node)
@@ -51,7 +102,7 @@ public class TomlSerializer
             { IsTomlDateTimeLocal: true } => node.AsDateTimeLocal,
             { IsTomlDateTimeOffset: true } => node.AsDateTimeOffset,
             { IsTomlDateTime: true } => node.AsDateTime,
-            _ => throw new ArgumentOutOfRangeException(nameof(node), node, null)
+            _ => node
         };
     }
     private static string ToPascal(string str)
@@ -59,10 +110,8 @@ public class TomlSerializer
         if (string.IsNullOrWhiteSpace(str))
             return str;
         var strs = str.Split("_");
-        var sb = new StringBuilder();
-        foreach (var tempStr in strs)
-            sb.Append(FirstLetterToUpper(tempStr));
-        return sb.ToString();
+        var newStrs = strs.Select(s => FirstLetterToUpper(s));
+        return string.Join("", newStrs);
     }
 
     private static string FirstLetterToUpper(string str) => $"{char.ToUpper(str[0])}{str[1..]}";

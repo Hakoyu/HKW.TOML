@@ -3,6 +3,7 @@ using HKW.Libs.TOML;
 
 var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
 //var classString = TomlAsClasses.Construct("Test", TOML.Parse(file));
+//Console.WriteLine(classString);
 //var table = TOML.Parse(file);
 var test = TomlSerializer.DeserializeFromFile<Test>(file);
 Console.WriteLine(test);
@@ -11,6 +12,7 @@ Console.WriteLine();
 
 public class Test
 {
+    public List<NoopClass0> Noop { get; set; }
     public string Title { get; set; }
     public OwnerClass Owner { get; set; }
     public DatabaseClass Database { get; set; }
@@ -24,6 +26,7 @@ public class OwnerClass
 public class DatabaseClass
 {
     public bool Enabled { get; set; }
+    public List<List<int>> Points { get; set; }
     public List<int> Ports { get; set; }
     public List<TomlNode> Data { get; set; }
     public TempTargetsClass TempTargets { get; set; }
@@ -47,4 +50,10 @@ public class BetaClass
 {
     public string Ip { get; set; }
     public string Role { get; set; }
+}
+public class NoopClass0
+{
+    public int A { get; set; }
+    public int B { get; set; }
+    public int C { get; set; }
 }
