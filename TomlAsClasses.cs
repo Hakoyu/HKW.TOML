@@ -7,28 +7,117 @@ namespace HKW.Libs.TOML;
 
 public class TomlAsClassesOptions
 {
+    /// <summary>
+    /// 将键名称转换为帕斯卡(属性命名格式)
+    /// <para>默认为 <see langword="true"/></para>
+    /// </summary>
     public bool KeyNameToPascal { get; set; } = true;
+
+    /// <summary>
+    /// 合并int和float
+    /// (如果一个数组中同时存在int和float类型,则会被转换成float)
+    /// <para>默认为 <see langword="true"/></para>
+    /// </summary>
     public bool MergeIntegerAndFloat { get; set; } = true;
+
+    /// <summary>
+    /// 删除键的单词分隔符 如 "_"
+    /// <para>默认为 <see langword="true"/></para>
+    /// </summary>
     public bool RemoveKeyWordSeparator { get; set; } = true;
+
+    /// <summary>
+    /// 单词分隔符
+    /// <para>默认为 "<see langword="_"/>"</para>
+    /// </summary>
     public string KeyWordSeparator { get; set; } = "_";
 
     #region ConvertName
+    /// <summary>
+    /// TomlBoolean类型转换名称
+    /// <para>默认为 "<see langword="bool"/></para>
+    /// </summary>
     public string TomlBooleanConvertName { get; set; } = "bool";
+
+    /// <summary>
+    /// TomlString类型转换名称
+    /// <para>默认为 "<see langword="string"/>"</para>
+    /// </summary>
     public string TomlStringConvertName { get; set; } = "string";
+
+    /// <summary>
+    /// TomlFloat类型转换名称
+    /// <para>默认为 "<see langword="double"/>"</para>
+    /// </summary>
     public string TomlFloatConvertName { get; set; } = "double";
+
+    /// <summary>
+    /// TomlInteger类型转换名称
+    /// <para>默认为 "<see langword="int"/>"</para>
+    /// </summary>
     public string TomlIntegerConvertName { get; set; } = "int";
+
+    /// <summary>
+    /// TomlInteger64类型转换名称
+    /// <para>默认为 "<see langword="long"/>"</para>
+    /// </summary>
     public string TomlInteger64ConvertName { get; set; } = "long";
-    public string TomlDateTimeLocalConvertName { get; set; } = "DateTime";
-    public string TomlDateTimeOffsetConvertName { get; set; } = "DateTimeOffset";
+
+    /// <summary>
+    /// TomlDateTime类型转换名称
+    /// <para>默认为 "<see langword="DateTime"/>"</para>
+    /// </summary>
     public string TomlDateTimeConvertName { get; set; } = "DateTime";
+
+    /// <summary>
+    /// TomlDateTimeLocal类型转换名称
+    /// <para>默认为 "<see langword="DateTime"/>"</para>
+    /// </summary>
+    public string TomlDateTimeLocalConvertName { get; set; } = "DateTime";
+
+    /// <summary>
+    /// TomlDateTimeOffset类型转换名称
+    /// <para>默认为 "<see langword="DateTimeOffset"/>"</para>
+    /// </summary>
+    public string TomlDateTimeOffsetConvertName { get; set; } = "DateTimeOffset";
     #endregion
     #region Format
+    /// <summary>
+    /// 类名称格式化文本
+    /// <para>默认为 "<see langword="{0}Class"/>"</para>
+    /// </summary>
     public string ClassNameFormat { get; set; } = "{0}Class";
+
+    /// <summary>
+    /// 数组格式化文本
+    /// <para>默认为 "<see langword="List&lt;{0}&gt;"/>"</para>
+    /// </summary>
     public string TomlArrayFormat { get; set; } = "List<{0}>";
+
+    /// <summary>
+    /// 匿名类名称格式化文本
+    /// <para>默认为 "<see langword="{0}Class{1}"/>"</para>
+    /// </summary>
     public string TomlTableInArrayFormat { get; set; } = "{0}Class{1}";
+
+    /// <summary>
+    /// 属性格式化文本
+    /// <para>默认为 "<see langword="    public {0} {1} {{ get; set; }}"/>"</para>
+    /// </summary>
     public string TomlValueFormat { get; set; } = "    public {0} {1} {{ get; set; }}";
+
+    /// <summary>
+    /// 类格式化文本
+    /// <para>默认为 "<see langword="public class {0} \n{{\n{1}}}"/>"</para>
+    /// </summary>
     public string TomlTableFormat { get; set; } = "public class {0} \n{{\n{1}}}";
     #endregion
+    /// <summary>
+    /// 获取转换后的名称
+    /// </summary>
+    /// <param name="typeCode">类型标识</param>
+    /// <param name="isInt64">是否为64位整型</param>
+    /// <returns>标识转换的字符串</returns>
     public string GetConvertName(TomlTypeCode typeCode, bool isInt64 = false)
     {
         return typeCode switch
@@ -46,16 +135,41 @@ public class TomlAsClassesOptions
     }
 }
 
+/// <summary>
+/// Toml转换为类
+/// </summary>
 public partial class TomlAsClasses
 {
-    private static string s_doubleListName = string.Empty;
-    private static string s_intListName = string.Empty;
+    /// <summary>
+    /// 匿名类数量
+    /// </summary>
     private static int s_anonymousTableCount = 0;
+
+    /// <summary>
+    /// 所有类
+    /// <para>(类名称, 类值)</para>
+    /// </summary>
     private static readonly Dictionary<string, TomlClass> s_tomlClasses = new();
+
+    /// <summary>
+    /// 所有数组名称
+    /// <para>(数组值类型名称, 数组名称)</para>
+    /// </summary>
+    private static readonly Dictionary<string, string> s_arrayTypeNames = new();
+
+    /// <summary>
+    /// 设置
+    /// </summary>
     private static TomlAsClassesOptions s_options = new();
 
     private TomlAsClasses() { }
 
+    /// <summary>
+    /// 从文件中构造
+    /// </summary>
+    /// <param name="tomlFile">toml文件</param>
+    /// <param name="options">设置</param>
+    /// <returns>构造的数据</returns>
     public static string ConstructFromFile(string tomlFile, TomlAsClassesOptions? options = null)
     {
         var toml = TOML.Parse(tomlFile);
@@ -63,6 +177,13 @@ public partial class TomlAsClasses
         return Construct(rootClassName, toml, options);
     }
 
+    /// <summary>
+    /// 从文件中构造
+    /// </summary>
+    /// <param name="tomlFile">toml文件</param>
+    /// <param name="rootClassName">基类名称</param>
+    /// <param name="options">设置</param>
+    /// <returns>构造的数据</returns>
     public static string ConstructFromFile(
         string tomlFile,
         string rootClassName = "",
@@ -75,60 +196,113 @@ public partial class TomlAsClasses
         return Construct(rootClassName, toml, options);
     }
 
+    /// <summary>
+    /// 从toml表格中构造
+    /// </summary>
+    /// <param name="rootClassName">基类名称</param>
+    /// <param name="table">表格</param>
+    /// <param name="options">设置</param>
+    /// <returns>构造的数据</returns>
     public static string Construct(
         string rootClassName,
         TomlTable table,
         TomlAsClassesOptions? options = null
     )
     {
-        if (options is not null)
-            s_options = options;
-        s_doubleListName = string.Format(s_options.TomlArrayFormat, s_options.TomlFloatConvertName);
-        s_intListName = string.Format(s_options.TomlArrayFormat, s_options.TomlIntegerConvertName);
+        // 获取设置
+        s_options = options ?? new();
+
+        // 获取列表名称
+        s_arrayTypeNames.Add(
+            s_options.TomlFloatConvertName,
+            string.Format(s_options.TomlArrayFormat, s_options.TomlFloatConvertName)
+        );
+        s_arrayTypeNames.Add(
+            s_options.TomlIntegerConvertName,
+            string.Format(s_options.TomlArrayFormat, s_options.TomlIntegerConvertName)
+        );
+        s_arrayTypeNames.Add(
+            s_options.TomlInteger64ConvertName,
+            string.Format(s_options.TomlArrayFormat, s_options.TomlInteger64ConvertName)
+        );
+        s_arrayTypeNames.Add(
+            nameof(TomlNode),
+            string.Format(s_options.TomlArrayFormat, nameof(TomlNode))
+        );
+
+        // 解析tbale
         ParseTable(rootClassName, string.Empty, table);
+
+        // 生成数据
         var sb = new StringBuilder();
         foreach (var tomlClass in s_tomlClasses.Values)
             sb.AppendLine(tomlClass.ToString());
+
+        // 清空数据
         s_tomlClasses.Clear();
+        s_arrayTypeNames.Clear();
         s_anonymousTableCount = 0;
-        s_options = new();
+        s_options = null!;
         return sb.ToString();
     }
 
+    /// <summary>
+    /// 解析表格
+    /// </summary>
+    /// <param name="className">类名称</param>
+    /// <param name="parentClassName">父类名称</param>
+    /// <param name="table">表格</param>
+    /// <exception cref="Exception">toml中使用的Csharp的关键字</exception>
     private static void ParseTable(string className, string parentClassName, TomlTable table)
     {
+        // 检测关键字
         if (s_csharpKeywords.Contains(className))
             throw new Exception($"Used CsharpKeywords \"{className}\"");
+        // 获取已存在的类
         if (s_tomlClasses.TryGetValue(className, out var tomlClass) is false)
         {
             tomlClass = new(className, parentClassName);
-            s_tomlClasses.Add(tomlClass.FullName, tomlClass);
+            s_tomlClasses.TryAdd(tomlClass.FullName, tomlClass);
         }
+
         foreach (var kv in table)
         {
             var name = kv.Key;
             var node = kv.Value;
+            // 检测关键词
             if (s_csharpKeywords.Contains(name))
                 throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
+
             if (s_options.KeyNameToPascal)
                 name = ToPascal(name);
+            // 解析表格的值
             ParseTableValue(tomlClass, name, node);
         }
     }
 
+    /// <summary>
+    /// 解析表格的值
+    /// </summary>
+    /// <param name="tomlClass">toml类</param>
+    /// <param name="name">值名称</param>
+    /// <param name="node">值数据</param>
     private static void ParseTableValue(TomlClass tomlClass, string name, TomlNode node)
     {
         if (node.IsTomlTable)
         {
-            var nestedClassName = string.Format(s_options.ClassNameFormat, ToPascal(name));
+            // 获取类名称
+            var className = string.Format(s_options.ClassNameFormat, name);
+            // 判断是否有父类,有则为父类添加新的属性,没有则新建
             if (string.IsNullOrWhiteSpace(tomlClass.ParentName))
-                tomlClass.Add(name, new(name, nestedClassName));
+                tomlClass.Add(name, new(name, className));
             else
-                s_tomlClasses[tomlClass.FullName].Add(name, new(name, nestedClassName));
-            ParseTable(nestedClassName, tomlClass.Name, node.AsTomlTable);
+                s_tomlClasses[tomlClass.FullName].Add(name, new(name, className));
+            // 解析类
+            ParseTable(className, tomlClass.Name, node.AsTomlTable);
         }
         else if (node.IsTomlArray)
         {
+            // 获取数组类名称
             var arrayTypeName = ParseArray(name, node.AsTomlArray);
             tomlClass.TryAdd(name, new(name, arrayTypeName));
         }
@@ -138,19 +312,25 @@ public partial class TomlAsClasses
         }
     }
 
-    private static string ParseArray(string tableName, TomlArray array) =>
-        string.Format(s_options.TomlArrayFormat, ParseArrayValueType(tableName, array));
-
-    private static string ParseArrayValueType(string tableName, TomlArray array)
+    /// <summary>
+    /// 解析数值
+    /// </summary>
+    /// <param name="name">值名称</param>
+    /// <param name="array">数组值</param>
+    /// <returns>数值类型名</returns>
+    private static string ParseArray(string name, TomlArray array)
     {
+        // 如果数值中没有值(无法判断值类型),则设置为TomlNode
         if (array.ChildrenCount is 0)
-            return nameof(TomlNode);
+            return s_arrayTypeNames[nameof(TomlNode)];
 
+        // 遍历所有值,并获取类型标识
         var isInt64 = false;
         var tomlTypeCode = array[0].TomlTypeCode;
         foreach (var node in array)
         {
             tomlTypeCode |= node.TomlTypeCode;
+            // 如果类型为Integer并且无法被int解析,则标记为int64
             if (
                 tomlTypeCode == TomlTypeCode.Integer
                 && int.TryParse(node.AsTomlInteger.Value.ToString(), out var _) is false
@@ -158,22 +338,34 @@ public partial class TomlAsClasses
                 isInt64 = true;
         }
 
+        // 解析类型标识
         var typeName = string.Empty;
         if (tomlTypeCode is TomlTypeCode.Array)
         {
-            typeName = ParseValueInArray(tableName, array);
+            typeName = ParseArrayValue(name, array);
         }
         else if (tomlTypeCode is TomlTypeCode.Table)
         {
-            typeName = ParseTableInArrayValue(tableName, array);
+            typeName = ParseTableInArrayValue(name, array);
+            // 匿名类不需要缓存
+            return string.Format(s_options.TomlArrayFormat, typeName);
         }
         else
             typeName = s_options.GetConvertName(MergeTomlTypeCode(tomlTypeCode), isInt64);
-        return typeName;
+
+        // 将数组名缓存
+        s_arrayTypeNames.TryAdd(typeName, string.Format(s_options.TomlArrayFormat, typeName));
+        return s_arrayTypeNames[typeName];
     }
 
+    /// <summary>
+    /// 合并类型标识
+    /// </summary>
+    /// <param name="tomlTypeCode"></param>
+    /// <returns></returns>
     private static TomlTypeCode MergeTomlTypeCode(TomlTypeCode tomlTypeCode)
     {
+        // 如果同时存在int和float类型,则会被转换成float
         if (
             s_options.MergeIntegerAndFloat
             && tomlTypeCode is (TomlTypeCode.Integer | TomlTypeCode.Float)
@@ -183,61 +375,148 @@ public partial class TomlAsClasses
             return tomlTypeCode;
     }
 
-    private static string ParseValueInArray(string tableName, TomlArray array)
+    /// <summary>
+    /// 解析数组的值(用于多维数组)
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="array"></param>
+    /// <returns></returns>
+    private static string ParseArrayValue(string name, TomlArray array)
     {
         var typeNames = new HashSet<string>();
+        // 遍历数组并获取值
         foreach (var node in array)
-            typeNames.Add(ParseArray(tableName, node.AsTomlArray));
+            typeNames.Add(ParseArray(name, node.AsTomlArray));
+
+        return ParseTypeNameSet(typeNames);
+    }
+
+    /// <summary>
+    /// 解析类型名称集合
+    /// </summary>
+    /// <param name="typeNames">类型名称集合</param>
+    /// <returns>解析完成的类型名称</returns>
+    private static string ParseTypeNameSet(ISet<string> typeNames)
+    {
+        // 如果为同一种值
         if (typeNames.Count is 1)
             return typeNames.First();
         else if (
+            typeNames.Count is 2
+            && typeNames.Contains(s_arrayTypeNames[s_options.TomlIntegerConvertName])
+            && typeNames.Contains(s_arrayTypeNames[s_options.TomlInteger64ConvertName])
+        )
+        {
+            // 如果同时为int和int64,则变为int64
+            return s_arrayTypeNames[s_options.TomlInteger64ConvertName];
+        }
+        else if (
             s_options.MergeIntegerAndFloat
             && typeNames.Count is 2
-            && typeNames.Contains(s_intListName)
-            && typeNames.Contains(s_doubleListName)
+            && (
+                typeNames.Contains(s_arrayTypeNames[s_options.TomlIntegerConvertName])
+                || typeNames.Contains(s_arrayTypeNames[s_options.TomlInteger64ConvertName])
+            )
+            && typeNames.Contains(s_arrayTypeNames[s_options.TomlFloatConvertName])
         )
-            return s_doubleListName;
-        return string.Empty;
+        {
+            // 如果同时为int或int64和float则返回float
+            return s_arrayTypeNames[s_options.TomlFloatConvertName];
+        }
+        else if (
+            s_options.MergeIntegerAndFloat
+            && typeNames.Count is 3
+            && typeNames.Contains(s_arrayTypeNames[s_options.TomlIntegerConvertName])
+            && typeNames.Contains(s_arrayTypeNames[s_options.TomlInteger64ConvertName])
+            && typeNames.Contains(s_arrayTypeNames[s_options.TomlFloatConvertName])
+        )
+        {
+            // 如果同时为int和int64和float则返回float
+            return s_arrayTypeNames[s_options.TomlFloatConvertName];
+        }
+        else
+            // 否则返回TomlNode
+            return s_arrayTypeNames[nameof(TomlNode)];
     }
 
-    private static string ParseTableInArrayValue(string tableName, TomlArray array)
+    /// <summary>
+    /// 解析数组中的表格
+    /// </summary>
+    /// <param name="name">数组名</param>
+    /// <param name="array">数组值</param>
+    /// <returns>匿名类名称</returns>
+    private static string ParseTableInArrayValue(string name, TomlArray array)
     {
-        var tempClassName = string.Format(
+        // 获取匿名类名称
+        var anonymousClassName = string.Format(
             s_options.TomlTableInArrayFormat,
-            tableName,
+            name,
             s_anonymousTableCount++
         );
         foreach (var item in array)
         {
             var table = item.AsTomlTable;
-            ParseTable(tempClassName, string.Empty, table);
+            ParseTable(anonymousClassName, string.Empty, table);
         }
-        return tempClassName;
+        return anonymousClassName;
     }
 
+    /// <summary>
+    /// 将字符串转换为帕斯卡格式
+    /// </summary>
+    /// <param name="str">字符串</param>
+    /// <returns>帕斯卡格式字符串</returns>
     private static string ToPascal(string str)
     {
         if (string.IsNullOrWhiteSpace(str))
             return str;
+        // 使用分隔符拆分单词
         var strs = str.Split(s_options.KeyWordSeparator);
+        // 将单词首字母大写
         var newStrs = strs.Select(s => FirstLetterToUpper(s));
+        // 是否保留分隔符
         if (s_options.RemoveKeyWordSeparator)
             return string.Join("", newStrs);
         else
-            return string.Join("_", newStrs);
+            return string.Join(s_options.KeyWordSeparator, newStrs);
     }
-
+    /// <summary>
+    /// 将字符串首字母大写
+    /// </summary>
+    /// <param name="str">字符串</param>
+    /// <returns>第一个为大写的字符串</returns>
     private static string FirstLetterToUpper(string str) => $"{char.ToUpper(str[0])}{str[1..]}";
 
+    /// <summary>
+    /// Toml构造类
+    /// </summary>
     [DebuggerDisplay("{Name},Count = {Count}")]
     private class TomlClass : IDictionary<string, TomlClassValue>
     {
+        /// <summary>
+        /// 名称
+        /// </summary>
         public string Name { get; set; }
+        /// <summary>
+        ///  全名
+        /// </summary>
         public string FullName { get; set; }
+        /// <summary>
+        /// 父类名称
+        /// </summary>
         public string ParentName { get; set; }
 
-        private readonly Dictionary<string, TomlClassValue> s_baseDictionary = new();
+        /// <summary>
+        /// 值字典
+        /// <para>(值名称, 值)</para>
+        /// </summary>
+        private readonly Dictionary<string, TomlClassValue> s_tomlClassValues = new();
 
+        /// <summary>
+        /// 构造
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <param name="parentName">父类名称</param>
         public TomlClass(string name, string parentName = "")
         {
             Name = name;
@@ -245,39 +524,43 @@ public partial class TomlAsClasses
             ParentName = parentName;
         }
 
+        /// <summary>
+        /// 转化为格式化字符串
+        /// </summary>
+        /// <returns>格式化字符串</returns>
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (var item in s_baseDictionary.Values)
+            foreach (var item in s_tomlClassValues.Values)
                 sb.AppendLine(item.ToString());
             return string.Format(s_options.TomlTableFormat, Name, sb.ToString());
         }
 
         public TomlClassValue this[string key]
         {
-            get => s_baseDictionary[key];
-            set => s_baseDictionary[key] = value;
+            get => s_tomlClassValues[key];
+            set => s_tomlClassValues[key] = value;
         }
 
-        public ICollection<string> Keys => s_baseDictionary.Keys;
+        public ICollection<string> Keys => s_tomlClassValues.Keys;
 
-        public ICollection<TomlClassValue> Values => s_baseDictionary.Values;
+        public ICollection<TomlClassValue> Values => s_tomlClassValues.Values;
 
-        public int Count => s_baseDictionary.Count;
+        public int Count => s_tomlClassValues.Count;
 
         public bool IsReadOnly =>
-            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_baseDictionary).IsReadOnly;
+            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_tomlClassValues).IsReadOnly;
 
-        public void Add(string key, TomlClassValue value) => s_baseDictionary.Add(key, value);
+        public void Add(string key, TomlClassValue value) => s_tomlClassValues.Add(key, value);
 
         public void Add(KeyValuePair<string, TomlClassValue> item) =>
-            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_baseDictionary).Add(item);
+            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_tomlClassValues).Add(item);
 
         public bool TryAdd(string key, TomlClassValue value)
         {
-            if (s_baseDictionary.TryAdd(key, value) is false)
+            if (s_tomlClassValues.TryAdd(key, value) is false)
             {
-                var classValue = s_baseDictionary[key];
+                var classValue = s_tomlClassValues[key];
                 if (
                     classValue.TypeName != value.TypeName && classValue.TypeName != nameof(TomlNode)
                 )
@@ -287,55 +570,84 @@ public partial class TomlAsClasses
             return true;
         }
 
-        public void Clear() => s_baseDictionary.Clear();
+        public void Clear() => s_tomlClassValues.Clear();
 
         public bool Contains(KeyValuePair<string, TomlClassValue> item) =>
-            s_baseDictionary.Contains(item);
+            s_tomlClassValues.Contains(item);
 
-        public bool ContainsKey(string key) => s_baseDictionary.ContainsKey(key);
+        public bool ContainsKey(string key) => s_tomlClassValues.ContainsKey(key);
 
         public void CopyTo(KeyValuePair<string, TomlClassValue>[] array, int arrayIndex) =>
-            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_baseDictionary).CopyTo(
+            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_tomlClassValues).CopyTo(
                 array,
                 arrayIndex
             );
 
         public IEnumerator<KeyValuePair<string, TomlClassValue>> GetEnumerator() =>
-            s_baseDictionary.GetEnumerator();
+            s_tomlClassValues.GetEnumerator();
 
-        public bool Remove(string key) => s_baseDictionary.Remove(key);
+        public bool Remove(string key) => s_tomlClassValues.Remove(key);
 
         public bool Remove(KeyValuePair<string, TomlClassValue> item) =>
-            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_baseDictionary).Remove(item);
+            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_tomlClassValues).Remove(item);
 
         public bool TryGetValue(string key, [MaybeNullWhen(false)] out TomlClassValue value) =>
-            s_baseDictionary.TryGetValue(key, out value);
+            s_tomlClassValues.TryGetValue(key, out value);
 
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)s_baseDictionary).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)s_tomlClassValues).GetEnumerator();
     }
 
+    /// <summary>
+    /// toml类值
+    /// </summary>
     [DebuggerDisplay("{TypeName}, {Name}")]
     public class TomlClassValue
     {
-        public string TypeName { get; set; }
+        /// <summary>
+        /// 名称
+        /// </summary>
         public string Name { get; set; }
+        /// <summary>
+        /// 类型名称
+        /// </summary>
+        public string TypeName { get; set; }
 
+        /// <summary>
+        /// 构造
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <param name="typeName">类型名称</param>
         public TomlClassValue(string name, string typeName)
         {
             Name = name;
             TypeName = typeName;
         }
 
+        /// <summary>
+        /// 构造
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <param name="node">类值(推断类型名称)</param>
         public TomlClassValue(string name, TomlNode node)
         {
             Name = name;
-            TypeName = s_options.GetConvertName(node.TomlTypeCode);
+            var isInt64 = false;
+            if (node.IsTomlInteger)
+                isInt64 = int.TryParse(node.AsTomlInteger?.Value.ToString(), out var _) is false;
+            TypeName = s_options.GetConvertName(node.TomlTypeCode, isInt64);
         }
 
+        /// <summary>
+        /// 转化为格式化字符串
+        /// </summary>
+        /// <returns>字符串</returns>
         public override string ToString() =>
             string.Format(s_options.TomlValueFormat, TypeName, Name);
     }
 
+    /// <summary>
+    /// csharp关键字集合
+    /// </summary>
     private static readonly HashSet<string> s_csharpKeywords =
         new()
         {
@@ -417,5 +729,4 @@ public partial class TomlAsClasses
             "volatile",
             "while"
         };
-
 }
