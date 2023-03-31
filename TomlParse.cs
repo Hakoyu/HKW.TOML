@@ -40,6 +40,23 @@ using System.Text.RegularExpressions;
 
 namespace HKW.Libs.TOML;
 
+#region TOML TypeCode
+[Flags]
+public enum TomlTypeCode
+{
+    Integer = 1,
+    Float = 2,
+    String = 4,
+    Boolean = 8,
+    DateTime = 16,
+    DateTimeLocal = 32,
+    DateTimeOffset = 64,
+    Array = 128,
+    Table = 256,
+}
+
+#endregion
+
 #region TOML Nodes
 
 public abstract class TomlNode : IEnumerable
@@ -65,12 +82,12 @@ public abstract class TomlNode : IEnumerable
 
     #region VanillaType
 
-    public virtual int AsInteger => AsTomlInteger;
-    public virtual double AsFloat => AsTomlFloat;
+    public virtual int AsInt32 => AsTomlInteger;
+    public virtual long AsInt64 => AsTomlInteger;
+    public virtual double AsDouble => AsTomlFloat;
     public virtual string AsString => AsTomlString;
     public virtual bool AsBoolean => AsTomlBoolean;
-    public virtual DateTime AsDateTime => AsTomlDateTime;
-    public virtual DateTime AsDateTimeLocal => AsTomlDateTimeLocal;
+    public virtual DateTime AsDateTime => AsTomlDateTimeLocal;
     public virtual DateTimeOffset AsDateTimeOffset => AsTomlDateTimeOffset;
     public virtual List<TomlNode> AsList => AsTomlArray.RawArray;
     public virtual Dictionary<string, TomlNode> AsDictionary => AsTomlTable.RawTable;
@@ -90,6 +107,7 @@ public abstract class TomlNode : IEnumerable
     public virtual TomlArray AsTomlArray => (this as TomlArray)!;
 
     #endregion
+    public virtual TomlTypeCode TomlTypeCode => default;
 
     public virtual int ChildrenCount => 0;
 
@@ -127,20 +145,15 @@ public abstract class TomlNode : IEnumerable
 
     public virtual bool HasItemAt(int index) => false;
 
-    public virtual void Add(string key, TomlNode node)
-    { }
+    public virtual void Add(string key, TomlNode node) { }
 
-    public virtual void Add(TomlNode node)
-    { }
+    public virtual void Add(TomlNode node) { }
 
-    public virtual void Delete(TomlNode node)
-    { }
+    public virtual void Delete(TomlNode node) { }
 
-    public virtual void Delete(string key)
-    { }
+    public virtual void Delete(string key) { }
 
-    public virtual void Delete(int index)
-    { }
+    public virtual void Delete(int index) { }
 
     public virtual void AddRange(IEnumerable<TomlNode> nodes)
     {
@@ -193,7 +206,7 @@ public abstract class TomlNode : IEnumerable
 
     public static implicit operator bool(TomlNode value) => value.AsTomlBoolean.Value;
 
-    public static implicit operator DateTime(TomlNode value) => value.AsTomlDateTimeLocal;
+    public static implicit operator DateTime(TomlNode value) => value.AsTomlDateTimeLocal.Value;
 
     public static implicit operator DateTimeOffset(TomlNode value) =>
         value.AsTomlDateTimeOffset.Value;
@@ -203,6 +216,7 @@ public abstract class TomlNode : IEnumerable
 
 public class TomlString : TomlNode
 {
+    public override TomlTypeCode TomlTypeCode => TomlTypeCode.String;
     public override bool HasValue { get; } = true;
     public override bool IsTomlString { get; } = true;
     public bool IsMultiline { get; set; }
@@ -253,6 +267,7 @@ public class TomlInteger : TomlNode
         Hexadecimal = 16
     }
 
+    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Integer;
     public override bool IsTomlInteger { get; } = true;
     public override bool HasValue { get; } = true;
     public Base IntegerBase { get; set; } = Base.Decimal;
@@ -269,6 +284,7 @@ public class TomlInteger : TomlNode
 
 public class TomlFloat : TomlNode, IFormattable
 {
+    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Float;
     public override bool IsTomlFloat { get; } = true;
     public override bool HasValue { get; } = true;
 
@@ -293,6 +309,7 @@ public class TomlFloat : TomlNode, IFormattable
 
 public class TomlBoolean : TomlNode
 {
+    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Boolean;
     public override bool IsTomlBoolean { get; } = true;
     public override bool HasValue { get; } = true;
 
@@ -305,6 +322,7 @@ public class TomlBoolean : TomlNode
 
 public class TomlDateTime : TomlNode, IFormattable
 {
+    public override TomlTypeCode TomlTypeCode => TomlTypeCode.DateTime;
     public int SecondsPrecision { get; set; }
     public override bool HasValue { get; } = true;
 
@@ -322,6 +340,7 @@ public class TomlDateTime : TomlNode, IFormattable
 
 public class TomlDateTimeOffset : TomlDateTime
 {
+    public override TomlTypeCode TomlTypeCode => TomlTypeCode.DateTimeOffset;
     public override bool IsTomlDateTimeOffset { get; } = true;
     public DateTimeOffset Value { get; set; }
 
@@ -345,7 +364,7 @@ public class TomlDateTimeLocal : TomlDateTime
         Time,
         DateTime
     }
-
+    public override TomlTypeCode TomlTypeCode => TomlTypeCode.DateTimeLocal;
     public override bool IsTomlDateTimeLocal { get; } = true;
     public DateTimeStyle Style { get; set; } = DateTimeStyle.DateTime;
     public DateTime Value { get; set; }
@@ -368,12 +387,13 @@ public class TomlDateTimeLocal : TomlDateTime
         };
 }
 
-public class TomlArray : TomlNode
+public class TomlArray : TomlNode, IEnumerable<TomlNode>
 {
     public new IEnumerator<TomlNode> GetEnumerator() => values.GetEnumerator();
 
     private readonly List<TomlNode> values = new();
 
+    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Array;
     public override bool HasValue { get; } = true;
     public override bool IsTomlArray { get; } = true;
     public bool IsMultiline { get; set; }
@@ -495,7 +515,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 
     private readonly Dictionary<string, TomlNode> children = new();
     internal bool isImplicit;
-
+    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Table;
     public override bool HasValue { get; } = false;
     public override bool IsTomlTable { get; } = true;
     public bool IsInline { get; set; }
@@ -533,7 +553,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 
     public void AddRange(TomlTable table) => AddRange(table.AsDictionary);
 
-    public void AddRange(Dictionary<string, TomlNode> dic)
+    public void AddRange(IDictionary<string, TomlNode> dic)
     {
         foreach (var kv in dic)
             RawTable.Add(kv.Key, kv.Value);
@@ -1981,7 +2001,7 @@ public class TOMLParser : IDisposable
     private string ParseComment()
     {
         ConsumeChar();
-        var commentLine = reader.ReadLine()?.Trim() ?? "";
+        var commentLine = reader.ReadLine()?.Trim() ?? string.Empty;
         if (commentLine.Any(ch => TomlSyntax.MustBeEscaped(ch)))
             AddError("Comment must not contain control characters other than tab.", false);
         return commentLine;

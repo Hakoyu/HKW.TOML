@@ -17,6 +17,7 @@ public class TomlAsClassesOptions
     public string TomlStringConvertName { get; set; } = "string";
     public string TomlFloatConvertName { get; set; } = "double";
     public string TomlIntegerConvertName { get; set; } = "int";
+    public string TomlInteger64ConvertName { get; set; } = "long";
     public string TomlDateTimeLocalConvertName { get; set; } = "DateTime";
     public string TomlDateTimeOffsetConvertName { get; set; } = "DateTimeOffset";
     public string TomlDateTimeConvertName { get; set; } = "DateTime";
@@ -28,29 +29,30 @@ public class TomlAsClassesOptions
     public string TomlValueFormat { get; set; } = "    public {0} {1} {{ get; set; }}";
     public string TomlTableFormat { get; set; } = "public class {0} \n{{\n{1}}}";
     #endregion
-    public string GetConvertName(TomlNode node)
+    public string GetConvertName(TomlTypeCode typeCode, bool isInt64 = false)
     {
-        return node switch
+        return typeCode switch
         {
-            { IsTomlBoolean: true } => TomlBooleanConvertName,
-            { IsTomlString: true } => TomlStringConvertName,
-            { IsTomlFloat: true } => TomlFloatConvertName,
-            { IsTomlInteger: true } => TomlIntegerConvertName,
-            { IsTomlDateTimeLocal: true } => TomlDateTimeLocalConvertName,
-            { IsTomlDateTimeOffset: true } => TomlDateTimeOffsetConvertName,
-            { IsTomlDateTime: true } => TomlDateTimeConvertName,
-            _ => string.Empty
+            TomlTypeCode.Boolean => TomlBooleanConvertName,
+            TomlTypeCode.String => TomlStringConvertName,
+            TomlTypeCode.Float => TomlFloatConvertName,
+            TomlTypeCode.DateTime => TomlDateTimeConvertName,
+            TomlTypeCode.DateTimeLocal => TomlDateTimeLocalConvertName,
+            TomlTypeCode.DateTimeOffset => TomlDateTimeOffsetConvertName,
+            TomlTypeCode.Integer when isInt64 => TomlInteger64ConvertName,
+            TomlTypeCode.Integer => TomlIntegerConvertName,
+            _ => nameof(TomlNode)
         };
     }
 }
 
 public partial class TomlAsClasses
 {
-    private static string doubleListName = string.Empty;
-    private static string intListName = string.Empty;
-    private static readonly Dictionary<string, TomlClass> _tomlClasses = new();
-    private static readonly Dictionary<string, TomlClass> _tempClasses = new();
-    private static TomlAsClassesOptions _options = new();
+    private static string s_doubleListName = string.Empty;
+    private static string s_intListName = string.Empty;
+    private static int s_anonymousTableCount = 0;
+    private static readonly Dictionary<string, TomlClass> s_tomlClasses = new();
+    private static TomlAsClassesOptions s_options = new();
 
     private TomlAsClasses() { }
 
@@ -80,188 +82,146 @@ public partial class TomlAsClasses
     )
     {
         if (options is not null)
-            _options = options;
-        doubleListName = string.Format(_options.TomlArrayFormat, _options.TomlFloatConvertName);
-        intListName = string.Format(_options.TomlArrayFormat, _options.TomlIntegerConvertName);
+            s_options = options;
+        s_doubleListName = string.Format(s_options.TomlArrayFormat, s_options.TomlFloatConvertName);
+        s_intListName = string.Format(s_options.TomlArrayFormat, s_options.TomlIntegerConvertName);
         ParseTable(rootClassName, string.Empty, table);
         var sb = new StringBuilder();
-        foreach (var tomlClass in _tomlClasses.Values)
+        foreach (var tomlClass in s_tomlClasses.Values)
             sb.AppendLine(tomlClass.ToString());
-        foreach (var tomlClass in _tempClasses.Values)
-            sb.AppendLine(tomlClass.ToString());
+        s_tomlClasses.Clear();
+        s_anonymousTableCount = 0;
+        s_options = new();
         return sb.ToString();
     }
 
     private static void ParseTable(string className, string parentClassName, TomlTable table)
     {
-        var tomlClass = new TomlClass(className, parentClassName);
-        _tomlClasses.Add(className, tomlClass);
+        if (s_csharpKeywords.Contains(className))
+            throw new Exception($"Used CsharpKeywords \"{className}\"");
+        if (s_tomlClasses.TryGetValue(className, out var tomlClass) is false)
+        {
+            tomlClass = new(className, parentClassName);
+            s_tomlClasses.Add(tomlClass.FullName, tomlClass);
+        }
         foreach (var kv in table)
         {
             var name = kv.Key;
-            if (_options.KeyNameToPascal)
-                name = ToPascal(name);
             var node = kv.Value;
-            ParseTableValue(tomlClass, name, node, className, parentClassName);
+            if (s_csharpKeywords.Contains(name))
+                throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
+            if (s_options.KeyNameToPascal)
+                name = ToPascal(name);
+            ParseTableValue(tomlClass, name, node);
         }
     }
 
-    private static void ParseTableValue(TomlClass tomlClass, string name, TomlNode node, string className, string parentClassName)
+    private static void ParseTableValue(TomlClass tomlClass, string name, TomlNode node)
     {
         if (node.IsTomlTable)
         {
-            var nestedClassName = string.Format(_options.ClassNameFormat, ToPascal(name));
-            if (string.IsNullOrWhiteSpace(parentClassName))
+            var nestedClassName = string.Format(s_options.ClassNameFormat, ToPascal(name));
+            if (string.IsNullOrWhiteSpace(tomlClass.ParentName))
                 tomlClass.Add(name, new(name, nestedClassName));
             else
-                _tomlClasses[className].Add(name, new(name, nestedClassName));
-            ParseTable(nestedClassName, className, node.AsTomlTable);
+                s_tomlClasses[tomlClass.FullName].Add(name, new(name, nestedClassName));
+            ParseTable(nestedClassName, tomlClass.Name, node.AsTomlTable);
         }
         else if (node.IsTomlArray)
         {
             var arrayTypeName = ParseArray(name, node.AsTomlArray);
-            tomlClass.Add(name, new(name, arrayTypeName));
+            tomlClass.TryAdd(name, new(name, arrayTypeName));
         }
         else
         {
-            tomlClass.Add(name, new(name, node));
+            tomlClass.TryAdd(name, new(name, node));
         }
     }
 
     private static string ParseArray(string tableName, TomlArray array) =>
-        string.Format(_options.TomlArrayFormat, ParseArrayValueType(tableName, array));
+        string.Format(s_options.TomlArrayFormat, ParseArrayValueType(tableName, array));
 
     private static string ParseArrayValueType(string tableName, TomlArray array)
     {
-        var typeData = new (bool IsType, List<int> Indexs)[9];
-        var index = 0;
+        if (array.ChildrenCount is 0)
+            return nameof(TomlNode);
+
+        var isInt64 = false;
+        var tomlTypeCode = array[0].TomlTypeCode;
         foreach (var node in array)
         {
-            var countIndex = GetTomlTypeIndex(node);
-            var temp = typeData[countIndex];
-            temp.IsType = true;
-            temp.Indexs ??= new();
-            temp.Indexs.Add(index++);
-            typeData[countIndex] = temp;
+            tomlTypeCode |= node.TomlTypeCode;
+            if (
+                tomlTypeCode == TomlTypeCode.Integer
+                && int.TryParse(node.AsTomlInteger.Value.ToString(), out var _) is false
+            )
+                isInt64 = true;
         }
+
         var typeName = string.Empty;
-        var typeCount = typeData.Count(i => i.IsType);
-        if (
-            _options.MergeIntegerAndFloat
-            && typeData[2].IsType
-            && typeData[3].IsType
-            && typeCount is 2
-        )
-            typeName = _options.TomlFloatConvertName;
-        else if (typeData[7].IsType && typeCount is 1)
+        if (tomlTypeCode is TomlTypeCode.Array)
         {
-            typeName = ParseArrayInArrayValueType(tableName, typeData[7].Indexs, array);
+            typeName = ParseValueInArray(tableName, array);
         }
-        else if (typeData[8].IsType && typeCount is 1)
+        else if (tomlTypeCode is TomlTypeCode.Table)
         {
             typeName = ParseTableInArrayValue(tableName, array);
         }
         else
-            typeName = typeCount is 1 ? _options.GetConvertName(array[0]) : nameof(TomlNode);
-        if (string.IsNullOrWhiteSpace(typeName))
-            typeName = nameof(TomlNode);
+            typeName = s_options.GetConvertName(MergeTomlTypeCode(tomlTypeCode), isInt64);
         return typeName;
     }
-    private static string ParseArrayInArrayValueType(string tableName, IEnumerable<int> indexs, TomlArray array)
+
+    private static TomlTypeCode MergeTomlTypeCode(TomlTypeCode tomlTypeCode)
+    {
+        if (
+            s_options.MergeIntegerAndFloat
+            && tomlTypeCode is (TomlTypeCode.Integer | TomlTypeCode.Float)
+        )
+            return TomlTypeCode.Float;
+        else
+            return tomlTypeCode;
+    }
+
+    private static string ParseValueInArray(string tableName, TomlArray array)
     {
         var typeNames = new HashSet<string>();
-        foreach (var arrayIndex in indexs)
-            typeNames.Add(ParseArray(tableName, array[arrayIndex].AsTomlArray));
+        foreach (var node in array)
+            typeNames.Add(ParseArray(tableName, node.AsTomlArray));
         if (typeNames.Count is 1)
             return typeNames.First();
         else if (
-            _options.MergeIntegerAndFloat
+            s_options.MergeIntegerAndFloat
             && typeNames.Count is 2
-            && typeNames.Contains(intListName)
-            && typeNames.Contains(doubleListName)
+            && typeNames.Contains(s_intListName)
+            && typeNames.Contains(s_doubleListName)
         )
-            return doubleListName;
+            return s_doubleListName;
         return string.Empty;
     }
 
     private static string ParseTableInArrayValue(string tableName, TomlArray array)
     {
-        var tempClassName =
-            string.Format(_options.TomlTableInArrayFormat, tableName, _tempClasses.Count);
+        var tempClassName = string.Format(
+            s_options.TomlTableInArrayFormat,
+            tableName,
+            s_anonymousTableCount++
+        );
         foreach (var item in array)
         {
             var table = item.AsTomlTable;
-            ParseAnonymousTable(tempClassName, string.Empty, table);
+            ParseTable(tempClassName, string.Empty, table);
         }
         return tempClassName;
-    }
-
-    private static int GetTomlTypeIndex(TomlNode node)
-    {
-        return node switch
-        {
-            { IsTomlBoolean: true } => 0,
-            { IsTomlString: true } => 1,
-            { IsTomlFloat: true } => 2,
-            { IsTomlInteger: true } => 3,
-            { IsTomlDateTimeLocal: true } => 4,
-            { IsTomlDateTimeOffset: true } => 5,
-            { IsTomlDateTime: true } => 6,
-            { IsTomlArray: true } => 7,
-            { IsTomlTable: true } => 8,
-            _ => throw new ArgumentOutOfRangeException(nameof(node), node, null)
-        };
-    }
-    private static void ParseAnonymousTable(
-        string className,
-        string parentClassName,
-        TomlTable table
-    )
-    {
-        if (_tempClasses.TryGetValue(className, out var tempClass) is false)
-        {
-            tempClass = new(className, parentClassName);
-            _tempClasses.Add(className, tempClass);
-        }
-        foreach (var kv in table)
-        {
-            var name = kv.Key;
-            if (_options.KeyNameToPascal)
-                name = ToPascal(name);
-            var node = kv.Value;
-            ParseAnonymousTableValue(tempClass, name, node, className, parentClassName);
-        }
-    }
-
-    private static void ParseAnonymousTableValue(TomlClass tempClass, string name, TomlNode node, string className, string parentClassName)
-    {
-        if (node.IsTomlTable)
-        {
-            var nestedClassName = string.Format(_options.ClassNameFormat, ToPascal(name));
-            if (string.IsNullOrWhiteSpace(parentClassName))
-                tempClass.TryAdd(name, new(name, nestedClassName));
-            else
-                _tempClasses[className].TryAdd(name, new(name, nestedClassName));
-            ParseAnonymousTable(nestedClassName, className, node.AsTomlTable);
-        }
-        else if (node.IsTomlArray)
-        {
-            var arrayTypeName = ParseArray(name, node.AsTomlArray);
-            tempClass.TryAdd(name, new(name, arrayTypeName));
-        }
-        else
-        {
-            tempClass.TryAdd(name, new(name, node));
-        }
     }
 
     private static string ToPascal(string str)
     {
         if (string.IsNullOrWhiteSpace(str))
             return str;
-        var strs = str.Split(_options.KeyWordSeparator);
+        var strs = str.Split(s_options.KeyWordSeparator);
         var newStrs = strs.Select(s => FirstLetterToUpper(s));
-        if (_options.RemoveKeyWordSeparator)
+        if (s_options.RemoveKeyWordSeparator)
             return string.Join("", newStrs);
         else
             return string.Join("_", newStrs);
@@ -273,49 +233,51 @@ public partial class TomlAsClasses
     private class TomlClass : IDictionary<string, TomlClassValue>
     {
         public string Name { get; set; }
+        public string FullName { get; set; }
         public string ParentName { get; set; }
 
-        private readonly Dictionary<string, TomlClassValue> _baseDictionary = new();
+        private readonly Dictionary<string, TomlClassValue> s_baseDictionary = new();
 
         public TomlClass(string name, string parentName = "")
         {
             Name = name;
+            FullName = name + parentName;
             ParentName = parentName;
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (var item in _baseDictionary.Values)
+            foreach (var item in s_baseDictionary.Values)
                 sb.AppendLine(item.ToString());
-            return string.Format(_options.TomlTableFormat, Name, sb.ToString());
+            return string.Format(s_options.TomlTableFormat, Name, sb.ToString());
         }
 
         public TomlClassValue this[string key]
         {
-            get => _baseDictionary[key];
-            set => _baseDictionary[key] = value;
+            get => s_baseDictionary[key];
+            set => s_baseDictionary[key] = value;
         }
 
-        public ICollection<string> Keys => _baseDictionary.Keys;
+        public ICollection<string> Keys => s_baseDictionary.Keys;
 
-        public ICollection<TomlClassValue> Values => _baseDictionary.Values;
+        public ICollection<TomlClassValue> Values => s_baseDictionary.Values;
 
-        public int Count => _baseDictionary.Count;
+        public int Count => s_baseDictionary.Count;
 
         public bool IsReadOnly =>
-            ((ICollection<KeyValuePair<string, TomlClassValue>>)_baseDictionary).IsReadOnly;
+            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_baseDictionary).IsReadOnly;
 
-        public void Add(string key, TomlClassValue value) => _baseDictionary.Add(key, value);
+        public void Add(string key, TomlClassValue value) => s_baseDictionary.Add(key, value);
 
         public void Add(KeyValuePair<string, TomlClassValue> item) =>
-            ((ICollection<KeyValuePair<string, TomlClassValue>>)_baseDictionary).Add(item);
+            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_baseDictionary).Add(item);
 
         public bool TryAdd(string key, TomlClassValue value)
         {
-            if (_baseDictionary.TryAdd(key, value) is false)
+            if (s_baseDictionary.TryAdd(key, value) is false)
             {
-                var classValue = _baseDictionary[key];
+                var classValue = s_baseDictionary[key];
                 if (
                     classValue.TypeName != value.TypeName && classValue.TypeName != nameof(TomlNode)
                 )
@@ -325,34 +287,34 @@ public partial class TomlAsClasses
             return true;
         }
 
-        public void Clear() => _baseDictionary.Clear();
+        public void Clear() => s_baseDictionary.Clear();
 
         public bool Contains(KeyValuePair<string, TomlClassValue> item) =>
-            _baseDictionary.Contains(item);
+            s_baseDictionary.Contains(item);
 
-        public bool ContainsKey(string key) => _baseDictionary.ContainsKey(key);
+        public bool ContainsKey(string key) => s_baseDictionary.ContainsKey(key);
 
         public void CopyTo(KeyValuePair<string, TomlClassValue>[] array, int arrayIndex) =>
-            ((ICollection<KeyValuePair<string, TomlClassValue>>)_baseDictionary).CopyTo(
+            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_baseDictionary).CopyTo(
                 array,
                 arrayIndex
             );
 
         public IEnumerator<KeyValuePair<string, TomlClassValue>> GetEnumerator() =>
-            _baseDictionary.GetEnumerator();
+            s_baseDictionary.GetEnumerator();
 
-        public bool Remove(string key) => _baseDictionary.Remove(key);
+        public bool Remove(string key) => s_baseDictionary.Remove(key);
 
         public bool Remove(KeyValuePair<string, TomlClassValue> item) =>
-            ((ICollection<KeyValuePair<string, TomlClassValue>>)_baseDictionary).Remove(item);
+            ((ICollection<KeyValuePair<string, TomlClassValue>>)s_baseDictionary).Remove(item);
 
         public bool TryGetValue(string key, [MaybeNullWhen(false)] out TomlClassValue value) =>
-            _baseDictionary.TryGetValue(key, out value);
+            s_baseDictionary.TryGetValue(key, out value);
 
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_baseDictionary).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)s_baseDictionary).GetEnumerator();
     }
 
-    [DebuggerDisplay("Type = {TypeName},Name = {Name}")]
+    [DebuggerDisplay("{TypeName}, {Name}")]
     public class TomlClassValue
     {
         public string TypeName { get; set; }
@@ -367,25 +329,93 @@ public partial class TomlAsClasses
         public TomlClassValue(string name, TomlNode node)
         {
             Name = name;
-            TypeName = GetTypeName(node);
-        }
-
-        private static string GetTypeName(TomlNode node)
-        {
-            return node switch
-            {
-                { IsTomlBoolean: true } => _options.TomlBooleanConvertName,
-                { IsTomlString: true } => _options.TomlStringConvertName,
-                { IsTomlFloat: true } => _options.TomlFloatConvertName,
-                { IsTomlInteger: true } => _options.TomlIntegerConvertName,
-                { IsTomlDateTimeLocal: true } => _options.TomlDateTimeLocalConvertName,
-                { IsTomlDateTimeOffset: true } => _options.TomlDateTimeOffsetConvertName,
-                { IsTomlDateTime: true } => _options.TomlDateTimeConvertName,
-                _ => throw new ArgumentOutOfRangeException(nameof(node), node, null)
-            };
+            TypeName = s_options.GetConvertName(node.TomlTypeCode);
         }
 
         public override string ToString() =>
-            string.Format(_options.TomlValueFormat, TypeName, Name);
+            string.Format(s_options.TomlValueFormat, TypeName, Name);
     }
+
+    private static readonly HashSet<string> s_csharpKeywords =
+        new()
+        {
+            "abstract",
+            "as",
+            "base",
+            "bool",
+            "break",
+            "byte",
+            "case",
+            "catch",
+            "char",
+            "checked",
+            "class",
+            "const",
+            "continue",
+            "decimal",
+            "default",
+            "delegate",
+            "do",
+            "double",
+            "else",
+            "enum",
+            "event",
+            "explicit",
+            "extern",
+            "false",
+            "finally",
+            "fixed",
+            "float",
+            "for",
+            "foreach",
+            "goto",
+            "if",
+            "implicit",
+            "in",
+            "int",
+            "interface",
+            "internal",
+            "is",
+            "lock",
+            "long",
+            "namespace",
+            "new",
+            "null",
+            "object",
+            "operator",
+            "out",
+            "override",
+            "params",
+            "private",
+            "protected",
+            "public",
+            "readonly",
+            "ref",
+            "return",
+            "sbyte",
+            "sealed",
+            "short",
+            "sizeof",
+            "stackalloc",
+            "static",
+            "string",
+            "struct",
+            "switch",
+            "this",
+            "throw",
+            "true",
+            "try",
+            "typeof",
+            "uint",
+            "ulong",
+            "unchecked",
+            "unsafe",
+            "ushort",
+            "using",
+            "virtual",
+            "void",
+            "volatile",
+            "while"
+        };
+
 }

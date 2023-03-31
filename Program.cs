@@ -1,19 +1,23 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using HKW.Libs.TOML;
-
 var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
-//var classString = TomlAsClasses.Construct("Test", TOML.Parse(file));
-//Console.WriteLine(classString);
+var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
+var classString = TomlAsClasses.Construct("Test", TOML.Parse(file));
+Console.WriteLine(classString);
 //var table = TOML.Parse(file);
-var test = TomlSerializer.DeserializeFromFile<Test>(file);
-Console.WriteLine(test);
+//var test = TomlDeserializer.DeserializeFromFile<Test>(file);
+//TomlSerializer.SerializerToFile(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
+//var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
+//Console.WriteLine(test);
 Console.WriteLine();
 
 
-public class Test
+public class Test : ITomlClass
 {
-    public List<NoopClass0> Noop { get; set; }
+    public string TableComment { get; set; }
+    public Dictionary<string, string> ValueComments { get; set; } = new();
     public string Title { get; set; }
+    public List<NoopClass0> Noop { get; set; }
     public OwnerClass Owner { get; set; }
     public DatabaseClass Database { get; set; }
     public ServersClass Servers { get; set; }
@@ -21,6 +25,7 @@ public class Test
 public class OwnerClass
 {
     public string Name { get; set; }
+    public DateTime Date { get; set; }
     public DateTimeOffset Dob { get; set; }
 }
 public class DatabaseClass

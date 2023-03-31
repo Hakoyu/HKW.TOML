@@ -6,113 +6,87 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-
 namespace HKW.Libs.TOML;
 
 public class TomlSerializer
 {
-    public static T DeserializeFromFile<T>(string tomlFile)
-        where T : class, new()
+    private TomlSerializer() { }
+    public static void SerializerToFile(object source, string tomlFile)
     {
-        var t = new T();
-        var toml = TOML.Parse(tomlFile);
-        DeserializeTable(t, t.GetType(), toml);
-        return t;
+        CreateTomlTable(source).SaveTo(tomlFile);
+    }
+    private static TomlTable CreateTomlTable(object source)
+    {
+        var table = new TomlTable();
+        var properties = source.GetType().GetProperties();
+        foreach (var propertyInfo in properties)
+        {
+            if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnore)))
+                continue;
+            if (propertyInfo.Name == nameof(ITomlClass.TableComment) || propertyInfo.Name == nameof(ITomlClass.ValueComments))
+                continue;
+            if (propertyInfo.GetValue(source) is not object value)
+                continue;
+            var node = CreateTomlNode(value);
+            table.Add(propertyInfo.Name, node);
+        }
+        SetComments(source as ITomlClass, table);
+        return table;
+    }
+    private static TomlArray CreateTomlArray(IList list)
+    {
+        var array = new TomlArray();
+        foreach (var item in list)
+            array.Add(CreateTomlNode(item));
+        return array;
     }
 
-    private static void DeserializeTable(object target, Type type, TomlTable table)
+    private static TomlNode CreateTomlNode(object source)
     {
-        foreach (var kv in table)
+        return source switch
         {
-            var name = ToPascal(kv.Key);
-            var node = kv.Value;
-            if (type.GetProperty(name) is not PropertyInfo propertyInfo)
-                continue;
-            DeserializeTableValue(target, node, propertyInfo);
-        }
-    }
-    private static void DeserializeTableValue(object target, TomlNode node, PropertyInfo propertyInfo)
-    {
-        var propertyType = propertyInfo.PropertyType;
-        if (node.IsTomlTable)
-        {
-            if (propertyType.Assembly.CreateInstance(propertyType.FullName!) is not object nestedTarget)
-                return;
-            propertyInfo.SetValue(target, nestedTarget);
-            DeserializeTable(nestedTarget, propertyType, node.AsTomlTable);
-        }
-        else if (node.IsTomlArray)
-        {
-            if (propertyType.Assembly.CreateInstance(propertyType.FullName!) is not IList nestedTarget)
-                return;
-            propertyInfo.SetValue(target, nestedTarget);
-            DeserializeArray(propertyType, nestedTarget, node.AsTomlArray);
-        }
-        else
-        {
-            var value = GetNodeVale(node);
-            propertyInfo.SetValue(target, value);
-        }
-    }
-    private static void DeserializeArray(Type type, IList list, TomlArray array)
-    {
-        foreach (var node in array)
-        {
-            DeserializeArrayValue(type, list, node);
-        }
-    }
-    private static void DeserializeArrayValue(Type type, IList list, TomlNode node)
-    {
-        if (node.IsTomlTable)
-        {
-            if (type.GetGenericArguments()[0] is not Type elementType)
-                return;
-            if (elementType.Assembly.CreateInstance(elementType.FullName!) is not object nestedTarget)
-                return;
-            list.Add(nestedTarget);
-            DeserializeTable(nestedTarget, nestedTarget.GetType(), node.AsTomlTable);
-        }
-        else if (node.IsTomlArray)
-        {
-            if (type.GetGenericArguments()[0] is not Type elementType)
-                return;
-            if (elementType == typeof(TomlNode))
-            {
-                list.Add(GetNodeVale(node));
-                return;
-            }
-            if (elementType.Assembly.CreateInstance(elementType.FullName!) is not IList nestedTarget)
-                return;
-            list.Add(nestedTarget);
-            DeserializeArray(elementType, nestedTarget, node.AsTomlArray);
-        }
-        else
-        {
-            list.Add(GetNodeVale(node));
-        }
-    }
-    private static object GetNodeVale(TomlNode node)
-    {
-        return node switch
-        {
-            { IsTomlBoolean: true } => node.AsBoolean,
-            { IsTomlString: true } => node.AsString,
-            { IsTomlFloat: true } => node.AsFloat,
-            { IsTomlInteger: true } => node.AsInteger,
-            { IsTomlDateTimeLocal: true } => node.AsDateTimeLocal,
-            { IsTomlDateTimeOffset: true } => node.AsDateTimeOffset,
-            { IsTomlDateTime: true } => node.AsDateTime,
-            _ => node
+            bool => new TomlBoolean { Value = (bool)source },
+            string => new TomlString { Value = source != null ? source.ToString()! : string.Empty },
+
+            float
+                => new TomlFloat
+                {
+                    Value = (double)Convert.ChangeType((float)source, TypeCode.Double)
+                },
+            double => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
+
+            sbyte => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            byte => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            short => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            ushort => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            int => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            uint => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            long => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            ulong => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+
+            DateTime => new TomlDateTimeLocal { Value = (DateTime)source },
+            DateTimeOffset => new TomlDateTimeOffset { Value = (DateTimeOffset)source },
+
+            TomlNode => (TomlNode)source,
+            IList v => CreateTomlArray(v),
+            var _ => CreateTomlTable(source),
         };
     }
-    private static string ToPascal(string str)
-    {
-        if (string.IsNullOrWhiteSpace(str))
-            return str;
-        var strs = str.Split("_");
-        var newStrs = strs.Select(s => FirstLetterToUpper(s));
-        return string.Join("", newStrs);
-    }
 
-    private static string FirstLetterToUpper(string str) => $"{char.ToUpper(str[0])}{str[1..]}";
+    private static void SetComments(ITomlClass? iTomlClass, TomlTable table)
+    {
+        if (iTomlClass is null)
+            return;
+        if (string.IsNullOrWhiteSpace(iTomlClass.TableComment) is false)
+            table.Comment = iTomlClass.TableComment;
+        if (iTomlClass.ValueComments is null)
+            return;
+        foreach (var commentKV in iTomlClass.ValueComments)
+        {
+            var name = commentKV.Key;
+            var comment = commentKV.Value;
+            if (string.IsNullOrWhiteSpace(comment) is false)
+                table[name].Comment = comment;
+        }
+    }
 }
