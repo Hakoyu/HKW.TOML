@@ -192,6 +192,8 @@ public abstract class TomlNode : IEnumerable
 
     public static implicit operator TomlNode(bool value) => new TomlBoolean { Value = value };
 
+    public static implicit operator TomlNode(int value) => new TomlInteger { Value = value };
+
     public static implicit operator TomlNode(long value) => new TomlInteger { Value = value };
 
     public static implicit operator TomlNode(float value) => new TomlFloat { Value = value };
@@ -676,8 +678,6 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         using var tw = new StreamWriter(tomlFile);
         WriteTo(tw, null!, false);
     }
-
-    public void WriteTo(TextWriter tw) => WriteTo(tw, null!, false);
 
     public override void WriteTo(TextWriter tw, string tomlFile) => WriteTo(tw, tomlFile, true);
 

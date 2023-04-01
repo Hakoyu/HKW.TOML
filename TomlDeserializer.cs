@@ -307,9 +307,5 @@ public class TomlName : Attribute
     /// </summary>
     public string Name { get; }
 
-    /// <summary>
-    /// 指定Toml键名称
-    /// </summary>
-    /// <param name="name">键名称</param>
     public TomlName(string name) => Name = name;
 }
