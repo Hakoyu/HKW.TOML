@@ -317,6 +317,8 @@ public class TomlInteger : TomlNode
 
     public long Value { get; set; }
 
+    public bool IsInteger64 => int.TryParse(Value.ToString(), out _) is false;
+
     public override string ToString() => Value.ToString();
 
     public override string ToInlineToml() =>

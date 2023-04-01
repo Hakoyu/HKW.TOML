@@ -211,18 +211,9 @@ public partial class TomlAsClasses
             return s_arrayTypeNames[nameof(TomlNode)];
 
         // 遍历所有值,并获取类型标识
-        var isInt64 = false;
         var tomlTypeCode = TomlType.GetTypeCode(array[0]);
         foreach (var node in array)
-        {
             tomlTypeCode |= TomlType.GetTypeCode(node);
-            // 如果类型为Integer并且无法被int解析,则标记为int64
-            if (
-                tomlTypeCode == TomlTypeCode.Integer
-                && int.TryParse(node.AsTomlInteger.Value.ToString(), out var _) is false
-            )
-                isInt64 = true;
-        }
 
         // 解析类型标识
         var typeName = string.Empty;
@@ -237,7 +228,10 @@ public partial class TomlAsClasses
             return string.Format(s_options.TomlArrayFormat, typeName);
         }
         else
-            typeName = s_options.GetConvertName(MergeTomlTypeCode(tomlTypeCode), isInt64);
+            typeName = s_options.GetConvertName(
+                array.FirstOrDefault(n => n.AsTomlInteger?.IsInteger64 is true, array[0]),
+                MergeTomlTypeCode(tomlTypeCode)
+            );
 
         // 将数组名缓存
         s_arrayTypeNames.TryAdd(typeName, string.Format(s_options.TomlArrayFormat, typeName));
@@ -581,7 +575,7 @@ public partial class TomlAsClasses
             var isInt64 = false;
             if (node.IsTomlInteger)
                 isInt64 = int.TryParse(node.AsTomlInteger?.Value.ToString(), out var _) is false;
-            TypeName = s_options.GetConvertName(TomlType.GetTypeCode(node), isInt64);
+            TypeName = s_options.GetConvertName(node, TomlType.GetTypeCode(node));
         }
 
         /// <summary>
@@ -852,7 +846,7 @@ public class TomlAsClassesOptions
     /// <param name="typeCode">类型标识</param>
     /// <param name="isInt64">是否为64位整型</param>
     /// <returns>标识转换的字符串</returns>
-    public string GetConvertName(TomlTypeCode typeCode, bool isInt64 = false)
+    public string GetConvertName(TomlNode node, TomlTypeCode typeCode)
     {
         return typeCode switch
         {
@@ -862,7 +856,7 @@ public class TomlAsClassesOptions
             TomlTypeCode.DateTime => TomlDateTimeConvertName,
             TomlTypeCode.DateTimeLocal => TomlDateTimeLocalConvertName,
             TomlTypeCode.DateTimeOffset => TomlDateTimeOffsetConvertName,
-            TomlTypeCode.Integer when isInt64 => TomlInteger64ConvertName,
+            TomlTypeCode.Integer when node.AsTomlInteger.IsInteger64 => TomlInteger64ConvertName,
             TomlTypeCode.Integer => TomlIntegerConvertName,
             _ => nameof(TomlNode)
         };
