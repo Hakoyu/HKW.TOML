@@ -11,7 +11,7 @@ namespace HKW.Libs.TOML;
 
 public class TomlDeserializer
 {
-    
+
     public static T DeserializeFromFile<T>(string tomlFile)
         where T : class, new()
     {
@@ -81,25 +81,28 @@ public class TomlDeserializer
         }
         else
         {
-            var value = GetNodeVale(node);
+            var value = GetNodeVale(node, Type.GetTypeCode(propertyType));
             propertyInfo.SetValue(target, value);
         }
     }
 
     private static void DeserializeArray(Type type, IList list, TomlArray array)
     {
+        if (array.Any() is false)
+            return;
+        if (type.GetGenericArguments()[0] is not Type elementType)
+            return;
+        var typeCode = Type.GetTypeCode(elementType);
         foreach (var node in array)
         {
-            DeserializeArrayValue(type, list, node);
+            DeserializeArrayValue(type, list, node, elementType, typeCode);
         }
     }
 
-    private static void DeserializeArrayValue(Type type, IList list, TomlNode node)
+    private static void DeserializeArrayValue(Type type, IList list, TomlNode node, Type elementType, TypeCode typeCode)
     {
         if (node.IsTomlTable)
         {
-            if (type.GetGenericArguments()[0] is not Type elementType)
-                return;
             if (
                 elementType.Assembly.CreateInstance(elementType.FullName!)
                 is not object nestedTarget
@@ -110,11 +113,9 @@ public class TomlDeserializer
         }
         else if (node.IsTomlArray)
         {
-            if (type.GetGenericArguments()[0] is not Type elementType)
-                return;
             if (elementType == typeof(TomlNode))
             {
-                list.Add(GetNodeVale(node));
+                list.Add(GetNodeVale(node, typeCode));
                 return;
             }
             if (
@@ -126,22 +127,33 @@ public class TomlDeserializer
         }
         else
         {
-            list.Add(GetNodeVale(node));
+            list.Add(GetNodeVale(node, typeCode));
         }
     }
 
-    private static object GetNodeVale(TomlNode node)
+    private static object GetNodeVale(TomlNode node, TypeCode typeCode)
     {
-        return node switch
+        return typeCode switch
         {
-            TomlBoolean => node.AsBoolean,
-            TomlString => node.AsString,
-            TomlFloat => node.AsDouble,
-            TomlInteger => node.AsInt32,
-            TomlDateTimeOffset => node.AsDateTimeOffset,
-            TomlDateTimeLocal => node.AsDateTime,
-            TomlDateTime => node.AsDateTime,
-            _ => node
+            TypeCode.Boolean => node.AsBoolean,
+            TypeCode.String => node.AsString,
+
+            TypeCode.Single => Convert.ChangeType((double)node, TypeCode.Single),
+            TypeCode.Double => Convert.ChangeType((double)node, TypeCode.Double),
+
+            TypeCode.SByte => Convert.ChangeType((double)node, TypeCode.SByte),
+            TypeCode.Byte => Convert.ChangeType((double)node, TypeCode.Byte),
+            TypeCode.Int16 => Convert.ChangeType((double)node, TypeCode.Int16),
+            TypeCode.UInt16 => Convert.ChangeType((double)node, TypeCode.UInt16),
+            TypeCode.Int32 => Convert.ChangeType((double)node, TypeCode.Int32),
+            TypeCode.UInt32 => Convert.ChangeType((double)node, TypeCode.UInt32),
+            TypeCode.Int64 => Convert.ChangeType((double)node, TypeCode.Int64),
+            TypeCode.UInt64 => Convert.ChangeType((double)node, TypeCode.UInt64),
+
+            TypeCode.DateTime => node.AsDateTime,
+            TypeCode.Object when node.IsTomlDateTimeOffset => node.AsDateTimeOffset,
+
+            _ => node,
         };
     }
 

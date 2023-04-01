@@ -32,6 +32,36 @@ public class TomlAsClassesOptions
     /// </summary>
     public string KeyWordSeparator { get; set; } = "_";
 
+    /// <summary>
+    /// 为所有非匿名类添加的接口
+    /// </summary>
+    public HashSet<string> Interfaces { get; set; } = new();
+
+    /// <summary>
+    /// 为所有非匿名类添加ITomlClass接口
+    /// <para>默认为 <see langword="false"/></para>
+    /// </summary>
+    public bool AddITomlClassInterface { get; set; } = true;
+
+    /// <summary>
+    /// ITomlClass接口名称
+    /// <para>默认为 <see langword="nameof(ITomlClass)"/></para>
+    /// </summary>
+    public string ITomlClassInterface { get; set; } = nameof(ITomlClass);
+
+    /// <summary>
+    /// TomlClass接口值名称
+    /// <para>默认为    
+    /// <![CDATA[
+    /// public string TableComment { get; set; } = string.Empty;
+    /// public Dictionary<string, string> ValueComments { get; set; } = new();
+    /// ]]>
+    /// </para>
+    /// </summary>
+    public string ITomlClassInterfaceValue { get; set; } =
+        "    public string TableComment { get; set; } = string.Empty;\n"
+        + "    public Dictionary<string, string> ValueComments { get; set; } = new();\n";
+
     #region ConvertName
     /// <summary>
     /// TomlBoolean类型转换名称
@@ -111,6 +141,12 @@ public class TomlAsClassesOptions
     /// <para>默认为 "<see langword="public class {0} \n{{\n{1}}}"/>"</para>
     /// </summary>
     public string TomlTableFormat { get; set; } = "public class {0} \n{{\n{1}}}";
+
+    /// <summary>
+    /// 接口格式化文本
+    /// <para>默认为 "<see langword=" : {0}"/>"</para>
+    /// </summary>
+    public string InterfaceFormat { get; set; } = " : {0}";
     #endregion
     /// <summary>
     /// 获取转换后的名称
@@ -253,7 +289,7 @@ public partial class TomlAsClasses
     /// <param name="parentClassName">父类名称</param>
     /// <param name="table">表格</param>
     /// <exception cref="Exception">toml中使用的Csharp的关键字</exception>
-    private static void ParseTable(string className, string parentClassName, TomlTable table)
+    private static void ParseTable(string className, string parentClassName, TomlTable table, bool isAnonymousClass = false)
     {
         // 检测关键字
         if (s_csharpKeywords.Contains(className))
@@ -263,6 +299,9 @@ public partial class TomlAsClasses
         {
             tomlClass = new(className, parentClassName);
             s_tomlClasses.TryAdd(tomlClass.FullName, tomlClass);
+            tomlClass.AddInterfaces(s_options.Interfaces);
+            if (isAnonymousClass is false && s_options.AddITomlClassInterface)
+                tomlClass.AddInterface(s_options.ITomlClassInterface);
         }
 
         foreach (var kv in table)
@@ -326,10 +365,10 @@ public partial class TomlAsClasses
 
         // 遍历所有值,并获取类型标识
         var isInt64 = false;
-        var tomlTypeCode = array[0].TomlTypeCode;
+        var tomlTypeCode = TomlType.GetTypeCode(array[0]);
         foreach (var node in array)
         {
-            tomlTypeCode |= node.TomlTypeCode;
+            tomlTypeCode |= TomlType.GetTypeCode(node);
             // 如果类型为Integer并且无法被int解析,则标记为int64
             if (
                 tomlTypeCode == TomlTypeCode.Integer
@@ -456,7 +495,7 @@ public partial class TomlAsClasses
         foreach (var item in array)
         {
             var table = item.AsTomlTable;
-            ParseTable(anonymousClassName, string.Empty, table);
+            ParseTable(anonymousClassName, string.Empty, table, true);
         }
         return anonymousClassName;
     }
@@ -480,6 +519,7 @@ public partial class TomlAsClasses
         else
             return string.Join(s_options.KeyWordSeparator, newStrs);
     }
+
     /// <summary>
     /// 将字符串首字母大写
     /// </summary>
@@ -497,14 +537,21 @@ public partial class TomlAsClasses
         /// 名称
         /// </summary>
         public string Name { get; set; }
+
         /// <summary>
         ///  全名
         /// </summary>
         public string FullName { get; set; }
+
         /// <summary>
         /// 父类名称
         /// </summary>
         public string ParentName { get; set; }
+
+        /// <summary>
+        /// 接口集合
+        /// </summary>
+        public HashSet<string> Interfaces { get; private set; } = new();
 
         /// <summary>
         /// 值字典
@@ -525,15 +572,47 @@ public partial class TomlAsClasses
         }
 
         /// <summary>
+        /// 添加接口
+        /// </summary>
+        /// <param name="interfaceName">接口名称</param>
+        /// <returns>成功为 <see langword="true"/> 失败为 <see langword="false"/></returns>
+        public bool AddInterface(string interfaceName) => Interfaces.Add(interfaceName);
+
+        /// <summary>
+        /// 添加多个接口
+        /// </summary>
+        /// <param name="interfaceName">接口名称</param>
+        /// <returns>成功为 <see langword="true"/> 失败为 <see langword="false"/></returns>
+        public void AddInterfaces(IEnumerable<string> interfaceNames)
+        {
+            foreach (string interfaceName in interfaceNames)
+                Interfaces.Add(interfaceName);
+        }
+
+        /// <summary>
         /// 转化为格式化字符串
         /// </summary>
         /// <returns>格式化字符串</returns>
         public override string ToString()
         {
             var sb = new StringBuilder();
+
+            // 拼接接口
+            string? nameAndInterfaces;
+            if (Interfaces.Any())
+            {
+                if (Interfaces.Contains(s_options.ITomlClassInterface))
+                    sb.AppendLine(s_options.ITomlClassInterfaceValue);
+                nameAndInterfaces = Name + string.Format(s_options.InterfaceFormat, string.Join(", ", Interfaces));
+            }
+            else
+                nameAndInterfaces = Name;
+
+            // 获取值数据
             foreach (var item in s_tomlClassValues.Values)
                 sb.AppendLine(item.ToString());
-            return string.Format(s_options.TomlTableFormat, Name, sb.ToString());
+
+            return string.Format(s_options.TomlTableFormat, nameAndInterfaces, sb.ToString());
         }
 
         public TomlClassValue this[string key]
@@ -607,6 +686,7 @@ public partial class TomlAsClasses
         /// 名称
         /// </summary>
         public string Name { get; set; }
+
         /// <summary>
         /// 类型名称
         /// </summary>
@@ -634,7 +714,7 @@ public partial class TomlAsClasses
             var isInt64 = false;
             if (node.IsTomlInteger)
                 isInt64 = int.TryParse(node.AsTomlInteger?.Value.ToString(), out var _) is false;
-            TypeName = s_options.GetConvertName(node.TomlTypeCode, isInt64);
+            TypeName = s_options.GetConvertName(TomlType.GetTypeCode(node), isInt64);
         }
 
         /// <summary>

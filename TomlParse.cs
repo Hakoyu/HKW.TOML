@@ -55,6 +55,26 @@ public enum TomlTypeCode
     Table = 256,
 }
 
+public class TomlType
+{
+    public static TomlTypeCode GetTypeCode(TomlNode node)
+    {
+        return node switch
+        {
+            TomlBoolean => TomlTypeCode.Boolean,
+            TomlString => TomlTypeCode.String,
+            TomlInteger => TomlTypeCode.Integer,
+            TomlFloat => TomlTypeCode.Float,
+            TomlDateTimeOffset => TomlTypeCode.DateTimeOffset,
+            TomlDateTimeLocal => TomlTypeCode.DateTimeOffset,
+            TomlDateTime => TomlTypeCode.DateTime,
+            TomlArray => TomlTypeCode.Array,
+            TomlTable => TomlTypeCode.Table,
+            _ => default,
+        };
+    }
+}
+
 #endregion
 
 #region TOML Nodes
@@ -82,9 +102,11 @@ public abstract class TomlNode : IEnumerable
 
     #region VanillaType
 
-    public virtual int AsInt32 => AsTomlInteger;
-    public virtual long AsInt64 => AsTomlInteger;
-    public virtual double AsDouble => AsTomlFloat;
+    public virtual int AsInt32 => (int)this;
+    public virtual long AsInt64 => (long)this;
+
+    public virtual float AsFloat => (float)this;
+    public virtual double AsDouble => (double)this;
     public virtual string AsString => AsTomlString;
     public virtual bool AsBoolean => AsTomlBoolean;
     public virtual DateTime AsDateTime => AsTomlDateTimeLocal;
@@ -107,7 +129,6 @@ public abstract class TomlNode : IEnumerable
     public virtual TomlArray AsTomlArray => (this as TomlArray)!;
 
     #endregion
-    public virtual TomlTypeCode TomlTypeCode => default;
 
     public virtual int ChildrenCount => 0;
 
@@ -196,13 +217,37 @@ public abstract class TomlNode : IEnumerable
 
     public static implicit operator string(TomlNode value) => value.ToString()!;
 
-    public static implicit operator int(TomlNode value) => (int)value.AsTomlInteger.Value;
+    public static implicit operator int(TomlNode value)
+    {
+        if (value.IsTomlInteger)
+            return (int)value.AsTomlInteger.Value;
+        else
+            return (int)value.AsTomlFloat.Value;
+    }
 
-    public static implicit operator long(TomlNode value) => value.AsTomlInteger.Value;
+    public static implicit operator long(TomlNode value)
+    {
+        if (value.IsTomlInteger)
+            return value.AsTomlInteger.Value;
+        else
+            return (long)value.AsTomlFloat.Value;
+    }
 
-    public static implicit operator float(TomlNode value) => (float)value.AsTomlFloat.Value;
+    public static implicit operator float(TomlNode value)
+    {
+        if (value.IsTomlInteger)
+            return (float)value.AsTomlInteger.Value;
+        else
+            return (float)value.AsTomlFloat.Value;
+    }
 
-    public static implicit operator double(TomlNode value) => value.AsTomlFloat.Value;
+    public static implicit operator double(TomlNode value)
+    {
+        if (value.IsTomlInteger)
+            return (double)value.AsTomlInteger.Value;
+        else
+            return (double)value.AsTomlFloat.Value;
+    }
 
     public static implicit operator bool(TomlNode value) => value.AsTomlBoolean.Value;
 
@@ -216,7 +261,6 @@ public abstract class TomlNode : IEnumerable
 
 public class TomlString : TomlNode
 {
-    public override TomlTypeCode TomlTypeCode => TomlTypeCode.String;
     public override bool HasValue { get; } = true;
     public override bool IsTomlString { get; } = true;
     public bool IsMultiline { get; set; }
@@ -267,7 +311,6 @@ public class TomlInteger : TomlNode
         Hexadecimal = 16
     }
 
-    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Integer;
     public override bool IsTomlInteger { get; } = true;
     public override bool HasValue { get; } = true;
     public Base IntegerBase { get; set; } = Base.Decimal;
@@ -284,7 +327,6 @@ public class TomlInteger : TomlNode
 
 public class TomlFloat : TomlNode, IFormattable
 {
-    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Float;
     public override bool IsTomlFloat { get; } = true;
     public override bool HasValue { get; } = true;
 
@@ -309,7 +351,6 @@ public class TomlFloat : TomlNode, IFormattable
 
 public class TomlBoolean : TomlNode
 {
-    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Boolean;
     public override bool IsTomlBoolean { get; } = true;
     public override bool HasValue { get; } = true;
 
@@ -322,7 +363,6 @@ public class TomlBoolean : TomlNode
 
 public class TomlDateTime : TomlNode, IFormattable
 {
-    public override TomlTypeCode TomlTypeCode => TomlTypeCode.DateTime;
     public int SecondsPrecision { get; set; }
     public override bool HasValue { get; } = true;
 
@@ -340,7 +380,6 @@ public class TomlDateTime : TomlNode, IFormattable
 
 public class TomlDateTimeOffset : TomlDateTime
 {
-    public override TomlTypeCode TomlTypeCode => TomlTypeCode.DateTimeOffset;
     public override bool IsTomlDateTimeOffset { get; } = true;
     public DateTimeOffset Value { get; set; }
 
@@ -364,7 +403,6 @@ public class TomlDateTimeLocal : TomlDateTime
         Time,
         DateTime
     }
-    public override TomlTypeCode TomlTypeCode => TomlTypeCode.DateTimeLocal;
     public override bool IsTomlDateTimeLocal { get; } = true;
     public DateTimeStyle Style { get; set; } = DateTimeStyle.DateTime;
     public DateTime Value { get; set; }
@@ -393,7 +431,6 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
 
     private readonly List<TomlNode> values = new();
 
-    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Array;
     public override bool HasValue { get; } = true;
     public override bool IsTomlArray { get; } = true;
     public bool IsMultiline { get; set; }
@@ -515,7 +552,6 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 
     private readonly Dictionary<string, TomlNode> children = new();
     internal bool isImplicit;
-    public override TomlTypeCode TomlTypeCode => TomlTypeCode.Table;
     public override bool HasValue { get; } = false;
     public override bool IsTomlTable { get; } = true;
     public bool IsInline { get; set; }
