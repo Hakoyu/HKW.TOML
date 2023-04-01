@@ -143,7 +143,9 @@ public partial class TomlAsClasses
         // 获取已存在的类
         if (s_tomlClasses.TryGetValue(className, out var tomlClass) is false)
         {
-            tomlClass = new(className, parentClassName) { Comment = table.Comment };
+            tomlClass = new(className, parentClassName);
+            if (s_options.AddComment)
+                tomlClass.Comment = table.Comment;
             s_tomlClasses.TryAdd(tomlClass.FullName, tomlClass);
             tomlClass.AddInterfaces(s_options.Interfaces);
             if (isAnonymousClass is false && s_options.AddITomlClassInterface)
@@ -162,7 +164,8 @@ public partial class TomlAsClasses
                 name = ToPascal(name);
             // 解析表格的值
             ParseTableValue(tomlClass, name, node);
-            tomlClass[name].Comment = node.Comment;
+            if (s_options.AddComment)
+                tomlClass[name].Comment = node.Comment;
         }
     }
 
@@ -465,6 +468,7 @@ public partial class TomlAsClasses
                 sb.ToString()
             );
 
+            // 设置注释
             if (string.IsNullOrWhiteSpace(Comment))
                 return classData;
             else
@@ -572,9 +576,6 @@ public partial class TomlAsClasses
         public TomlClassValue(string name, TomlNode node)
         {
             Name = name;
-            var isInt64 = false;
-            if (node.IsTomlInteger)
-                isInt64 = int.TryParse(node.AsTomlInteger?.Value.ToString(), out var _) is false;
             TypeName = s_options.GetConvertName(node, TomlType.GetTypeCode(node));
         }
 
@@ -679,10 +680,13 @@ public partial class TomlAsClasses
         };
 }
 
+/// <summary>
+/// Toml转换为类设置
+/// </summary>
 public class TomlAsClassesOptions
 {
     /// <summary>
-    /// 将键名称转换为帕斯卡(属性命名格式)
+    /// 将键名称转换为帕斯卡命名格式(属性命名格式)
     /// <para>默认为 <see langword="true"/></para>
     /// </summary>
     public bool KeyNameToPascal { get; set; } = true;
@@ -708,8 +712,9 @@ public class TomlAsClassesOptions
 
     /// <summary>
     /// 添加注释
+    /// <para>默认为 <see langword="false"/></para>
     /// </summary>
-    public bool AddComment { get; set; } = true;
+    public bool AddComment { get; set; } = false;
 
     /// <summary>
     /// 为所有非匿名类添加的接口
