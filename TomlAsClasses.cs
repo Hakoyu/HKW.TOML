@@ -5,172 +5,6 @@ using System.Text;
 
 namespace HKW.Libs.TOML;
 
-public class TomlAsClassesOptions
-{
-    /// <summary>
-    /// 将键名称转换为帕斯卡(属性命名格式)
-    /// <para>默认为 <see langword="true"/></para>
-    /// </summary>
-    public bool KeyNameToPascal { get; set; } = true;
-
-    /// <summary>
-    /// 合并int和float
-    /// (如果一个数组中同时存在int和float类型,则会被转换成float)
-    /// <para>默认为 <see langword="true"/></para>
-    /// </summary>
-    public bool MergeIntegerAndFloat { get; set; } = true;
-
-    /// <summary>
-    /// 删除键的单词分隔符 如 "_"
-    /// <para>默认为 <see langword="true"/></para>
-    /// </summary>
-    public bool RemoveKeyWordSeparator { get; set; } = true;
-
-    /// <summary>
-    /// 单词分隔符
-    /// <para>默认为 "<see langword="_"/>"</para>
-    /// </summary>
-    public string KeyWordSeparator { get; set; } = "_";
-
-    /// <summary>
-    /// 为所有非匿名类添加的接口
-    /// </summary>
-    public HashSet<string> Interfaces { get; set; } = new();
-
-    /// <summary>
-    /// 为所有非匿名类添加ITomlClass接口
-    /// <para>默认为 <see langword="false"/></para>
-    /// </summary>
-    public bool AddITomlClassInterface { get; set; } = true;
-
-    /// <summary>
-    /// ITomlClass接口名称
-    /// <para>默认为 <see langword="nameof(ITomlClass)"/></para>
-    /// </summary>
-    public string ITomlClassInterface { get; set; } = nameof(ITomlClass);
-
-    /// <summary>
-    /// TomlClass接口值名称
-    /// <para>默认为    
-    /// <![CDATA[
-    /// public string TableComment { get; set; } = string.Empty;
-    /// public Dictionary<string, string> ValueComments { get; set; } = new();
-    /// ]]>
-    /// </para>
-    /// </summary>
-    public string ITomlClassInterfaceValue { get; set; } =
-        "    public string TableComment { get; set; } = string.Empty;\n"
-        + "    public Dictionary<string, string> ValueComments { get; set; } = new();\n";
-
-    #region ConvertName
-    /// <summary>
-    /// TomlBoolean类型转换名称
-    /// <para>默认为 "<see langword="bool"/></para>
-    /// </summary>
-    public string TomlBooleanConvertName { get; set; } = "bool";
-
-    /// <summary>
-    /// TomlString类型转换名称
-    /// <para>默认为 "<see langword="string"/>"</para>
-    /// </summary>
-    public string TomlStringConvertName { get; set; } = "string";
-
-    /// <summary>
-    /// TomlFloat类型转换名称
-    /// <para>默认为 "<see langword="double"/>"</para>
-    /// </summary>
-    public string TomlFloatConvertName { get; set; } = "double";
-
-    /// <summary>
-    /// TomlInteger类型转换名称
-    /// <para>默认为 "<see langword="int"/>"</para>
-    /// </summary>
-    public string TomlIntegerConvertName { get; set; } = "int";
-
-    /// <summary>
-    /// TomlInteger64类型转换名称
-    /// <para>默认为 "<see langword="long"/>"</para>
-    /// </summary>
-    public string TomlInteger64ConvertName { get; set; } = "long";
-
-    /// <summary>
-    /// TomlDateTime类型转换名称
-    /// <para>默认为 "<see langword="DateTime"/>"</para>
-    /// </summary>
-    public string TomlDateTimeConvertName { get; set; } = "DateTime";
-
-    /// <summary>
-    /// TomlDateTimeLocal类型转换名称
-    /// <para>默认为 "<see langword="DateTime"/>"</para>
-    /// </summary>
-    public string TomlDateTimeLocalConvertName { get; set; } = "DateTime";
-
-    /// <summary>
-    /// TomlDateTimeOffset类型转换名称
-    /// <para>默认为 "<see langword="DateTimeOffset"/>"</para>
-    /// </summary>
-    public string TomlDateTimeOffsetConvertName { get; set; } = "DateTimeOffset";
-    #endregion
-    #region Format
-    /// <summary>
-    /// 类名称格式化文本
-    /// <para>默认为 "<see langword="{0}Class"/>"</para>
-    /// </summary>
-    public string ClassNameFormat { get; set; } = "{0}Class";
-
-    /// <summary>
-    /// 数组格式化文本
-    /// <para>默认为 "<see langword="List&lt;{0}&gt;"/>"</para>
-    /// </summary>
-    public string TomlArrayFormat { get; set; } = "List<{0}>";
-
-    /// <summary>
-    /// 匿名类名称格式化文本
-    /// <para>默认为 "<see langword="{0}Class{1}"/>"</para>
-    /// </summary>
-    public string TomlTableInArrayFormat { get; set; } = "{0}Class{1}";
-
-    /// <summary>
-    /// 属性格式化文本
-    /// <para>默认为 "<see langword="    public {0} {1} {{ get; set; }}"/>"</para>
-    /// </summary>
-    public string TomlValueFormat { get; set; } = "    public {0} {1} {{ get; set; }}";
-
-    /// <summary>
-    /// 类格式化文本
-    /// <para>默认为 "<see langword="public class {0} \n{{\n{1}}}"/>"</para>
-    /// </summary>
-    public string TomlTableFormat { get; set; } = "public class {0} \n{{\n{1}}}";
-
-    /// <summary>
-    /// 接口格式化文本
-    /// <para>默认为 "<see langword=" : {0}"/>"</para>
-    /// </summary>
-    public string InterfaceFormat { get; set; } = " : {0}";
-    #endregion
-    /// <summary>
-    /// 获取转换后的名称
-    /// </summary>
-    /// <param name="typeCode">类型标识</param>
-    /// <param name="isInt64">是否为64位整型</param>
-    /// <returns>标识转换的字符串</returns>
-    public string GetConvertName(TomlTypeCode typeCode, bool isInt64 = false)
-    {
-        return typeCode switch
-        {
-            TomlTypeCode.Boolean => TomlBooleanConvertName,
-            TomlTypeCode.String => TomlStringConvertName,
-            TomlTypeCode.Float => TomlFloatConvertName,
-            TomlTypeCode.DateTime => TomlDateTimeConvertName,
-            TomlTypeCode.DateTimeLocal => TomlDateTimeLocalConvertName,
-            TomlTypeCode.DateTimeOffset => TomlDateTimeOffsetConvertName,
-            TomlTypeCode.Integer when isInt64 => TomlInteger64ConvertName,
-            TomlTypeCode.Integer => TomlIntegerConvertName,
-            _ => nameof(TomlNode)
-        };
-    }
-}
-
 /// <summary>
 /// Toml转换为类
 /// </summary>
@@ -247,24 +81,8 @@ public partial class TomlAsClasses
     {
         // 获取设置
         s_options = options ?? new();
-
-        // 获取列表名称
-        s_arrayTypeNames.Add(
-            s_options.TomlFloatConvertName,
-            string.Format(s_options.TomlArrayFormat, s_options.TomlFloatConvertName)
-        );
-        s_arrayTypeNames.Add(
-            s_options.TomlIntegerConvertName,
-            string.Format(s_options.TomlArrayFormat, s_options.TomlIntegerConvertName)
-        );
-        s_arrayTypeNames.Add(
-            s_options.TomlInteger64ConvertName,
-            string.Format(s_options.TomlArrayFormat, s_options.TomlInteger64ConvertName)
-        );
-        s_arrayTypeNames.Add(
-            nameof(TomlNode),
-            string.Format(s_options.TomlArrayFormat, nameof(TomlNode))
-        );
+        // 初始化列表名称
+        InitializeArrayTypeNames();
 
         // 解析tbale
         ParseTable(rootClassName, string.Empty, table);
@@ -283,13 +101,41 @@ public partial class TomlAsClasses
     }
 
     /// <summary>
+    /// 初始化列表名称
+    /// </summary>
+    private static void InitializeArrayTypeNames()
+    {
+        s_arrayTypeNames.Add(
+            s_options.TomlFloatConvertName,
+            string.Format(s_options.TomlArrayFormat, s_options.TomlFloatConvertName)
+        );
+        s_arrayTypeNames.Add(
+            s_options.TomlIntegerConvertName,
+            string.Format(s_options.TomlArrayFormat, s_options.TomlIntegerConvertName)
+        );
+        s_arrayTypeNames.Add(
+            s_options.TomlInteger64ConvertName,
+            string.Format(s_options.TomlArrayFormat, s_options.TomlInteger64ConvertName)
+        );
+        s_arrayTypeNames.Add(
+            nameof(TomlNode),
+            string.Format(s_options.TomlArrayFormat, nameof(TomlNode))
+        );
+    }
+
+    /// <summary>
     /// 解析表格
     /// </summary>
     /// <param name="className">类名称</param>
     /// <param name="parentClassName">父类名称</param>
     /// <param name="table">表格</param>
     /// <exception cref="Exception">toml中使用的Csharp的关键字</exception>
-    private static void ParseTable(string className, string parentClassName, TomlTable table, bool isAnonymousClass = false)
+    private static void ParseTable(
+        string className,
+        string parentClassName,
+        TomlTable table,
+        bool isAnonymousClass = false
+    )
     {
         // 检测关键字
         if (s_csharpKeywords.Contains(className))
@@ -297,7 +143,7 @@ public partial class TomlAsClasses
         // 获取已存在的类
         if (s_tomlClasses.TryGetValue(className, out var tomlClass) is false)
         {
-            tomlClass = new(className, parentClassName);
+            tomlClass = new(className, parentClassName) { Comment = table.Comment };
             s_tomlClasses.TryAdd(tomlClass.FullName, tomlClass);
             tomlClass.AddInterfaces(s_options.Interfaces);
             if (isAnonymousClass is false && s_options.AddITomlClassInterface)
@@ -316,6 +162,7 @@ public partial class TomlAsClasses
                 name = ToPascal(name);
             // 解析表格的值
             ParseTableValue(tomlClass, name, node);
+            tomlClass[name].Comment = node.Comment;
         }
     }
 
@@ -549,6 +396,11 @@ public partial class TomlAsClasses
         public string ParentName { get; set; }
 
         /// <summary>
+        /// 注释
+        /// </summary>
+        public string Comment { get; set; } = string.Empty;
+
+        /// <summary>
         /// 接口集合
         /// </summary>
         public HashSet<string> Interfaces { get; private set; } = new();
@@ -603,7 +455,8 @@ public partial class TomlAsClasses
             {
                 if (Interfaces.Contains(s_options.ITomlClassInterface))
                     sb.AppendLine(s_options.ITomlClassInterfaceValue);
-                nameAndInterfaces = Name + string.Format(s_options.InterfaceFormat, string.Join(", ", Interfaces));
+                nameAndInterfaces =
+                    Name + string.Format(s_options.InterfaceFormat, string.Join(", ", Interfaces));
             }
             else
                 nameAndInterfaces = Name;
@@ -612,7 +465,16 @@ public partial class TomlAsClasses
             foreach (var item in s_tomlClassValues.Values)
                 sb.AppendLine(item.ToString());
 
-            return string.Format(s_options.TomlTableFormat, nameAndInterfaces, sb.ToString());
+            var classData = string.Format(
+                s_options.TomlTableFormat,
+                nameAndInterfaces,
+                sb.ToString()
+            );
+
+            if (string.IsNullOrWhiteSpace(Comment))
+                return classData;
+            else
+                return string.Format(s_options.CommentFormat, Comment) + classData;
         }
 
         public TomlClassValue this[string key]
@@ -693,6 +555,11 @@ public partial class TomlAsClasses
         public string TypeName { get; set; }
 
         /// <summary>
+        /// 注释
+        /// </summary>
+        public string Comment { get; set; } = string.Empty;
+
+        /// <summary>
         /// 构造
         /// </summary>
         /// <param name="name">名称</param>
@@ -721,8 +588,15 @@ public partial class TomlAsClasses
         /// 转化为格式化字符串
         /// </summary>
         /// <returns>字符串</returns>
-        public override string ToString() =>
-            string.Format(s_options.TomlValueFormat, TypeName, Name);
+        public override string ToString()
+        {
+            var valueData = string.Format(s_options.TomlValueFormat, TypeName, Name);
+            // 添加注释
+            if (string.IsNullOrWhiteSpace(Comment))
+                return valueData;
+            else
+                return string.Format(s_options.ValueCommentFormat, Comment) + valueData;
+        }
     }
 
     /// <summary>
@@ -809,4 +683,188 @@ public partial class TomlAsClasses
             "volatile",
             "while"
         };
+}
+
+public class TomlAsClassesOptions
+{
+    /// <summary>
+    /// 将键名称转换为帕斯卡(属性命名格式)
+    /// <para>默认为 <see langword="true"/></para>
+    /// </summary>
+    public bool KeyNameToPascal { get; set; } = true;
+
+    /// <summary>
+    /// 合并int和float
+    /// (如果一个数组中同时存在int和float类型,则会被转换成float)
+    /// <para>默认为 <see langword="true"/></para>
+    /// </summary>
+    public bool MergeIntegerAndFloat { get; set; } = true;
+
+    /// <summary>
+    /// 删除键的单词分隔符 如 "_"
+    /// <para>默认为 <see langword="true"/></para>
+    /// </summary>
+    public bool RemoveKeyWordSeparator { get; set; } = true;
+
+    /// <summary>
+    /// 单词分隔符
+    /// <para>默认为 "<see langword="_"/>"</para>
+    /// </summary>
+    public string KeyWordSeparator { get; set; } = "_";
+
+    /// <summary>
+    /// 添加注释
+    /// </summary>
+    public bool AddComment { get; set; } = true;
+
+    /// <summary>
+    /// 为所有非匿名类添加的接口
+    /// </summary>
+    public HashSet<string> Interfaces { get; set; } = new();
+
+    /// <summary>
+    /// 为所有非匿名类添加ITomlClass接口
+    /// <para>默认为 <see langword="false"/></para>
+    /// </summary>
+    public bool AddITomlClassInterface { get; set; } = false;
+
+    /// <summary>
+    /// ITomlClass接口名称
+    /// <para>默认为 <see langword="nameof(ITomlClass)"/></para>
+    /// </summary>
+    public string ITomlClassInterface { get; set; } = nameof(ITomlClass);
+
+    /// <summary>
+    /// TomlClass接口值名称
+    /// <para>默认为
+    /// <![CDATA[
+    /// public string TableComment { get; set; } = string.Empty;
+    /// public Dictionary<string, string> ValueComments { get; set; } = new();
+    /// ]]>
+    /// </para>
+    /// </summary>
+    public string ITomlClassInterfaceValue { get; set; } =
+        "    public string TableComment { get; set; } = string.Empty;\n"
+        + "    public Dictionary<string, string> ValueComments { get; set; } = new();\n";
+
+    #region ConvertName
+    /// <summary>
+    /// TomlBoolean类型转换名称
+    /// <para>默认为 "<see langword="bool"/></para>
+    /// </summary>
+    public string TomlBooleanConvertName { get; set; } = "bool";
+
+    /// <summary>
+    /// TomlString类型转换名称
+    /// <para>默认为 "<see langword="string"/>"</para>
+    /// </summary>
+    public string TomlStringConvertName { get; set; } = "string";
+
+    /// <summary>
+    /// TomlFloat类型转换名称
+    /// <para>默认为 "<see langword="double"/>"</para>
+    /// </summary>
+    public string TomlFloatConvertName { get; set; } = "double";
+
+    /// <summary>
+    /// TomlInteger类型转换名称
+    /// <para>默认为 "<see langword="int"/>"</para>
+    /// </summary>
+    public string TomlIntegerConvertName { get; set; } = "int";
+
+    /// <summary>
+    /// TomlInteger64类型转换名称
+    /// <para>默认为 "<see langword="long"/>"</para>
+    /// </summary>
+    public string TomlInteger64ConvertName { get; set; } = "long";
+
+    /// <summary>
+    /// TomlDateTime类型转换名称
+    /// <para>默认为 "<see langword="DateTime"/>"</para>
+    /// </summary>
+    public string TomlDateTimeConvertName { get; set; } = "DateTime";
+
+    /// <summary>
+    /// TomlDateTimeLocal类型转换名称
+    /// <para>默认为 "<see langword="DateTime"/>"</para>
+    /// </summary>
+    public string TomlDateTimeLocalConvertName { get; set; } = "DateTime";
+
+    /// <summary>
+    /// TomlDateTimeOffset类型转换名称
+    /// <para>默认为 "<see langword="DateTimeOffset"/>"</para>
+    /// </summary>
+    public string TomlDateTimeOffsetConvertName { get; set; } = "DateTimeOffset";
+    #endregion
+    #region Format
+    /// <summary>
+    /// 类名称格式化文本
+    /// <para>默认为 "<see langword="{0}Class"/>"</para>
+    /// </summary>
+    public string ClassNameFormat { get; set; } = "{0}Class";
+
+    /// <summary>
+    /// 数组格式化文本
+    /// <para>默认为 "<see langword="List&lt;{0}&gt;"/>"</para>
+    /// </summary>
+    public string TomlArrayFormat { get; set; } = "List<{0}>";
+
+    /// <summary>
+    /// 匿名类名称格式化文本
+    /// <para>默认为 "<see langword="{0}Class{1}"/>"</para>
+    /// </summary>
+    public string TomlTableInArrayFormat { get; set; } = "{0}Class{1}";
+
+    /// <summary>
+    /// 属性格式化文本
+    /// <para>默认为 "<see langword="    public {0} {1} {{ get; set; }}"/>"</para>
+    /// </summary>
+    public string TomlValueFormat { get; set; } = "    public {0} {1} {{ get; set; }}";
+
+    /// <summary>
+    /// 类格式化文本
+    /// <para>默认为 "<see langword="public class {0} \n{{\n{1}}}\n"/>"</para>
+    /// </summary>
+    public string TomlTableFormat { get; set; } = "public class {0} \n{{\n{1}}}\n";
+
+    /// <summary>
+    /// 接口格式化文本
+    /// <para>默认为 "<see langword=" : {0}"/>"</para>
+    /// </summary>
+    public string InterfaceFormat { get; set; } = " : {0}";
+
+    /// <summary>
+    /// 注释格式化文本
+    /// <para>默认为 "<see langword="/// &lt;summary&gt;\n/// {0}\n/// &lt;/summary&gt;\n"/>"</para>
+    /// </summary>
+    public string CommentFormat { get; set; } = "/// <summary>\n/// {0}\n/// </summary>\n";
+
+    /// <summary>
+    /// 注释格式化文本
+    /// <para>默认为 "<see langword="    /// &lt;summary&gt;\n    /// {0}\n    /// &lt;/summary&gt;\n"/>"</para>
+    /// </summary>
+    public string ValueCommentFormat { get; set; } =
+        "    /// <summary>\n    /// {0}\n    /// </summary>\n";
+    #endregion
+    /// <summary>
+    /// 获取转换后的名称
+    /// </summary>
+    /// <param name="typeCode">类型标识</param>
+    /// <param name="isInt64">是否为64位整型</param>
+    /// <returns>标识转换的字符串</returns>
+    public string GetConvertName(TomlTypeCode typeCode, bool isInt64 = false)
+    {
+        return typeCode switch
+        {
+            TomlTypeCode.Boolean => TomlBooleanConvertName,
+            TomlTypeCode.String => TomlStringConvertName,
+            TomlTypeCode.Float => TomlFloatConvertName,
+            TomlTypeCode.DateTime => TomlDateTimeConvertName,
+            TomlTypeCode.DateTimeLocal => TomlDateTimeLocalConvertName,
+            TomlTypeCode.DateTimeOffset => TomlDateTimeOffsetConvertName,
+            TomlTypeCode.Integer when isInt64 => TomlInteger64ConvertName,
+            TomlTypeCode.Integer => TomlIntegerConvertName,
+            _ => nameof(TomlNode)
+        };
+    }
 }

@@ -6,11 +6,11 @@ var classString = TomlAsClasses.Construct("Test", TOML.Parse(file));
 Console.WriteLine(classString);
 
 //var table = TOML.Parse(file);
-var test = TomlDeserializer.DeserializeFromFile<Test>(file);
-foreach (var kv in test.ValueComments)
-    if (string.IsNullOrWhiteSpace(kv.Value))
-        test.ValueComments[kv.Key] = kv.Key;
-TomlSerializer.SerializerToFile(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
+//var test = TomlDeserializer.DeserializeFromFile<Test>(file);
+//foreach (var kv in test.ValueComments)
+//    if (string.IsNullOrWhiteSpace(kv.Value))
+//        test.ValueComments[kv.Key] = kv.Key;
+//TomlSerializer.SerializerToFile(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
 //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
 //Console.WriteLine(test);
 Console.WriteLine();
