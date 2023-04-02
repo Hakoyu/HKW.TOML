@@ -137,6 +137,27 @@ public partial class TomlAsClasses
         bool isAnonymousClass = false
     )
     {
+        var tomlClass =  GetTomlClass(className, parentClassName, table, isAnonymousClass);
+
+        foreach (var kv in table)
+        {
+            var name = kv.Key;
+            var node = kv.Value;
+            if (s_options.KeyNameToPascal)
+                name = ToPascal(name);
+
+            // 检测关键词
+            if (s_csharpKeywords.Contains(name))
+                throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
+            // 解析表格的值
+            ParseTableValue(tomlClass, name, node);
+            if (s_options.AddComment)
+                tomlClass[name].Comment = node.Comment;
+        }
+    }
+
+    private static TomlClass GetTomlClass(string className, string parentClassName, TomlTable table, bool isAnonymousClass = false)
+    {
         // 检测关键字
         if (s_csharpKeywords.Contains(className))
             throw new Exception($"Used CsharpKeywords \"{className}\"");
@@ -151,22 +172,7 @@ public partial class TomlAsClasses
             if (isAnonymousClass is false && s_options.AddITomlClassInterface)
                 tomlClass.AddInterface(s_options.ITomlClassInterface);
         }
-
-        foreach (var kv in table)
-        {
-            var name = kv.Key;
-            var node = kv.Value;
-            // 检测关键词
-            if (s_csharpKeywords.Contains(name))
-                throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
-
-            if (s_options.KeyNameToPascal)
-                name = ToPascal(name);
-            // 解析表格的值
-            ParseTableValue(tomlClass, name, node);
-            if (s_options.AddComment)
-                tomlClass[name].Comment = node.Comment;
-        }
+        return tomlClass;
     }
 
     /// <summary>
@@ -279,7 +285,7 @@ public partial class TomlAsClasses
     /// </summary>
     /// <param name="typeNames">类型名称集合</param>
     /// <returns>解析完成的类型名称</returns>
-    private static string ParseTypeNameSet(ISet<string> typeNames)
+    private static string ParseTypeNameSet(HashSet<string> typeNames)
     {
         // 如果为同一种值
         if (typeNames.Count is 1)
