@@ -101,12 +101,12 @@ public class TomlDeserializer
             if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnore)))
                 continue;
             // 设置注释
-            iTomlClass?.ValueComments.Add(name, node.Comment ?? string.Empty);
+            iTomlClass?.ValueComments.TryAdd(name, node.Comment ?? string.Empty);
             DeserializeTableValue(target, node, propertyInfo);
         }
 
         // 检查TomlName特性
-        CheckTomlName(target, type, table);
+        CheckTomlName(iTomlClass, target, type, table);
     }
 
     /// <summary>
@@ -115,15 +115,17 @@ public class TomlDeserializer
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
     /// <param name="table">Toml表格</param>
-    private static void CheckTomlName(object target, Type type, TomlTable table)
+    private static void CheckTomlName(ITomlClassComment? iTomlClass, object target, Type type, TomlTable table)
     {
         foreach (var propertyInfo in type.GetProperties())
         {
-            if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName tomlName)
+            if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName keyName)
                 continue;
-            if (string.IsNullOrWhiteSpace(tomlName.Name))
+            if (string.IsNullOrWhiteSpace(keyName.Name))
                 continue;
-            DeserializeTableValue(target, table[tomlName.Name], propertyInfo);
+            var node = table[keyName.Name];
+            iTomlClass?.ValueComments.TryAdd(propertyInfo.Name, node.Comment ?? string.Empty);
+            DeserializeTableValue(target, node, propertyInfo);
         }
     }
 
@@ -316,26 +318,4 @@ public class TomlDeserializerOptions
     /// <para>默认为 "<see langword="_"/>"</para>
     /// </summary>
     public string KeyWordSeparator { get; set; } = "_";
-}
-
-/// <summary>
-/// Toml忽略值
-/// <para>在序列化和反序列化时忽略的值</para>
-/// </summary>
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-public class TomlIgnore : Attribute { }
-
-/// <summary>
-/// Toml名称
-/// <para>指定Toml键的名称</para>
-/// </summary>
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-public class TomlKeyName : Attribute
-{
-    /// <summary>
-    /// 键名
-    /// </summary>
-    public string Name { get; }
-
-    public TomlKeyName(string name) => Name = name;
 }

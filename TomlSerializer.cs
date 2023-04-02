@@ -25,13 +25,13 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <param name="tomlFile">Toml文件</param>
-    public static void SerializerToFile(
+    public static void SerializeToFile(
         object source,
         string tomlFile,
         TomlSerializerOptions? option = null
     )
     {
-        Serializer(source, option).SaveTo(tomlFile);
+        Serialize(source, option).SaveTo(tomlFile);
     }
 
     /// <summary>
@@ -39,13 +39,13 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <param name="tomlFile">Toml文件</param>
-    public static async Task SerializerToFileAsync(
+    public static async Task SerializeToFileAsync(
         object source,
         string tomlFile,
         TomlSerializerOptions? option = null
     )
     {
-        (await SerializerAsync(source, option)).SaveTo(tomlFile);
+        (await SerializeAsync(source, option)).SaveTo(tomlFile);
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <returns>Toml表格数据</returns>
-    public static TomlTable Serializer(object source, TomlSerializerOptions? option = null)
+    public static TomlTable Serialize(object source, TomlSerializerOptions? option = null)
     {
         s_options = option ?? new();
         var table = CreateTomlTable(source);
@@ -66,7 +66,7 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <returns>Toml表格数据</returns>
-    public static async Task<TomlTable> SerializerAsync(
+    public static async Task<TomlTable> SerializeAsync(
         object source,
         TomlSerializerOptions? option = null
     )
@@ -91,7 +91,7 @@ public class TomlSerializer
         // 获取所有属性
         var properties = GetGetProperties(source);
         var isITomlClass = source is ITomlClassComment;
-
+        var iTomlClass = source as ITomlClassComment;
         foreach (var propertyInfo in properties)
         {
             // 检测是否有隐藏特性
@@ -114,9 +114,9 @@ public class TomlSerializer
             // 创建Toml节点
             var node = CreateTomlNode(value);
             table.TryAdd(name, node);
+            node.Comment = SetCommentToNode(iTomlClass, propertyInfo.Name)!;
         }
         // 设置注释
-        SetComments(source as ITomlClassComment, table);
         return table;
     }
 
@@ -125,7 +125,7 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <returns>经过排序后的属性</returns>
-    private static PropertyInfo[] GetGetProperties(object source)
+    private static IEnumerable<PropertyInfo> GetGetProperties(object source)
     {
         var properties = source.GetType().GetProperties();
         // 使用自定义比较器排序
@@ -134,7 +134,31 @@ public class TomlSerializer
         // 判断是否倒序
         if (s_options.PropertiesReverseOrder)
             Array.Reverse(properties);
-        return properties;
+
+        return CheckTomlParameterOrder(properties);
+    }
+
+    /// <summary>
+    /// 检查Toml参数顺序属性并修改顺序
+    /// </summary>
+    /// <param name="properties">属性</param>
+    /// <returns>修改顺序后的属性</returns>
+    private static IEnumerable<PropertyInfo> CheckTomlParameterOrder(
+        IEnumerable<PropertyInfo> properties
+    )
+    {
+        var newProperties = new List<PropertyInfo>();
+        foreach (PropertyInfo property in properties)
+        {
+            if (
+                property.GetCustomAttribute<TomlParameterOrder>()
+                is TomlParameterOrder parameterOrder
+            )
+                newProperties.Insert(parameterOrder.Order, property);
+            else
+                newProperties.Add(property);
+        }
+        return newProperties;
     }
 
     /// <summary>
@@ -170,33 +194,51 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <returns>Toml节点</returns>
-    private static TomlNode CreateTomlNode(object source)
+    private static TomlNode CreateTomlNode(object source, Type? type = null)
     {
-        return source switch
+        type ??= source.GetType();
+        return Type.GetTypeCode(type) switch
         {
-            bool => new TomlBoolean { Value = (bool)source },
-            string => new TomlString { Value = (string)source },
+            TypeCode.Boolean => new TomlBoolean { Value = (bool)source },
+
+            TypeCode.Char => new TomlString { Value = source.ToString()! },
+            TypeCode.String => new TomlString { Value = (string)source },
 
             // 浮点型
-            float => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
-            double => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
+            TypeCode.Single
+                => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
+            TypeCode.Double
+                => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
 
             // 整形
-            sbyte => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
-            byte => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
-            short => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
-            ushort => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
-            int => new TomlInteger { Value = (int)source },
-            uint => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
-            long => new TomlInteger { Value = (long)source },
-            ulong => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            TypeCode.SByte
+                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            TypeCode.Byte
+                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            TypeCode.Int16
+                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            TypeCode.UInt16
+                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            TypeCode.Int32
+                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            TypeCode.UInt32
+                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            TypeCode.Int64
+                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+            TypeCode.UInt64
+                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
 
-            DateTime => new TomlDateTimeLocal { Value = (DateTime)source },
-            DateTimeOffset => new TomlDateTimeOffset { Value = (DateTimeOffset)source },
+            TypeCode.DateTime => new TomlDateTimeLocal { Value = (DateTime)source },
+            TypeCode.Object when source is DateTimeOffset offset
+                => new TomlDateTimeOffset { Value = offset },
 
-            TomlNode => (TomlNode)source,
-            IList v => CreateTomlArray(v),
-            var _ => CreateTomlTable(source),
+            TypeCode.Object when source is TomlNode node => node,
+            TypeCode.Object when source is IList list => CreateTomlArray(list),
+            TypeCode.Object when type.IsClass => CreateTomlTable(source),
+            _
+                => throw new NotSupportedException(
+                    $"Unknown source !\nType = {type.Name}, Source = {source}"
+                )
         };
     }
 
@@ -204,23 +246,17 @@ public class TomlSerializer
     /// 设置注释
     /// </summary>
     /// <param name="iTomlClass">TomlClass接口</param>
-    /// <param name="table">Toml表格</param>
-    private static void SetComments(ITomlClassComment? iTomlClass, TomlTable table)
+    /// <param name="node">Toml表格</param>
+    private static string? SetCommentToNode(ITomlClassComment? iTomlClass, string name)
     {
-        if (iTomlClass is null)
-            return;
-        if (string.IsNullOrWhiteSpace(iTomlClass.ClassComment) is false)
-            table.Comment = iTomlClass.ClassComment;
         // 检查值注释
-        if (iTomlClass.ValueComments?.Any() is null or false)
-            return;
-        foreach (var commentKV in iTomlClass.ValueComments)
+        if (iTomlClass?.ValueComments?.TryGetValue(name, out var comment) is true)
         {
-            var name = commentKV.Key;
-            var comment = commentKV.Value;
-            if (string.IsNullOrWhiteSpace(comment) is false)
-                table[name].Comment = comment;
+            if (string.IsNullOrWhiteSpace(comment))
+                return null;
+            return comment;
         }
+        return null;
     }
 }
 
