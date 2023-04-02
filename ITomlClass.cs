@@ -10,7 +10,7 @@ namespace HKW.Libs.TOML;
 /// <summary>
 /// Toml类接口
 /// </summary>
-public interface ITomlClass
+public interface ITomlClassComment
 {
     /// <summary>
     /// 类注释

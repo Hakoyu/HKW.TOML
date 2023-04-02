@@ -71,7 +71,7 @@ public class TomlSerializer
         var table = new TomlTable();
         // 获取所有属性
         var properties = source.GetType().GetProperties();
-        var isITomlClass = source is ITomlClass;
+        var isITomlClass = source is ITomlClassComment;
 
         foreach (var propertyInfo in properties)
         {
@@ -82,21 +82,38 @@ public class TomlSerializer
             if (
                 isITomlClass
                 && (
-                    propertyInfo.Name == nameof(ITomlClass.ClassComment)
-                    || propertyInfo.Name == nameof(ITomlClass.ValueComments)
+                    propertyInfo.Name == nameof(ITomlClassComment.ClassComment)
+                    || propertyInfo.Name == nameof(ITomlClassComment.ValueComments)
                 )
             )
                 continue;
             // 获取属性的值
             if (propertyInfo.GetValue(source) is not object value)
                 continue;
+            // 获取名称
+            var name = GetTomlKeyName(propertyInfo) ?? propertyInfo.Name;
             // 创建Toml节点
             var node = CreateTomlNode(value);
-            table.Add(propertyInfo.Name, node);
+            table.TryAdd(name, node);
         }
         // 设置注释
-        SetComments(source as ITomlClass, table);
+        SetComments(source as ITomlClassComment, table);
         return table;
+    }
+
+    /// <summary>
+    /// 获取Toml键名特性的值
+    /// </summary>
+    /// <param name="propertyInfo"></param>
+    /// <returns></returns>
+    private static string? GetTomlKeyName(PropertyInfo propertyInfo)
+    {
+        // 检查TomlName特性
+        if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName tomlName)
+            return null;
+        if (string.IsNullOrWhiteSpace(tomlName.Name))
+            return null;
+        return tomlName.Name;
     }
 
     /// <summary>
@@ -122,14 +139,10 @@ public class TomlSerializer
         return source switch
         {
             bool => new TomlBoolean { Value = (bool)source },
-            string => new TomlString { Value = source != null ? source.ToString()! : string.Empty },
+            string => new TomlString { Value = (string)source },
 
             // 浮点型
-            float
-                => new TomlFloat
-                {
-                    Value = (double)Convert.ChangeType((float)source, TypeCode.Double)
-                },
+            float => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
             double => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
 
             // 整形
@@ -156,7 +169,7 @@ public class TomlSerializer
     /// </summary>
     /// <param name="iTomlClass">TomlClass接口</param>
     /// <param name="table">Toml表格</param>
-    private static void SetComments(ITomlClass? iTomlClass, TomlTable table)
+    private static void SetComments(ITomlClassComment? iTomlClass, TomlTable table)
     {
         if (iTomlClass is null)
             return;

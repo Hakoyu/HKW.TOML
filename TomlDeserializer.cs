@@ -14,16 +14,18 @@ namespace HKW.Libs.TOML;
 /// </summary>
 public class TomlDeserializer
 {
+    private static TomlDeserializerOptions s_options = null!;
+
     /// <summary>
     /// 从Toml文件反序列化
     /// </summary>
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="tomlFile">Toml文件</param>
     /// <returns>完成反序列化的对象</returns>
-    public static T DeserializeFromFile<T>(string tomlFile)
+    public static T DeserializeFromFile<T>(string tomlFile, TomlDeserializerOptions? options = null)
         where T : class, new()
     {
-        return Deserialize<T>(TOML.Parse(tomlFile));
+        return Deserialize<T>(TOML.Parse(tomlFile), options);
     }
 
     /// <summary>
@@ -32,10 +34,10 @@ public class TomlDeserializer
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="tomlFile">Toml文件</param>
     /// <returns>完成反序列化的对象</returns>
-    public static async Task<T> DeserializeFromFileAsync<T>(string tomlFile)
+    public static async Task<T> DeserializeFromFileAsync<T>(string tomlFile, TomlDeserializerOptions? options = null)
         where T : class, new()
     {
-        return await DeserializeAsync<T>(TOML.Parse(tomlFile));
+        return await DeserializeAsync<T>(TOML.Parse(tomlFile), options);
     }
 
     /// <summary>
@@ -44,11 +46,13 @@ public class TomlDeserializer
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="table">Toml表格</param>
     /// <returns>完成反序列化的对象</returns>
-    public static T Deserialize<T>(TomlTable table)
+    public static T Deserialize<T>(TomlTable table, TomlDeserializerOptions? options = null)
         where T : class, new()
     {
         var t = new T();
+        s_options = options ?? new();
         DeserializeTable(t, t.GetType(), table);
+        s_options = null!;
         return t;
     }
 
@@ -58,14 +62,16 @@ public class TomlDeserializer
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="table">Toml表格</param>
     /// <returns>完成反序列化的对象</returns>
-    public static async Task<T> DeserializeAsync<T>(TomlTable table)
+    public static async Task<T> DeserializeAsync<T>(TomlTable table, TomlDeserializerOptions? options = null)
         where T : class, new()
     {
         var t = new T();
+        s_options = options ?? new();
         await Task.Run(() =>
         {
             DeserializeTable(t, t.GetType(), table);
         });
+        s_options = null!;
         return t;
     }
 
@@ -78,7 +84,7 @@ public class TomlDeserializer
     private static void DeserializeTable(object target, Type type, TomlTable table)
     {
         // 设置注释
-        var iTomlClass = target as ITomlClass;
+        var iTomlClass = target as ITomlClassComment;
         if (iTomlClass is not null)
         {
             iTomlClass.ClassComment = table.Comment ?? string.Empty;
@@ -99,12 +105,12 @@ public class TomlDeserializer
             DeserializeTableValue(target, node, propertyInfo);
         }
 
-        // 检查是TomlName特性
+        // 检查TomlName特性
         CheckTomlName(target, type, table);
     }
 
     /// <summary>
-    /// 检查是TomlName特性
+    /// 检查TomlName特性
     /// </summary>
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
@@ -113,7 +119,7 @@ public class TomlDeserializer
     {
         foreach (var propertyInfo in type.GetProperties())
         {
-            if (propertyInfo.GetCustomAttribute<TomlName>() is not TomlName tomlName)
+            if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName tomlName)
                 continue;
             if (string.IsNullOrWhiteSpace(tomlName.Name))
                 continue;
@@ -275,9 +281,15 @@ public class TomlDeserializer
     {
         if (string.IsNullOrWhiteSpace(str))
             return str;
-        var strs = str.Split("_");
+        // 使用分隔符拆分单词
+        var strs = str.Split(s_options.KeyWordSeparator);
+        // 将单词首字母大写
         var newStrs = strs.Select(s => FirstLetterToUpper(s));
-        return string.Join("", newStrs);
+        // 是否保留分隔符
+        if (s_options.RemoveKeyWordSeparator)
+            return string.Join("", newStrs);
+        else
+            return string.Join(s_options.KeyWordSeparator, newStrs);
     }
 
     /// <summary>
@@ -286,6 +298,24 @@ public class TomlDeserializer
     /// <param name="str">字符串</param>
     /// <returns>第一个为大写的字符串</returns>
     private static string FirstLetterToUpper(string str) => $"{char.ToUpper(str[0])}{str[1..]}";
+}
+
+/// <summary>
+/// Toml反序列化设置
+/// </summary>
+public class TomlDeserializerOptions
+{
+    /// <summary>
+    /// 删除键的单词分隔符 如 "_"
+    /// <para>默认为 <see langword="true"/></para>
+    /// </summary>
+    public bool RemoveKeyWordSeparator { get; set; } = true;
+
+    /// <summary>
+    /// 单词分隔符
+    /// <para>默认为 "<see langword="_"/>"</para>
+    /// </summary>
+    public string KeyWordSeparator { get; set; } = "_";
 }
 
 /// <summary>
@@ -300,12 +330,12 @@ public class TomlIgnore : Attribute { }
 /// <para>指定Toml键的名称</para>
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class TomlName : Attribute
+public class TomlKeyName : Attribute
 {
     /// <summary>
     /// 键名
     /// </summary>
     public string Name { get; }
 
-    public TomlName(string name) => Name = name;
+    public TomlKeyName(string name) => Name = name;
 }

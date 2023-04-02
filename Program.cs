@@ -2,24 +2,23 @@
 using HKW.Libs.TOML;
 var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
 var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
-var classString = TomlAsClasses.Construct("Test", TOML.Parse(file), new() { AddComment = true });
-Console.WriteLine(classString);
+//var classString = TomlAsClasses.Construct("Test", TOML.Parse(file), new() { AddComment = true });
+//Console.WriteLine(classString);
 
 //var table = TOML.Parse(file);
-//var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
-//await TomlSerializer.SerializerToFileAsync(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
+var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
+await TomlSerializer.SerializerToFileAsync(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
 //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
 //Console.WriteLine(test);
 Console.WriteLine();
 
-public class Test : ITomlClass
+public class Test : ITomlClassComment
 {
     public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
 
-    [TomlName("title")]
+    [TomlKeyName("title")]
     public string AAA { get; set; }
-    public string Title { get; set; }
     public int Int1 { get; set; }
     public long Long1 { get; set; }
     public List<NoopClass0> Noop { get; set; }
@@ -33,7 +32,7 @@ public class NoopClass0
     public int B { get; set; }
     public int C { get; set; }
 }
-public class OwnerClass : ITomlClass
+public class OwnerClass : ITomlClassComment
 {
     public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
@@ -42,7 +41,7 @@ public class OwnerClass : ITomlClass
     public DateTime Date { get; set; }
     public DateTimeOffset Dob { get; set; }
 }
-public class DatabaseClass : ITomlClass
+public class DatabaseClass : ITomlClassComment
 {
     public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
@@ -53,7 +52,7 @@ public class DatabaseClass : ITomlClass
     public List<List<TomlNode>> Data { get; set; }
     public TempTargetsClass TempTargets { get; set; }
 }
-public class TempTargetsClass : ITomlClass
+public class TempTargetsClass : ITomlClassComment
 {
     public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
@@ -61,7 +60,7 @@ public class TempTargetsClass : ITomlClass
     public double Cpu { get; set; }
     public double Apu { get; set; }
 }
-public class ServersClass : ITomlClass
+public class ServersClass : ITomlClassComment
 {
     public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
@@ -69,7 +68,7 @@ public class ServersClass : ITomlClass
     public AlphaClass Alpha { get; set; }
     public BetaClass Beta { get; set; }
 }
-public class AlphaClass : ITomlClass
+public class AlphaClass : ITomlClassComment
 {
     public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
@@ -77,7 +76,7 @@ public class AlphaClass : ITomlClass
     public string Ip { get; set; }
     public string Role { get; set; }
 }
-public class BetaClass : ITomlClass
+public class BetaClass : ITomlClassComment
 {
     public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();

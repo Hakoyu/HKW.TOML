@@ -756,9 +756,9 @@ public class TomlAsClassesOptions
 
     /// <summary>
     /// ITomlClass接口名称
-    /// <para>默认为 <see langword="nameof(ITomlClass)"/></para>
+    /// <para>默认为 <see langword="nameof(ITomlClassComment)"/></para>
     /// </summary>
-    public string ITomlClassInterface { get; set; } = nameof(ITomlClass);
+    public string ITomlClassInterface { get; set; } = nameof(ITomlClassComment);
 
     /// <summary>
     /// 缩进
