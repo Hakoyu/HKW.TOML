@@ -2,12 +2,12 @@
 using HKW.Libs.TOML;
 var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
 var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
-//var classString = TomlAsClasses.Construct("Test", TOML.Parse(file));
-//Console.WriteLine(classString);
+var classString = TomlAsClasses.Construct("Test", TOML.Parse(file), new() { AddComment = true });
+Console.WriteLine(classString);
 
 //var table = TOML.Parse(file);
-var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
-TomlSerializer.SerializerToFile(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
+//var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
+//await TomlSerializer.SerializerToFileAsync(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
 //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
 //Console.WriteLine(test);
 Console.WriteLine();

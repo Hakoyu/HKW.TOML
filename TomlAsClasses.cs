@@ -107,19 +107,19 @@ public partial class TomlAsClasses
     {
         s_arrayTypeNames.Add(
             s_options.TomlFloatConvertName,
-            string.Format(s_options.TomlArrayFormat, s_options.TomlFloatConvertName)
+            string.Format(s_options.ListFormat, s_options.TomlFloatConvertName)
         );
         s_arrayTypeNames.Add(
             s_options.TomlIntegerConvertName,
-            string.Format(s_options.TomlArrayFormat, s_options.TomlIntegerConvertName)
+            string.Format(s_options.ListFormat, s_options.TomlIntegerConvertName)
         );
         s_arrayTypeNames.Add(
             s_options.TomlInteger64ConvertName,
-            string.Format(s_options.TomlArrayFormat, s_options.TomlInteger64ConvertName)
+            string.Format(s_options.ListFormat, s_options.TomlInteger64ConvertName)
         );
         s_arrayTypeNames.Add(
             nameof(TomlNode),
-            string.Format(s_options.TomlArrayFormat, nameof(TomlNode))
+            string.Format(s_options.ListFormat, nameof(TomlNode))
         );
     }
 
@@ -228,7 +228,7 @@ public partial class TomlAsClasses
         {
             typeName = ParseTableInArrayValue(name, array);
             // 匿名类不需要缓存
-            return string.Format(s_options.TomlArrayFormat, typeName);
+            return string.Format(s_options.ListFormat, typeName);
         }
         else
             typeName = s_options.GetConvertName(
@@ -237,7 +237,7 @@ public partial class TomlAsClasses
             );
 
         // 将数组名缓存
-        s_arrayTypeNames.TryAdd(typeName, string.Format(s_options.TomlArrayFormat, typeName));
+        s_arrayTypeNames.TryAdd(typeName, string.Format(s_options.ListFormat, typeName));
         return s_arrayTypeNames[typeName];
     }
 
@@ -332,7 +332,7 @@ public partial class TomlAsClasses
     {
         // 获取匿名类名称
         var anonymousClassName = string.Format(
-            s_options.TomlTableInArrayFormat,
+            s_options.AnonymousClassNameFormat,
             name,
             s_anonymousTableCount++
         );
@@ -463,7 +463,7 @@ public partial class TomlAsClasses
                 sb.AppendLine(item.ToString());
 
             var classData = string.Format(
-                s_options.TomlTableFormat,
+                s_options.ClassFormat,
                 nameAndInterfaces,
                 sb.ToString()
             );
@@ -472,7 +472,7 @@ public partial class TomlAsClasses
             if (string.IsNullOrWhiteSpace(Comment))
                 return classData;
             else
-                return string.Format(s_options.CommentFormat, Comment) + classData;
+                return string.Format(s_options.CommentFormat, string.Empty, Comment) + classData;
         }
 
         public TomlClassValue this[string key]
@@ -585,12 +585,35 @@ public partial class TomlAsClasses
         /// <returns>字符串</returns>
         public override string ToString()
         {
-            var valueData = string.Format(s_options.TomlValueFormat, TypeName, Name);
+            var valueData = string.Format(
+                s_options.ValueFormat,
+                s_options.Indent,
+                TypeName,
+                Name
+            );
             // 添加注释
             if (string.IsNullOrWhiteSpace(Comment))
                 return valueData;
-            else
-                return string.Format(s_options.ValueCommentFormat, Comment) + valueData;
+
+            var comments = Comment.Split(
+                new[] { '\r', '\n' },
+                StringSplitOptions.RemoveEmptyEntries
+            );
+            if (comments.Length is 1)
+                return string.Format(s_options.CommentFormat, s_options.Indent, Comment)
+                    + valueData;
+
+            var multiLineComment =
+                comments[0]
+                + "\n"
+                + string.Join(
+                    "\n",
+                    comments[1..].Select(
+                        s => string.Format(s_options.CommentParaFormat, s_options.Indent, s)
+                    )
+                );
+            return string.Format(s_options.CommentFormat, s_options.Indent, multiLineComment)
+                + valueData;
         }
     }
 
@@ -734,6 +757,12 @@ public class TomlAsClassesOptions
     public string ITomlClassInterface { get; set; } = nameof(ITomlClass);
 
     /// <summary>
+    /// 缩进
+    /// <para>默认为 "<see langword="    "/>"</para>
+    /// </summary>
+    public string Indent { get; set; } = "    ";
+
+    /// <summary>
     /// TomlClass接口值名称
     /// <para>默认为
     /// <![CDATA[
@@ -806,25 +835,25 @@ public class TomlAsClassesOptions
     /// 数组格式化文本
     /// <para>默认为 "<see langword="List&lt;{0}&gt;"/>"</para>
     /// </summary>
-    public string TomlArrayFormat { get; set; } = "List<{0}>";
+    public string ListFormat { get; set; } = "List<{0}>";
 
     /// <summary>
     /// 匿名类名称格式化文本
     /// <para>默认为 "<see langword="{0}Class{1}"/>"</para>
     /// </summary>
-    public string TomlTableInArrayFormat { get; set; } = "{0}Class{1}";
+    public string AnonymousClassNameFormat { get; set; } = "{0}Class{1}";
 
     /// <summary>
     /// 属性格式化文本
-    /// <para>默认为 "<see langword="    public {0} {1} {{ get; set; }}"/>"</para>
+    /// <para>默认为 "<see langword="{0}public {1} {2} {{ get; set; }}"/>"</para>
     /// </summary>
-    public string TomlValueFormat { get; set; } = "    public {0} {1} {{ get; set; }}";
+    public string ValueFormat { get; set; } = "{0}public {1} {2} {{ get; set; }}";
 
     /// <summary>
     /// 类格式化文本
     /// <para>默认为 "<see langword="public class {0} \n{{\n{1}}}\n"/>"</para>
     /// </summary>
-    public string TomlTableFormat { get; set; } = "public class {0} \n{{\n{1}}}\n";
+    public string ClassFormat { get; set; } = "public class {0} \n{{\n{1}}}\n";
 
     /// <summary>
     /// 接口格式化文本
@@ -834,16 +863,15 @@ public class TomlAsClassesOptions
 
     /// <summary>
     /// 注释格式化文本
-    /// <para>默认为 "<see langword="/// &lt;summary&gt;\n/// {0}\n/// &lt;/summary&gt;\n"/>"</para>
+    /// <para>默认为 "<see langword="{0}/// &lt;summary&gt;\n{0}/// {1}\n{0}/// &lt;/summary&gt;\n"/>"</para>
     /// </summary>
-    public string CommentFormat { get; set; } = "/// <summary>\n/// {0}\n/// </summary>\n";
+    public string CommentFormat { get; set; } = "{0}/// <summary>\n{0}/// {1}\n{0}/// </summary>\n";
 
     /// <summary>
-    /// 注释格式化文本
-    /// <para>默认为 "<see langword="    /// &lt;summary&gt;\n    /// {0}\n    /// &lt;/summary&gt;\n"/>"</para>
+    /// 多行注释格式化文本
+    /// <para>"<see langword="{0}/// &lt;para&gt;{1}&lt;/para&gt;"/>"</para>
     /// </summary>
-    public string ValueCommentFormat { get; set; } =
-        "    /// <summary>\n    /// {0}\n    /// </summary>\n";
+    public string CommentParaFormat { get; set; } = "{0}/// <para>{1}</para>";
     #endregion
     /// <summary>
     /// 获取转换后的名称
