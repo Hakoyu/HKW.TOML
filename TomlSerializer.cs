@@ -13,6 +13,11 @@ namespace HKW.Libs.TOML;
 /// </summary>
 public class TomlSerializer
 {
+    /// <summary>
+    /// Toml序列化设置
+    /// </summary>
+    private static TomlSerializerOptions s_options = null!;
+
     private TomlSerializer() { }
 
     /// <summary>
@@ -20,9 +25,13 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <param name="tomlFile">Toml文件</param>
-    public static void SerializerToFile(object source, string tomlFile)
+    public static void SerializerToFile(
+        object source,
+        string tomlFile,
+        TomlSerializerOptions? option = null
+    )
     {
-        CreateTomlTable(source).SaveTo(tomlFile);
+        Serializer(source, option).SaveTo(tomlFile);
     }
 
     /// <summary>
@@ -30,12 +39,13 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <param name="tomlFile">Toml文件</param>
-    public static async Task SerializerToFileAsync(object source, string tomlFile)
+    public static async Task SerializerToFileAsync(
+        object source,
+        string tomlFile,
+        TomlSerializerOptions? option = null
+    )
     {
-        await Task.Run(() =>
-        {
-            CreateTomlTable(source).SaveTo(tomlFile);
-        });
+        (await SerializerAsync(source, option)).SaveTo(tomlFile);
     }
 
     /// <summary>
@@ -43,9 +53,12 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <returns>Toml表格数据</returns>
-    public static TomlTable Serializer(object source)
+    public static TomlTable Serializer(object source, TomlSerializerOptions? option = null)
     {
-        return CreateTomlTable(source);
+        s_options = option ?? new();
+        var table = CreateTomlTable(source);
+        s_options = null!;
+        return table;
     }
 
     /// <summary>
@@ -53,12 +66,18 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <returns>Toml表格数据</returns>
-    public static async Task<TomlTable> SerializerAsync(object source)
+    public static async Task<TomlTable> SerializerAsync(
+        object source,
+        TomlSerializerOptions? option = null
+    )
     {
-        return await Task.Run(() =>
+        s_options = option ?? new();
+        var table = await Task.Run(() =>
         {
             return CreateTomlTable(source);
         });
+        s_options = null!;
+        return table;
     }
 
     /// <summary>
@@ -70,7 +89,7 @@ public class TomlSerializer
     {
         var table = new TomlTable();
         // 获取所有属性
-        var properties = source.GetType().GetProperties();
+        var properties = GetGetProperties(source);
         var isITomlClass = source is ITomlClassComment;
 
         foreach (var propertyInfo in properties)
@@ -99,6 +118,23 @@ public class TomlSerializer
         // 设置注释
         SetComments(source as ITomlClassComment, table);
         return table;
+    }
+
+    /// <summary>
+    /// 获取源中的所有属性
+    /// </summary>
+    /// <param name="source">源</param>
+    /// <returns>经过排序后的属性</returns>
+    private static PropertyInfo[] GetGetProperties(object source)
+    {
+        var properties = source.GetType().GetProperties();
+        // 使用自定义比较器排序
+        if (s_options.PropertiesOrderComparer is not null)
+            Array.Sort(properties, s_options.PropertiesOrderComparer);
+        // 判断是否倒序
+        if (s_options.PropertiesReverseOrder)
+            Array.Reverse(properties);
+        return properties;
     }
 
     /// <summary>
@@ -186,4 +222,20 @@ public class TomlSerializer
                 table[name].Comment = comment;
         }
     }
+}
+
+/// <summary>
+/// Toml序列化设置
+/// </summary>
+public class TomlSerializerOptions
+{
+    /// <summary>
+    /// 属性排序比较器
+    /// </summary>
+    public IComparer<PropertyInfo>? PropertiesOrderComparer { get; set; }
+
+    /// <summary>
+    /// 属性倒序排列
+    /// </summary>
+    public bool PropertiesReverseOrder { get; set; } = false;
 }

@@ -322,14 +322,14 @@ public class TomlDeserializerOptions
 /// Toml忽略值
 /// <para>在序列化和反序列化时忽略的值</para>
 /// </summary>
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 public class TomlIgnore : Attribute { }
 
 /// <summary>
 /// Toml名称
 /// <para>指定Toml键的名称</para>
 /// </summary>
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
 public class TomlKeyName : Attribute
 {
     /// <summary>
