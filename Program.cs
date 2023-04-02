@@ -14,7 +14,7 @@ Console.WriteLine();
 
 public class Test : ITomlClass
 {
-    public string TableComment { get; set; } = string.Empty;
+    public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
 
     [TomlName("title")]
@@ -35,7 +35,7 @@ public class NoopClass0
 }
 public class OwnerClass : ITomlClass
 {
-    public string TableComment { get; set; } = string.Empty;
+    public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
 
     public string Name { get; set; }
@@ -44,7 +44,7 @@ public class OwnerClass : ITomlClass
 }
 public class DatabaseClass : ITomlClass
 {
-    public string TableComment { get; set; } = string.Empty;
+    public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
 
     public bool Enabled { get; set; }
@@ -55,7 +55,7 @@ public class DatabaseClass : ITomlClass
 }
 public class TempTargetsClass : ITomlClass
 {
-    public string TableComment { get; set; } = string.Empty;
+    public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
 
     public double Cpu { get; set; }
@@ -63,7 +63,7 @@ public class TempTargetsClass : ITomlClass
 }
 public class ServersClass : ITomlClass
 {
-    public string TableComment { get; set; } = string.Empty;
+    public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
 
     public AlphaClass Alpha { get; set; }
@@ -71,7 +71,7 @@ public class ServersClass : ITomlClass
 }
 public class AlphaClass : ITomlClass
 {
-    public string TableComment { get; set; } = string.Empty;
+    public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
 
     public string Ip { get; set; }
@@ -79,7 +79,7 @@ public class AlphaClass : ITomlClass
 }
 public class BetaClass : ITomlClass
 {
-    public string TableComment { get; set; } = string.Empty;
+    public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
 
     public string Ip { get; set; }

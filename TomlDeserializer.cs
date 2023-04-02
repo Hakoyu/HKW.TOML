@@ -81,7 +81,7 @@ public class TomlDeserializer
         var iTomlClass = target as ITomlClass;
         if (iTomlClass is not null)
         {
-            iTomlClass.TableComment = table.Comment ?? string.Empty;
+            iTomlClass.ClassComment = table.Comment ?? string.Empty;
             iTomlClass.ValueComments ??= new();
         }
 

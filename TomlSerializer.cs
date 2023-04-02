@@ -82,7 +82,7 @@ public class TomlSerializer
             if (
                 isITomlClass
                 && (
-                    propertyInfo.Name == nameof(ITomlClass.TableComment)
+                    propertyInfo.Name == nameof(ITomlClass.ClassComment)
                     || propertyInfo.Name == nameof(ITomlClass.ValueComments)
                 )
             )
@@ -160,8 +160,8 @@ public class TomlSerializer
     {
         if (iTomlClass is null)
             return;
-        if (string.IsNullOrWhiteSpace(iTomlClass.TableComment) is false)
-            table.Comment = iTomlClass.TableComment;
+        if (string.IsNullOrWhiteSpace(iTomlClass.ClassComment) is false)
+            table.Comment = iTomlClass.ClassComment;
         // 检查值注释
         if (iTomlClass.ValueComments?.Any() is null or false)
             return;

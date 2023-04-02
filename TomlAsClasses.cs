@@ -137,7 +137,7 @@ public partial class TomlAsClasses
         bool isAnonymousClass = false
     )
     {
-        var tomlClass =  GetTomlClass(className, parentClassName, table, isAnonymousClass);
+        var tomlClass = GetTomlClass(className, parentClassName, table, isAnonymousClass);
 
         foreach (var kv in table)
         {
@@ -156,7 +156,12 @@ public partial class TomlAsClasses
         }
     }
 
-    private static TomlClass GetTomlClass(string className, string parentClassName, TomlTable table, bool isAnonymousClass = false)
+    private static TomlClass GetTomlClass(
+        string className,
+        string parentClassName,
+        TomlTable table,
+        bool isAnonymousClass = false
+    )
     {
         // 检测关键字
         if (s_csharpKeywords.Contains(className))
@@ -457,7 +462,9 @@ public partial class TomlAsClasses
             if (Interfaces.Any())
             {
                 if (Interfaces.Contains(s_options.ITomlClassInterface))
-                    sb.AppendLine(s_options.ITomlClassInterfaceValue);
+                    sb.AppendLine(
+                        string.Format(s_options.ITomlClassInterfaceValueFomat, s_options.Indent)
+                    );
                 nameAndInterfaces =
                     Name + string.Format(s_options.InterfaceFormat, string.Join(", ", Interfaces));
             }
@@ -468,11 +475,7 @@ public partial class TomlAsClasses
             foreach (var item in s_tomlClassValues.Values)
                 sb.AppendLine(item.ToString());
 
-            var classData = string.Format(
-                s_options.ClassFormat,
-                nameAndInterfaces,
-                sb.ToString()
-            );
+            var classData = string.Format(s_options.ClassFormat, nameAndInterfaces, sb.ToString());
 
             // 设置注释
             if (string.IsNullOrWhiteSpace(Comment))
@@ -591,12 +594,7 @@ public partial class TomlAsClasses
         /// <returns>字符串</returns>
         public override string ToString()
         {
-            var valueData = string.Format(
-                s_options.ValueFormat,
-                s_options.Indent,
-                TypeName,
-                Name
-            );
+            var valueData = string.Format(s_options.ValueFormat, s_options.Indent, TypeName, Name);
             // 添加注释
             if (string.IsNullOrWhiteSpace(Comment))
                 return valueData;
@@ -768,19 +766,6 @@ public class TomlAsClassesOptions
     /// </summary>
     public string Indent { get; set; } = "    ";
 
-    /// <summary>
-    /// TomlClass接口值名称
-    /// <para>默认为
-    /// <![CDATA[
-    /// public string TableComment { get; set; } = string.Empty;
-    /// public Dictionary<string, string> ValueComments { get; set; } = new();
-    /// ]]>
-    /// </para>
-    /// </summary>
-    public string ITomlClassInterfaceValue { get; set; } =
-        "    public string TableComment { get; set; } = string.Empty;\n"
-        + "    public Dictionary<string, string> ValueComments { get; set; } = new();\n";
-
     #region ConvertName
     /// <summary>
     /// TomlBoolean类型转换名称
@@ -878,6 +863,21 @@ public class TomlAsClassesOptions
     /// <para>"<see langword="{0}/// &lt;para&gt;{1}&lt;/para&gt;"/>"</para>
     /// </summary>
     public string CommentParaFormat { get; set; } = "{0}/// <para>{1}</para>";
+
+    /// <summary>
+    /// TomlClass接口值格式化文本
+    /// <para>默认为
+    /// <![CDATA[
+    /// {0}/// <inheritdoc/>
+    /// {0}public string ClassComment { get; set; } = string.Empty;
+    /// {0}/// <inheritdoc/>
+    /// {0}public Dictionary<string, string> ValueComments { get; set; } = new();
+    /// ]]>
+    /// </para>
+    /// </summary>
+    public string ITomlClassInterfaceValueFomat { get; set; } =
+        "{0}/// <inheritdoc/>\n{0}public string TableComment { get; set; } = string.Empty;\n"
+        + "{0}/// <inheritdoc/>\n{0}public Dictionary<string, string> ValueComments { get; set; } = new();\n";
     #endregion
     /// <summary>
     /// 获取转换后的名称
