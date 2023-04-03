@@ -627,15 +627,14 @@ public class TomlString : TomlNode
         );
         var result = PreferLiteral ? Value : Value.Escape(!IsMultiline);
         if (IsMultiline)
+        {
             result = result.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
-        if (
-            IsMultiline
-            && (
+            if (
                 MultilineTrimFirstLine
                 || !MultilineTrimFirstLine && result.StartsWith(Environment.NewLine)
             )
-        )
-            result = $"{Environment.NewLine}{result}";
+                result = $"{Environment.NewLine}{result}";
+        }
         return $"{quotes}{result}{quotes}";
     }
 }
@@ -1146,15 +1145,17 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
             var collapsed = CollectCollapsedItems(normalizeOrder: false);
 
             if (collapsed.Count != 0)
-                sb.Append(' ')
-                    .Append(
-                        $"{TomlSyntax.ITEM_SEPARATOR} ".Join(
-                            collapsed.Select(
-                                n =>
-                                    $"{n.Key} {TomlSyntax.KEY_VALUE_SEPARATOR} {n.Value.ToInlineToml()}"
-                            )
+            {
+                sb.Append(' ');
+                sb.Append(
+                    $"{TomlSyntax.ITEM_SEPARATOR} ".Join(
+                        collapsed.Select(
+                            n =>
+                                $"{n.Key} {TomlSyntax.KEY_VALUE_SEPARATOR} {n.Value.ToInlineToml()}"
                         )
-                    );
+                    )
+                );
+            }
             sb.Append(' ');
         }
 
@@ -1178,10 +1179,10 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         var nodes = new LinkedList<KeyValuePair<string, TomlNode>>();
         var postNodes = normalizeOrder ? new LinkedList<KeyValuePair<string, TomlNode>>() : nodes;
 
-        foreach (var keyValuePair in RawTable)
+        foreach (var kv in RawTable)
         {
-            var node = keyValuePair.Value;
-            var key = keyValuePair.Key.AsKey();
+            var node = kv.Value;
+            var key = kv.Key.AsKey();
 
             if (node is TomlTable table)
             {
@@ -1195,8 +1196,8 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
                 {
                     postNodes.AddLast(new KeyValuePair<string, TomlNode>($"{prefix}{key}", node));
                 }
-                foreach (var kv in subnodes)
-                    postNodes.AddLast(kv);
+                foreach (var subKV in subnodes)
+                    postNodes.AddLast(subKV);
             }
             else if (node.CollapseLevel == level)
                 nodes.AddLast(new KeyValuePair<string, TomlNode>($"{prefix}{key}", node));
@@ -1451,7 +1452,7 @@ public class TOMLParser : IDisposable
     /// </summary>
     private int s_column;
 
-    private List<TomlSyntaxException> syntaxErrors = null!;
+    private List<TomlSyntaxException> s_syntaxErrors = null!;
 
     /// <summary>
     /// 从文本读入器解析
@@ -1479,15 +1480,15 @@ public class TOMLParser : IDisposable
     /// <exception cref="TomlParseException">解析错误</exception>
     public TomlTable Parse()
     {
-        syntaxErrors = new List<TomlSyntaxException>();
+        s_syntaxErrors = new List<TomlSyntaxException>();
         s_line = s_column = 1;
         var rootTable = new TomlTable();
         var currentTable = rootTable;
         s_currentState = ParseState.None;
         var keyParts = new List<string>();
-        var arrayTable = false;
+        var isArrayTable = false;
         StringBuilder latestComment = null!;
-        var firstComment = true;
+        var isFirstComment = true;
 
         int currentChar;
         while ((currentChar = s_reader.Peek()) >= 0)
@@ -1496,196 +1497,295 @@ public class TOMLParser : IDisposable
 
             if (s_currentState is ParseState.None)
             {
-                // Skip white space
-                if (TomlSyntax.IsWhiteSpace(c))
-                    goto consume_character;
-
-                if (TomlSyntax.IsNewLine(c))
+                if (
+                    ParseNone(c, rootTable, ref isFirstComment, ref latestComment)
+                    is bool noneParsed
+                )
                 {
-                    // Check if there are any comments and so far no items being declared
-                    if (latestComment is not null && firstComment)
-                    {
-                        rootTable.Comment = latestComment.ToString().TrimEnd();
-                        latestComment = null!;
-                        firstComment = false;
-                    }
-
-                    if (TomlSyntax.IsLineBreak(c))
-                        AdvanceLine();
-
-                    goto consume_character;
-                }
-
-                // Start of a comment; ignore until newline
-                if (c is TomlSyntax.COMMENT_SYMBOL)
-                {
-                    latestComment ??= new StringBuilder();
-                    latestComment.AppendLine(ParseComment());
-                    AdvanceLine(1);
-                    continue;
-                }
-
-                // Encountered a non-comment value. The comment must belong to it (ignore possible newlines)!
-                firstComment = false;
-
-                if (c is TomlSyntax.TABLE_START_SYMBOL)
-                {
-                    s_currentState = ParseState.Table;
-                    goto consume_character;
-                }
-
-                if (TomlSyntax.IsBareKey(c) || TomlSyntax.IsQuoted(c))
-                {
-                    s_currentState = ParseState.KeyValuePair;
-                }
-                else
-                {
-                    AddError($"Unexpected character \"{c}\"");
+                    if (noneParsed)
+                        ConsumeCharacter();
                     continue;
                 }
             }
             if (s_currentState is ParseState.KeyValuePair)
             {
-                var keyValuePair = ReadKeyValuePair(keyParts);
-
-                if (keyValuePair == null)
-                {
-                    latestComment = null!;
-                    keyParts.Clear();
-
-                    if (s_currentState != ParseState.None)
-                        AddError("Failed to parse key-value pair!");
+                if (ParseKeyValuePair(currentTable, keyParts, ref latestComment))
                     continue;
-                }
-
-                keyValuePair.Comment = latestComment?.ToString()?.TrimEnd()!;
-                var inserted = InsertNode(keyValuePair, currentTable, keyParts);
-                latestComment = null!;
-                keyParts.Clear();
-                if (inserted)
-                    s_currentState = ParseState.SkipToNextLine;
-                continue;
             }
             if (s_currentState is ParseState.Table)
             {
-                if (keyParts.Count == 0)
+                if (
+                    ParseTable(
+                        c,
+                        rootTable,
+                        ref currentTable,
+                        keyParts,
+                        ref isArrayTable,
+                        ref latestComment
+                    )
+                    is bool tableParsed
+                )
                 {
-                    // We have array table
-                    if (c is TomlSyntax.TABLE_START_SYMBOL)
-                    {
-                        // Consume the character
-                        ConsumeChar();
-                        arrayTable = true;
-                    }
-
-                    if (!ReadKeyName(ref keyParts, TomlSyntax.TABLE_END_SYMBOL))
-                    {
-                        keyParts.Clear();
-                        continue;
-                    }
-
-                    if (keyParts.Count == 0)
-                    {
-                        AddError("Table name is emtpy.");
-                        arrayTable = false;
-                        latestComment = null!;
-                        keyParts.Clear();
-                    }
-
+                    if (tableParsed)
+                        ConsumeCharacter();
                     continue;
-                }
-
-                if (c is TomlSyntax.TABLE_END_SYMBOL)
-                {
-                    if (arrayTable)
-                    {
-                        // Consume the ending bracket so we can peek the next character
-                        ConsumeChar();
-                        var nextChar = s_reader.Peek();
-                        if (nextChar < 0 || (char)nextChar != TomlSyntax.TABLE_END_SYMBOL)
-                        {
-                            AddError(
-                                $"Array table {".".Join(keyParts)} has only one closing bracket."
-                            );
-                            keyParts.Clear();
-                            arrayTable = false;
-                            latestComment = null!;
-                            continue;
-                        }
-                    }
-
-                    currentTable = CreateTable(rootTable, keyParts, arrayTable);
-                    if (currentTable is not null)
-                    {
-                        currentTable.IsInline = false;
-                        currentTable.Comment = latestComment?.ToString()?.TrimEnd()!;
-                    }
-
-                    keyParts.Clear();
-                    arrayTable = false;
-                    latestComment = null!;
-
-                    if (currentTable == null)
-                    {
-                        if (s_currentState != ParseState.None)
-                            AddError("Error creating table array!");
-                        // Reset a node to root in order to try and continue parsing
-                        currentTable = rootTable;
-                        continue;
-                    }
-
-                    s_currentState = ParseState.SkipToNextLine;
-                    goto consume_character;
-                }
-
-                if (keyParts.Count != 0)
-                {
-                    AddError($"Unexpected character \"{c}\"");
-                    keyParts.Clear();
-                    arrayTable = false;
-                    latestComment = null!;
                 }
             }
             if (s_currentState is ParseState.SkipToNextLine)
             {
-                if (TomlSyntax.IsWhiteSpace(c) || c is TomlSyntax.NEWLINE_CARRIAGE_RETURN_CHARACTER)
-                    goto consume_character;
-
-                if (c is TomlSyntax.COMMENT_SYMBOL or TomlSyntax.NEWLINE_CHARACTER)
+                if (ParseSkipToNextLine(c) is bool skipPased)
                 {
-                    s_currentState = ParseState.None;
-                    AdvanceLine();
-
-                    if (c is TomlSyntax.COMMENT_SYMBOL)
-                    {
-                        s_column++;
-                        ParseComment();
-                        continue;
-                    }
-
-                    goto consume_character;
+                    if (skipPased)
+                        ConsumeCharacter();
+                    continue;
                 }
-
-                AddError($"Unexpected character \"{c}\" at the end of the line.");
             }
-
-        consume_character:
-            s_reader.Read();
-            s_column++;
+            ConsumeCharacter();
         }
 
         if (s_currentState != ParseState.None && s_currentState != ParseState.SkipToNextLine)
             AddError("Unexpected end of file!");
 
-        if (syntaxErrors.Count > 0)
-            throw new TomlParseException(rootTable, syntaxErrors);
+        if (s_syntaxErrors.Count > 0)
+            throw new TomlParseException(rootTable, s_syntaxErrors);
 
         return rootTable;
     }
 
+    private void ConsumeCharacter()
+    {
+        s_reader.Read();
+        s_column++;
+    }
+
+    /// <summary>
+    /// 解析空字符
+    /// </summary>
+    /// <param name="c">字符</param>
+    /// <param name="rootTable">原始表格</param>
+    /// <param name="isFirstComment">是首个注释</param>
+    /// <param name="latestComment">末尾注释</param>
+    /// <returns>消耗字符并跳过为 <see langword="true"/> 只跳过为 <see langword="false"/> 不操作为 <see langword="null"/></returns>
+    private bool? ParseNone(
+        char c,
+        TomlTable rootTable,
+        ref bool isFirstComment,
+        ref StringBuilder latestComment
+    )
+    {
+        // Skip white space
+        if (TomlSyntax.IsWhiteSpace(c))
+            return true;
+
+        if (TomlSyntax.IsNewLine(c))
+        {
+            // Check if there are any comments and so far no items being declared
+            if (latestComment is not null && isFirstComment)
+            {
+                rootTable.Comment = latestComment.ToString().TrimEnd();
+                latestComment = null!;
+                isFirstComment = false;
+            }
+
+            if (TomlSyntax.IsLineBreak(c))
+                AdvanceLine();
+
+            return true;
+        }
+
+        // Start of a comment; ignore until newline
+        if (c is TomlSyntax.COMMENT_SYMBOL)
+        {
+            latestComment ??= new StringBuilder();
+            latestComment.AppendLine(ParseComment());
+            AdvanceLine(1);
+            return false;
+        }
+
+        // Encountered a non-comment value. The comment must belong to it (ignore possible newlines)!
+        isFirstComment = false;
+
+        if (c is TomlSyntax.TABLE_START_SYMBOL)
+        {
+            s_currentState = ParseState.Table;
+            return true;
+        }
+
+        if (TomlSyntax.IsBareKey(c) || TomlSyntax.IsQuoted(c))
+        {
+            s_currentState = ParseState.KeyValuePair;
+            return null;
+        }
+        else
+        {
+            AddError($"Unexpected character \"{c}\"");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 解析键值对
+    /// </summary>
+    /// <param name="currentTable">当前表格</param>
+    /// <param name="keyParts">键列表</param>
+    /// <param name="latestComment">最后注释</param>
+    /// <returns>跳过为 <see langword="true"/> 不跳过为 <see langword="false"/></returns>
+    private bool ParseKeyValuePair(
+        TomlTable currentTable,
+        List<string> keyParts,
+        ref StringBuilder latestComment
+    )
+    {
+        var keyValuePair = ReadKeyValuePair(keyParts);
+
+        if (keyValuePair == null)
+        {
+            latestComment = null!;
+            keyParts.Clear();
+
+            if (s_currentState != ParseState.None)
+                AddError("Failed to parse key-value pair!");
+            return true;
+        }
+
+        keyValuePair.Comment = latestComment?.ToString()?.TrimEnd()!;
+        var inserted = InsertNode(keyValuePair, currentTable, keyParts);
+        latestComment = null!;
+        keyParts.Clear();
+        if (inserted)
+            s_currentState = ParseState.SkipToNextLine;
+        return true;
+    }
+
+    /// <summary>
+    /// 解析表格
+    /// </summary>
+    /// <param name="c">字符</param>
+    /// <param name="rootTable">原始表格</param>
+    /// <param name="currentTable">当前表格</param>
+    /// <param name="keyParts">键列表</param>
+    /// <param name="isArrayTable">是数组表格</param>
+    /// <param name="latestComment">末尾注释</param>
+    /// <returns>消耗字符并跳过为 <see langword="true"/> 只跳过为 <see langword="false"/> 不操作为 <see langword="null"/></returns>
+    private bool? ParseTable(
+        char c,
+        TomlTable rootTable,
+        ref TomlTable currentTable,
+        List<string> keyParts,
+        ref bool isArrayTable,
+        ref StringBuilder latestComment
+    )
+    {
+        if (keyParts.Count == 0)
+        {
+            // We have array table
+            if (c is TomlSyntax.TABLE_START_SYMBOL)
+            {
+                // Consume the character
+                ConsumeChar();
+                isArrayTable = true;
+            }
+
+            if (!ReadKeyName(ref keyParts, TomlSyntax.TABLE_END_SYMBOL))
+            {
+                keyParts.Clear();
+                return false;
+            }
+
+            if (keyParts.Count == 0)
+            {
+                AddError("Table name is emtpy.");
+                isArrayTable = false;
+                latestComment = null!;
+                keyParts.Clear();
+            }
+
+            return false;
+        }
+
+        if (c is TomlSyntax.TABLE_END_SYMBOL)
+        {
+            if (isArrayTable)
+            {
+                // Consume the ending bracket so we can peek the next character
+                ConsumeChar();
+                var nextChar = s_reader.Peek();
+                if (nextChar < 0 || (char)nextChar != TomlSyntax.TABLE_END_SYMBOL)
+                {
+                    AddError($"Array table {".".Join(keyParts)} has only one closing bracket.");
+                    keyParts.Clear();
+                    isArrayTable = false;
+                    latestComment = null!;
+                    return false;
+                }
+            }
+
+            currentTable = CreateTable(rootTable, keyParts, isArrayTable);
+            if (currentTable is not null)
+            {
+                currentTable.IsInline = false;
+                currentTable.Comment = latestComment?.ToString()?.TrimEnd()!;
+            }
+
+            keyParts.Clear();
+            isArrayTable = false;
+            latestComment = null!;
+
+            if (currentTable == null)
+            {
+                if (s_currentState != ParseState.None)
+                    AddError("Error creating table array!");
+                // Reset a node to root in order to try and continue parsing
+                currentTable = rootTable;
+                return false;
+            }
+
+            s_currentState = ParseState.SkipToNextLine;
+            return true;
+        }
+
+        if (keyParts.Count != 0)
+        {
+            AddError($"Unexpected character \"{c}\"");
+            keyParts.Clear();
+            isArrayTable = false;
+            latestComment = null!;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// 跳过下一行
+    /// </summary>
+    /// <param name="c">字符</param>
+    /// <returns>消耗字符并跳过为 <see langword="true"/> 只跳过为 <see langword="false"/> 不操作为 <see langword="null"/></returns>
+    private bool? ParseSkipToNextLine(char c)
+    {
+        if (TomlSyntax.IsWhiteSpace(c) || c is TomlSyntax.NEWLINE_CARRIAGE_RETURN_CHARACTER)
+            return true;
+
+        if (c is TomlSyntax.COMMENT_SYMBOL or TomlSyntax.NEWLINE_CHARACTER)
+        {
+            s_currentState = ParseState.None;
+            AdvanceLine();
+
+            if (c is TomlSyntax.COMMENT_SYMBOL)
+            {
+                s_column++;
+                ParseComment();
+                return false;
+            }
+
+            return true;
+        }
+
+        AddError($"Unexpected character \"{c}\" at the end of the line.");
+        return null;
+    }
+
     private bool AddError(string message, bool skipLine = true)
     {
-        syntaxErrors.Add(new TomlSyntaxException(message, s_currentState, s_line, s_column));
+        s_syntaxErrors.Add(new TomlSyntaxException(message, s_currentState, s_line, s_column));
         // Skip the whole s_line in hope that it was only a single faulty value (and non-multiline one at that)
         if (skipLine)
         {
@@ -1867,7 +1967,8 @@ public class TOMLParser : IDisposable
             if (TomlSyntax.IsWhiteSpace(c))
             {
                 prevWasSpace = true;
-                goto consume_character;
+                ConsumeCharacter();
+                continue;
             }
 
             if (buffer.Length == 0)
@@ -1882,7 +1983,8 @@ public class TOMLParser : IDisposable
                 buffer.Length = 0;
                 quoted = false;
                 prevWasSpace = false;
-                goto consume_character;
+                ConsumeCharacter();
+                continue;
             }
 
             if (prevWasSpace)
@@ -1907,15 +2009,12 @@ public class TOMLParser : IDisposable
             if (TomlSyntax.IsBareKey(c))
             {
                 buffer.Append(c);
-                goto consume_character;
+                ConsumeCharacter();
+                continue;
             }
 
             // If we see an invalid symbol, let the next parser handle it
             break;
-
-        consume_character:
-            s_reader.Read();
-            s_column++;
         }
 
         if (buffer.Length == 0 && !quoted)
@@ -2111,7 +2210,8 @@ public class TOMLParser : IDisposable
             {
                 if (TomlSyntax.IsLineBreak(c))
                     AdvanceLine();
-                goto consume_character;
+                ConsumeChar();
+                continue;
             }
 
             if (c is TomlSyntax.ITEM_SEPARATOR)
@@ -2125,7 +2225,8 @@ public class TOMLParser : IDisposable
                 result.Add(currentValue);
                 currentValue = null!;
                 expectValue = true;
-                goto consume_character;
+                ConsumeChar();
+                continue;
             }
 
             if (!expectValue)
@@ -2141,10 +2242,6 @@ public class TOMLParser : IDisposable
                 return null!;
             }
             expectValue = false;
-
-            continue;
-        consume_character:
-            ConsumeChar();
         }
 
         if (currentValue is not null)
@@ -2192,7 +2289,10 @@ public class TOMLParser : IDisposable
             }
 
             if (TomlSyntax.IsWhiteSpace(c))
-                goto consume_character;
+            {
+                ConsumeChar();
+                continue;
+            }
 
             if (c is TomlSyntax.ITEM_SEPARATOR)
             {
@@ -2207,15 +2307,12 @@ public class TOMLParser : IDisposable
                 keyParts.Clear();
                 currentValue = null!;
                 separator = true;
-                goto consume_character;
+                ConsumeChar();
+                continue;
             }
 
             separator = false;
             currentValue = ReadKeyValuePair(keyParts);
-            continue;
-
-        consume_character:
-            ConsumeChar();
         }
 
         if (separator)
@@ -2805,70 +2902,84 @@ internal static class TomlSyntax
     /// Boolean真值
     /// </summary>
     public const string TRUE_VALUE = "true";
+
     /// <summary>
     /// Boolean假值
     /// </summary>
     public const string FALSE_VALUE = "false";
+
     /// <summary>
     /// 无效值
     /// </summary>
     public const string NAN_VALUE = "nan";
+
     /// <summary>
     /// 正无效值
     /// </summary>
     public const string POS_NAN_VALUE = "+nan";
+
     /// <summary>
     /// 负无效值
     /// </summary>
     public const string NEG_NAN_VALUE = "-nan";
+
     /// <summary>
     /// 无穷
     /// </summary>
     public const string INF_VALUE = "inf";
+
     /// <summary>
     /// 正无穷
     /// </summary>
     public const string POS_INF_VALUE = "+inf";
+
     /// <summary>
     /// 负无穷
     /// </summary>
     public const string NEG_INF_VALUE = "-inf";
+
     /// <summary>
     /// 是布尔类型
     /// </summary>
     /// <param name="s">字符串</param>
     /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsBoolean(string s) => s is TRUE_VALUE or FALSE_VALUE;
+
     /// <summary>
     /// 是正无穷
     /// </summary>
     /// <param name="s">字符串</param>
     /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsPosInf(string s) => s is INF_VALUE or POS_INF_VALUE;
+
     /// <summary>
     /// 是负无穷
     /// </summary>
     /// <param name="s">字符串</param>
     /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsNegInf(string s) => s == NEG_INF_VALUE;
+
     /// <summary>
     /// 是无效值
     /// </summary>
     /// <param name="s">字符串</param>
     /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsNaN(string s) => s is NAN_VALUE or POS_NAN_VALUE or NEG_NAN_VALUE;
+
     /// <summary>
     /// 是整型
     /// </summary>
     /// <param name="s">字符串</param>
     /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsInteger(string s) => IntegerPattern.IsMatch(s);
+
     /// <summary>
     /// 是浮点型
     /// </summary>
     /// <param name="s">字符串</param>
     /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsFloat(string s) => FloatPattern.IsMatch(s);
+
     /// <summary>
     /// 是进位制整型
     /// </summary>
@@ -3056,6 +3167,7 @@ internal static class TomlSyntax
 
     #endregion
 }
+
 /// <summary>
 /// 字符串工具
 /// </summary>
@@ -3073,6 +3185,7 @@ internal static class StringUtils
             ? key
             : $"{TomlSyntax.BASIC_STRING_SYMBOL}{key.Escape()}{TomlSyntax.BASIC_STRING_SYMBOL}";
     }
+
     /// <summary>
     /// 加入值
     /// </summary>
@@ -3112,6 +3225,7 @@ internal static class StringUtils
         DateTimeStyles dts,
         out T dt
     );
+
     /// <summary>
     /// 尝试解析日期时间
     /// </summary>
@@ -3145,6 +3259,7 @@ internal static class StringUtils
 
         return false;
     }
+
     /// <summary>
     /// 转换为注释
     /// </summary>
@@ -3155,6 +3270,7 @@ internal static class StringUtils
         foreach (var line in self.Split(TomlSyntax.NEWLINE_CHARACTER))
             tw.WriteLine($"{TomlSyntax.COMMENT_SYMBOL} {line.Trim()}");
     }
+
     /// <summary>
     /// 删除所有指定字符
     /// </summary>
@@ -3168,6 +3284,7 @@ internal static class StringUtils
             sb.Append(c);
         return sb.ToString();
     }
+
     /// <summary>
     /// 编码
     /// </summary>
@@ -3207,6 +3324,7 @@ internal static class StringUtils
 
         return stringBuilder.ToString();
     }
+
     /// <summary>
     /// 尝试解码
     /// </summary>
@@ -3229,6 +3347,7 @@ internal static class StringUtils
             return false;
         }
     }
+
     /// <summary>
     /// 字符串解码
     /// </summary>
@@ -3240,7 +3359,7 @@ internal static class StringUtils
         if (string.IsNullOrWhiteSpace(txt))
             return txt;
         var stringBuilder = new StringBuilder(txt.Length);
-        for (var i = 0; i < txt.Length;)
+        for (var i = 0; i < txt.Length; )
         {
             var num = txt.IndexOf('\\', i);
             var next = num + 1;

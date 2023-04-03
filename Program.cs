@@ -8,10 +8,10 @@ using HKWToml;
 
 System.Diagnostics.Stopwatch stopWatch = new();
 stopWatch.Start();
-var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml".AsKey();
+var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
 var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
 //var i = (int)long.MaxValue;
-int i = ((TomlNode)(float)114.514).AsInt32;
+//int i = ((TomlNode)(float)114.514).AsInt32;
 //var classString = TomlAsClasses.Construct(
 //    "Test",
 //    TOML.Parse(file),
@@ -25,7 +25,8 @@ int i = ((TomlNode)(float)114.514).AsInt32;
 //);
 //Console.WriteLine(classString);
 
-//var table = TOML.Parse(file);
+var table = TOML.Parse(file);
+Console.WriteLine(table.ToString());
 //var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
 //await TomlSerializer.SerializeToFileAsync(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
 //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
