@@ -5,36 +5,43 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using HKW.TOML;
 using HKWToml;
+namespace HKWToml;
 
-System.Diagnostics.Stopwatch stopWatch = new();
-stopWatch.Start();
-var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
-var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
-//var i = (int)long.MaxValue;
-//int i = ((TomlNode)(float)114.514).AsInt32;
-//var classString = TomlAsClasses.Construct(
-//    "Test",
-//    TOML.Parse(file),
-//    new()
-//    {
-//        AddComment = true,
-//        AddITomlClassInterface = true,
-//        AddTomlParameterOrderAttribute = true,
-//        KeyNameConverterFunc = (s) => s + "999"
-//    }
-//);
-//Console.WriteLine(classString);
+internal class HKWToml
+{
+    public static void Main(string[] args)
+    {
+        System.Diagnostics.Stopwatch stopWatch = new();
+        stopWatch.Start();
+        var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
+        var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
+        //var i = (int)long.MaxValue;
+        //int i = ((TomlNode)(float)114.514).AsInt32;
+        //var classString = TomlAsClasses.Construct(
+        //    "Test",
+        //    TOML.Parse(file),
+        //    new()
+        //    {
+        //        AddComment = true,
+        //        AddITomlClassInterface = true,
+        //        AddTomlParameterOrderAttribute = true,
+        //        KeyNameConverterFunc = (s) => s + "999"
+        //    }
+        //);
+        //Console.WriteLine(classString);
 
-var table = TOML.Parse(file);
-Console.WriteLine(table.ToTomlString());
-//var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
-//await TomlSerializer.SerializeToFileAsync(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
-//var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
-//Console.WriteLine(test);
-//var banchMark = BenchmarkRunner.Run<Benchmark>();
-//await Benchmark.Test();
-stopWatch.Stop();
-Console.WriteLine($"\nSTOP {stopWatch.Elapsed.TotalMilliseconds.ToString():f4}ms");
+        var table = TOML.Parse(file);
+        Console.WriteLine(table.ToTomlString());
+        //var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
+        //await TomlSerializer.SerializeToFileAsync(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
+        //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
+        //Console.WriteLine(test);
+        //var banchMark = BenchmarkRunner.Run<Benchmark>();
+        //await Benchmark.Test();
+        stopWatch.Stop();
+        Console.WriteLine($"\nSTOP {stopWatch.Elapsed.TotalMilliseconds.ToString():f4}ms");
+    }
+}
 
 
 public class Noop : IComparer<PropertyInfo>
