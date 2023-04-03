@@ -24,7 +24,7 @@ public class TomlKeyName : Attribute
     /// 键名
     /// </summary>
     public string Name { get; }
-
+    /// <inheritdoc/>
     public TomlKeyName(string name) => Name = name;
 }
 
@@ -38,7 +38,7 @@ public class TomlParameterOrder : Attribute
     /// 顺序
     /// </summary>
     public int Order { get; }
-
+    /// <inheritdoc/>
     public TomlParameterOrder(int order) => Order  = order;
 }
 
