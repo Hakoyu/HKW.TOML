@@ -3,7 +3,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Denis Zhidkikh
+ * Copyright (c) 2023 HKW
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,25 +38,76 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace HKW.Libs.TOML;
+namespace HKW.TOML;
 
 #region TOML TypeCode
+/// <summary>
+/// Toml类型代码
+/// </summary>
 [Flags]
 public enum TomlTypeCode
 {
+    /// <summary>
+    /// 空
+    /// </summary>
+    None = 0,
+
+    /// <summary>
+    /// 整型
+    /// </summary>
     Integer = 1,
+
+    /// <summary>
+    /// 浮点型
+    /// </summary>
     Float = 2,
+
+    /// <summary>
+    /// 字符串
+    /// </summary>
     String = 4,
+
+    /// <summary>
+    /// 布尔类型
+    /// </summary>
     Boolean = 8,
+
+    /// <summary>
+    /// 日期时间
+    /// </summary>
     DateTime = 16,
+
+    /// <summary>
+    /// 地区日期时间
+    /// </summary>
     DateTimeLocal = 32,
+
+    /// <summary>
+    /// 日期时间偏移量
+    /// </summary>
     DateTimeOffset = 64,
+
+    /// <summary>
+    /// 数组
+    /// </summary>
     Array = 128,
+
+    /// <summary>
+    /// 表格
+    /// </summary>
     Table = 256,
 }
 
+/// <summary>
+/// Toml类
+/// </summary>
 public class TomlType
 {
+    /// <summary>
+    /// 获取Toml类型代码
+    /// </summary>
+    /// <param name="node">Toml节点</param>
+    /// <returns>Toml类型代码</returns>
     public static TomlTypeCode GetTypeCode(TomlNode node)
     {
         return node switch
@@ -70,7 +121,7 @@ public class TomlType
             TomlDateTime => TomlTypeCode.DateTime,
             TomlArray => TomlTypeCode.Array,
             TomlTable => TomlTypeCode.Table,
-            _ => default,
+            _ => TomlTypeCode.None,
         };
     }
 }
@@ -79,133 +130,364 @@ public class TomlType
 
 #region TOML Nodes
 
+/// <summary>
+/// Toml节点
+/// </summary>
 public abstract class TomlNode : IEnumerable
 {
+    /// <summary>
+    /// 有值
+    /// </summary>
     public virtual bool HasValue { get; } = false;
 
     #region TypeCheck
-
+    /// <summary>
+    /// 是Toml数组
+    /// </summary>
     public virtual bool IsTomlArray { get; } = false;
+
+    /// <summary>
+    /// 是Toml表格
+    /// </summary>
     public virtual bool IsTomlTable { get; } = false;
+
+    /// <summary>
+    /// 是Toml字符串
+    /// </summary>
     public virtual bool IsTomlString { get; } = false;
+
+    /// <summary>
+    /// 是Toml整型
+    /// </summary>
     public virtual bool IsTomlInteger { get; } = false;
+
+    /// <summary>
+    /// 是Toml浮点型
+    /// </summary>
     public virtual bool IsTomlFloat { get; } = false;
+
+    /// <summary>
+    /// 是Toml日期时间
+    /// </summary>
     public bool IsTomlDateTime => IsTomlDateTimeLocal || IsTomlDateTimeOffset;
+
+    /// <summary>
+    /// 是Toml地区日期时间
+    /// </summary>
     public virtual bool IsTomlDateTimeLocal { get; } = false;
+
+    /// <summary>
+    /// 是Toml偏移日期时间
+    /// </summary>
     public virtual bool IsTomlDateTimeOffset { get; } = false;
+
+    /// <summary>
+    /// 是Toml布尔类型
+    /// </summary>
     public virtual bool IsTomlBoolean { get; } = false;
 
     #endregion
 
+    /// <summary>
+    /// 注释
+    /// </summary>
     public virtual string Comment { get; set; } = null!;
+
+    /// <summary>
+    /// 层级
+    /// </summary>
     public virtual int CollapseLevel { get; set; }
 
-    #region VanillaType
+    #region NativeType
 
+    /// <summary>
+    /// 转换为Int32
+    /// </summary>
     public virtual int AsInt32 => (int)this;
+
+    /// <summary>
+    /// 转换为Int64
+    /// </summary>
     public virtual long AsInt64 => (long)this;
 
-    public virtual float AsFloat => (float)this;
+    /// <summary>
+    /// 转换为浮点
+    /// </summary>
+    public virtual float AsFloat => (float)Convert.ChangeType(this, TypeCode.Int64);
+
+    /// <summary>
+    /// 转换为双精度浮点
+    /// </summary>
     public virtual double AsDouble => (double)this;
+
+    /// <summary>
+    /// 转换为字符串
+    /// </summary>
     public virtual string AsString => AsTomlString;
+
+    /// <summary>
+    /// 转换为布尔
+    /// </summary>
     public virtual bool AsBoolean => AsTomlBoolean;
+
+    /// <summary>
+    /// 转换为日期时间
+    /// </summary>
     public virtual DateTime AsDateTime => AsTomlDateTimeLocal;
+
+    /// <summary>
+    /// 转换为日期时间偏移量
+    /// </summary>
     public virtual DateTimeOffset AsDateTimeOffset => AsTomlDateTimeOffset;
+
+    /// <summary>
+    /// 转换为列表
+    /// </summary>
     public virtual List<TomlNode> AsList => AsTomlArray.RawArray;
+
+    /// <summary>
+    /// 转换为字典
+    /// </summary>
     public virtual Dictionary<string, TomlNode> AsDictionary => AsTomlTable.RawTable;
 
     #endregion
 
     #region TomlType
 
+    /// <summary>
+    /// 转换为Toml表格
+    /// </summary>
     public virtual TomlTable AsTomlTable => (this as TomlTable)!;
+
+    /// <summary>
+    /// 转换为Toml字符串
+    /// </summary>
     public virtual TomlString AsTomlString => (this as TomlString)!;
+
+    /// <summary>
+    /// 转换为Toml整型
+    /// </summary>
     public virtual TomlInteger AsTomlInteger => (this as TomlInteger)!;
+
+    /// <summary>
+    /// 转换为Toml浮点型
+    /// </summary>
     public virtual TomlFloat AsTomlFloat => (this as TomlFloat)!;
+
+    /// <summary>
+    /// 转换为Toml布尔型
+    /// </summary>
     public virtual TomlBoolean AsTomlBoolean => (this as TomlBoolean)!;
+
+    /// <summary>
+    /// 转换为Toml日期时间
+    /// </summary>
     public virtual TomlDateTime AsTomlDateTime => (this as TomlDateTime)!;
+
+    /// <summary>
+    /// 转换为Toml地区日期时间
+    /// </summary>
     public virtual TomlDateTimeLocal AsTomlDateTimeLocal => (this as TomlDateTimeLocal)!;
+
+    /// <summary>
+    /// 转换为Toml日期时间偏移量
+    /// </summary>
     public virtual TomlDateTimeOffset AsTomlDateTimeOffset => (this as TomlDateTimeOffset)!;
+
+    /// <summary>
+    /// 转化为Toml数组
+    /// </summary>
     public virtual TomlArray AsTomlArray => (this as TomlArray)!;
 
     #endregion
 
+    /// <summary>
+    /// 子数量
+    /// </summary>
     public virtual int ChildrenCount => 0;
 
+    /// <summary>
+    /// 使用键获取值(用于Toml表格)
+    /// </summary>
+    /// <param name="key">键</param>
+    /// <returns>值</returns>
     public virtual TomlNode this[string key]
     {
         get => null!;
         set { }
     }
 
+    /// <summary>
+    /// 使用索引获取值(用于Toml数组)
+    /// </summary>
+    /// <param name="index">索引</param>
+    /// <returns>值</returns>
     public virtual TomlNode this[int index]
     {
         get => null!;
         set { }
     }
 
+    /// <summary>
+    /// 子
+    /// </summary>
     public virtual IEnumerable<TomlNode> Children
     {
         get { yield break; }
     }
 
+    /// <summary>
+    /// 所有键
+    /// </summary>
     public virtual IEnumerable<string> Keys
     {
         get { yield break; }
     }
 
+    /// <inheritdoc/>
     public IEnumerator GetEnumerator() => Children.GetEnumerator();
 
+    /// <summary>
+    /// 尝试获取值
+    /// </summary>
+    /// <param name="key">键</param>
+    /// <param name="node">值</param>
+    /// <returns>成功为 <see langword="true"/> 失败为 <see langword="false"/></returns>
     public virtual bool TryGetNode(string key, out TomlNode node)
     {
         node = null!;
         return false;
     }
 
+    /// <summary>
+    /// 拥有键
+    /// </summary>
+    /// <param name="key">键</param>
+    /// <returns>成功为 <see langword="true"/> 失败为 <see langword="false"/></returns>
     public virtual bool HasKey(string key) => false;
 
+    /// <summary>
+    /// 拥有索引
+    /// </summary>
+    /// <param name="index">索引</param>
+    /// <returns>成功为 <see langword="true"/> 失败为 <see langword="false"/></returns>
     public virtual bool HasItemAt(int index) => false;
 
+    /// <summary>
+    /// 添加键值对(用于Toml表格)
+    /// </summary>
+    /// <param name="key">键</param>
+    /// <param name="node">值</param>
     public virtual void Add(string key, TomlNode node) { }
 
+    /// <summary>
+    /// 添加值(用于Toml数组)
+    /// </summary>
+    /// <param name="node">值</param>
     public virtual void Add(TomlNode node) { }
 
+    /// <summary>
+    /// 删除值(用于Toml数组)
+    /// </summary>
+    /// <param name="node">值</param>
     public virtual void Delete(TomlNode node) { }
 
+    /// <summary>
+    /// 使用键删除值(用于Toml表格)
+    /// </summary>
+    /// <param name="key"></param>
     public virtual void Delete(string key) { }
 
+    /// <summary>
+    /// 使用索引删除值(用于Toml数组)
+    /// </summary>
+    /// <param name="index"></param>
     public virtual void Delete(int index) { }
 
+    /// <summary>
+    /// 添加多个值(用于Toml数组)
+    /// </summary>
+    /// <param name="nodes">多个值</param>
     public virtual void AddRange(IEnumerable<TomlNode> nodes)
     {
         foreach (var tomlNode in nodes)
             Add(tomlNode);
     }
 
+    /// <summary>
+    /// 写入至
+    /// </summary>
+    /// <param name="tw">文本写入流</param>
+    /// <param name="name">名称</param>
     public virtual void WriteTo(TextWriter tw, string name = null!) => tw.WriteLine(ToInlineToml());
 
+    /// <summary>
+    /// 转换为行内Toml格式字符串
+    /// </summary>
+    /// <returns>Toml格式字符串</returns>
     public virtual string ToInlineToml() => ToString()!;
 
     #region Native type to TOML cast
 
+    /// <summary>
+    /// 隐式转换 string -> TomlString
+    /// </summary>
+    /// <param name="value">字符串</param>
     public static implicit operator TomlNode(string value) => new TomlString { Value = value };
+
+    /// <summary>
+    /// 隐式转换 bool -> TomlBoolean
+    /// </summary>
+    /// <param name="value">布尔类型</param>
 
     public static implicit operator TomlNode(bool value) => new TomlBoolean { Value = value };
 
+    /// <summary>
+    /// 隐式转换 int -> TomlInteger
+    /// </summary>
+    /// <param name="value">整型</param>
+
     public static implicit operator TomlNode(int value) => new TomlInteger { Value = value };
+
+    /// <summary>
+    /// 隐式转换 long -> TomlInteger
+    /// </summary>
+    /// <param name="value">64位整型</param>
 
     public static implicit operator TomlNode(long value) => new TomlInteger { Value = value };
 
+    /// <summary>
+    /// 隐式转换 float -> TomlFloat
+    /// </summary>
+    /// <param name="value">浮点型</param>
+
     public static implicit operator TomlNode(float value) => new TomlFloat { Value = value };
+
+    /// <summary>
+    /// 隐式转换 double -> TomlFloat
+    /// </summary>
+    /// <param name="value">双精度浮点</param>
 
     public static implicit operator TomlNode(double value) => new TomlFloat { Value = value };
 
+    /// <summary>
+    /// 隐式转换 DateTime -> TomlDateTimeLocal
+    /// </summary>
+    /// <param name="value">日期时间</param>
     public static implicit operator TomlNode(DateTime value) =>
         new TomlDateTimeLocal { Value = value };
 
+    /// <summary>
+    /// 隐式转换 DateTimeOffset -> TomlDateTimeOffset
+    /// </summary>
+    /// <param name="value">日期时间偏移量</param>
     public static implicit operator TomlNode(DateTimeOffset value) =>
         new TomlDateTimeOffset { Value = value };
 
+    /// <summary>
+    /// 隐式转换 TomlNode[] -> TomlArray
+    /// </summary>
+    /// <param name="nodes">TomlNode数组</param>
     public static implicit operator TomlNode(TomlNode[] nodes)
     {
         var result = new TomlArray();
@@ -217,8 +499,16 @@ public abstract class TomlNode : IEnumerable
 
     #region TOML to native type cast
 
+    /// <summary>
+    /// 隐式转换 TomlNode -> string
+    /// </summary>
+    /// <param name="value">Toml节点</param>
     public static implicit operator string(TomlNode value) => value.ToString()!;
 
+    /// <summary>
+    /// 隐式转换 TomlNode -> int
+    /// </summary>
+    /// <param name="value">Toml节点</param>
     public static implicit operator int(TomlNode value)
     {
         if (value.IsTomlInteger)
@@ -227,6 +517,10 @@ public abstract class TomlNode : IEnumerable
             return (int)value.AsTomlFloat.Value;
     }
 
+    /// <summary>
+    /// 隐式转换 TomlNode -> long
+    /// </summary>
+    /// <param name="value">Toml节点</param>
     public static implicit operator long(TomlNode value)
     {
         if (value.IsTomlInteger)
@@ -235,44 +529,87 @@ public abstract class TomlNode : IEnumerable
             return (long)value.AsTomlFloat.Value;
     }
 
+    /// <summary>
+    /// 隐式转换 TomlNode -> float
+    /// </summary>
+    /// <param name="value">Toml节点</param>
     public static implicit operator float(TomlNode value)
     {
         if (value.IsTomlInteger)
-            return (float)value.AsTomlInteger.Value;
+            return value.AsTomlInteger.Value;
         else
             return (float)value.AsTomlFloat.Value;
     }
 
+    /// <summary>
+    /// 隐式转换 TomlNode -> double
+    /// </summary>
+    /// <param name="value">Toml节点</param>
     public static implicit operator double(TomlNode value)
     {
         if (value.IsTomlInteger)
-            return (double)value.AsTomlInteger.Value;
+            return value.AsTomlInteger.Value;
         else
             return (double)value.AsTomlFloat.Value;
     }
 
+    /// <summary>
+    /// 隐式转换 TomlNode -> bool
+    /// </summary>
+    /// <param name="value">Toml节点</param>
     public static implicit operator bool(TomlNode value) => value.AsTomlBoolean.Value;
 
+    /// <summary>
+    /// 隐式转换 TomlNode -> DateTime
+    /// </summary>
+    /// <param name="value">Toml节点</param>
     public static implicit operator DateTime(TomlNode value) => value.AsTomlDateTimeLocal.Value;
 
+    /// <summary>
+    /// 隐式转换 TomlNode -> DateTimeOffset
+    /// </summary>
+    /// <param name="value">Toml节点</param>
     public static implicit operator DateTimeOffset(TomlNode value) =>
         value.AsTomlDateTimeOffset.Value;
 
     #endregion
 }
 
+/// <summary>
+/// Toml字符串
+/// </summary>
 public class TomlString : TomlNode
 {
+    /// <inheritdoc/>
     public override bool HasValue { get; } = true;
+
+    /// <inheritdoc/>
     public override bool IsTomlString { get; } = true;
+
+    /// <summary>
+    /// 是多行
+    /// </summary>
     public bool IsMultiline { get; set; }
+
+    /// <summary>
+    /// 是多行首行
+    /// </summary>
     public bool MultilineTrimFirstLine { get; set; }
+
+    /// <summary>
+    /// 首选文字
+    /// </summary>
     public bool PreferLiteral { get; set; }
 
-    public string Value { get; set; } = "";
+    /// <summary>
+    /// 值
+    /// </summary>
+    public string Value { get; set; } = string.Empty;
 
+    /// <inheritdoc/>
     public override string ToString() => Value;
 
+    /// <inheritdoc/>
     public override string ToInlineToml()
     {
         // Automatically convert literal to non-literal if there are too many literal string symbols
@@ -303,46 +640,95 @@ public class TomlString : TomlNode
     }
 }
 
+/// <summary>
+/// Toml整型
+/// </summary>
 public class TomlInteger : TomlNode
 {
+    /// <summary>
+    /// 进位制
+    /// </summary>
     public enum Base
     {
+        /// <summary>
+        /// 二进制
+        /// </summary>
         Binary = 2,
+
+        /// <summary>
+        /// 八进制
+        /// </summary>
         Octal = 8,
+
+        /// <summary>
+        /// 十进制
+        /// </summary>
         Decimal = 10,
+
+        /// <summary>
+        /// 十六进制
+        /// </summary>
         Hexadecimal = 16
     }
 
+    /// <inheritdoc/>
     public override bool IsTomlInteger { get; } = true;
+
+    /// <inheritdoc/>
     public override bool HasValue { get; } = true;
+
+    /// <summary>
+    /// 整型进位制
+    /// </summary>
     public Base IntegerBase { get; set; } = Base.Decimal;
 
+    /// <summary>
+    /// 值
+    /// </summary>
     public long Value { get; set; }
 
+    /// <summary>
+    /// 是64位整型
+    /// </summary>
     public bool IsInteger64 => int.TryParse(Value.ToString(), out _) is false;
 
+    /// <inheritdoc/>
     public override string ToString() => Value.ToString();
 
+    /// <inheritdoc/>
     public override string ToInlineToml() =>
         IntegerBase != Base.Decimal
             ? $"0{TomlSyntax.BaseIdentifiers[(int)IntegerBase]}{Convert.ToString(Value, (int)IntegerBase)}"
             : Value.ToString(CultureInfo.InvariantCulture);
 }
 
+/// <summary>
+/// Toml浮点型
+/// </summary>
 public class TomlFloat : TomlNode, IFormattable
 {
+    /// <inheritdoc/>
     public override bool IsTomlFloat { get; } = true;
+
+    /// <inheritdoc/>
     public override bool HasValue { get; } = true;
 
+    /// <summary>
+    /// 值
+    /// </summary>
     public double Value { get; set; }
 
+    /// <inheritdoc/>
     public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
 
+    /// <inheritdoc/>
     public string ToString(string? format, IFormatProvider? formatProvider) =>
         Value.ToString(format, formatProvider);
 
+    /// <inheritdoc/>
     public string ToString(IFormatProvider formatProvider) => Value.ToString(formatProvider);
 
+    /// <inheritdoc/>
     public override string ToInlineToml() =>
         Value switch
         {
@@ -353,72 +739,141 @@ public class TomlFloat : TomlNode, IFormattable
         };
 }
 
+/// <summary>
+/// Toml布尔类型
+/// </summary>
 public class TomlBoolean : TomlNode
 {
+    /// <inheritdoc/>
     public override bool IsTomlBoolean { get; } = true;
+
+    /// <inheritdoc/>
     public override bool HasValue { get; } = true;
 
+    /// <summary>
+    /// 值
+    /// </summary>
     public bool Value { get; set; }
 
+    /// <inheritdoc/>
     public override string ToString() => Value.ToString();
 
+    /// <inheritdoc/>
     public override string ToInlineToml() => Value ? TomlSyntax.TRUE_VALUE : TomlSyntax.FALSE_VALUE;
 }
 
+/// <summary>
+/// Toml日期时间
+/// </summary>
 public class TomlDateTime : TomlNode, IFormattable
 {
+    /// <summary>
+    ///
+    /// </summary>
     public int SecondsPrecision { get; set; }
+
+    /// <inheritdoc/>
     public override bool HasValue { get; } = true;
 
+    /// <inheritdoc/>
     public virtual string ToString(string? format, IFormatProvider? formatProvider) => string.Empty;
 
+    /// <inheritdoc/>
     public virtual string ToString(IFormatProvider formatProvider) => string.Empty;
 
+    /// <summary>
+    /// 转换为行内内部Toml格式字符串
+    /// </summary>
+    /// <returns>Toml格式字符串</returns>
     protected virtual string ToInlineTomlInternal() => string.Empty;
 
+    /// <inheritdoc/>
     public override string ToInlineToml() =>
         ToInlineTomlInternal()
             .Replace(TomlSyntax.RFC3339EmptySeparator, TomlSyntax.ISO861Separator)
             .Replace(TomlSyntax.ISO861ZeroZone, TomlSyntax.RFC3339ZeroZone);
 }
 
+/// <summary>
+/// Toml日期时间偏移量
+/// </summary>
 public class TomlDateTimeOffset : TomlDateTime
 {
+    /// <inheritdoc/>
     public override bool IsTomlDateTimeOffset { get; } = true;
+
+    /// <summary>
+    /// 值
+    /// </summary>
     public DateTimeOffset Value { get; set; }
 
+    /// <inheritdoc/>
     public override string ToString() => Value.ToString(CultureInfo.CurrentCulture);
 
+    /// <inheritdoc/>
     public override string ToString(IFormatProvider formatProvider) =>
         Value.ToString(formatProvider);
 
+    /// <inheritdoc/>
     public override string ToString(string? format, IFormatProvider? formatProvider) =>
         Value.ToString(format, formatProvider);
 
+    /// <inheritdoc/>
     protected override string ToInlineTomlInternal() =>
         Value.ToString(TomlSyntax.RFC3339Formats[SecondsPrecision]);
 }
 
+/// <summary>
+/// Toml地区日期时间
+/// </summary>
 public class TomlDateTimeLocal : TomlDateTime
 {
+    /// <summary>
+    /// 日期时间类型
+    /// </summary>
     public enum DateTimeStyle
     {
+        /// <summary>
+        /// 日期
+        /// </summary>
         Date,
+
+        /// <summary>
+        /// 时间
+        /// </summary>
         Time,
+
+        /// <summary>
+        /// 日期时间
+        /// </summary>
         DateTime
     }
+
+    /// <inheritdoc/>
     public override bool IsTomlDateTimeLocal { get; } = true;
+
+    /// <summary>
+    /// 日期时间类型
+    /// </summary>
     public DateTimeStyle Style { get; set; } = DateTimeStyle.DateTime;
+
+    /// <summary>
+    /// 值
+    /// </summary>
     public DateTime Value { get; set; }
 
+    /// <inheritdoc/>
     public override string ToString() => Value.ToString(CultureInfo.CurrentCulture);
 
+    /// <inheritdoc/>
     public override string ToString(IFormatProvider formatProvider) =>
         Value.ToString(formatProvider);
 
+    /// <inheritdoc/>
     public override string ToString(string? format, IFormatProvider? formatProvider) =>
         Value.ToString(format, formatProvider);
 
+    /// <inheritdoc/>
     public override string ToInlineToml() =>
         Style switch
         {
@@ -429,18 +884,36 @@ public class TomlDateTimeLocal : TomlDateTime
         };
 }
 
+/// <summary>
+/// Toml数组
+/// </summary>
 public class TomlArray : TomlNode, IEnumerable<TomlNode>
 {
-    public new IEnumerator<TomlNode> GetEnumerator() => values.GetEnumerator();
+    /// <inheritdoc/>
+    public new IEnumerator<TomlNode> GetEnumerator() => RawArray.GetEnumerator();
 
-    private readonly List<TomlNode> values = new();
+    /// <summary>
+    /// 原始值
+    /// </summary>
+    public List<TomlNode> RawArray { get; private set; } = new();
 
+    /// <inheritdoc/>
     public override bool HasValue { get; } = true;
-    public override bool IsTomlArray { get; } = true;
-    public bool IsMultiline { get; set; }
-    public bool IsTableArray { get; set; }
-    public List<TomlNode> RawArray => values;
 
+    /// <inheritdoc/>
+    public override bool IsTomlArray { get; } = true;
+
+    /// <summary>
+    /// 是多行
+    /// </summary>
+    public bool IsMultiline { get; set; }
+
+    /// <summary>
+    /// 是Toml表格数组
+    /// </summary>
+    public bool IsTableArray { get; set; }
+
+    /// <inheritdoc/>
     public override TomlNode this[int index]
     {
         get
@@ -460,20 +933,32 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
         }
     }
 
+    /// <inheritdoc/>
     public override int ChildrenCount => RawArray.Count;
 
+    /// <inheritdoc/>
     public override IEnumerable<TomlNode> Children => RawArray.AsEnumerable();
 
+    /// <inheritdoc/>
     public override void Add(TomlNode node) => RawArray.Add(node);
 
+    /// <inheritdoc/>
     public override void AddRange(IEnumerable<TomlNode> nodes) => RawArray.AddRange(nodes);
 
+    /// <inheritdoc/>
     public override void Delete(TomlNode node) => RawArray.Remove(node);
 
+    /// <inheritdoc/>
     public override void Delete(int index) => RawArray.RemoveAt(index);
 
+    /// <inheritdoc/>
     public override string ToString() => ToString(false);
 
+    /// <summary>
+    /// 转化为多行字符串
+    /// </summary>
+    /// <param name="multiline">是多行</param>
+    /// <returns>多行字符串</returns>
     public string ToString(bool multiline)
     {
         var sb = new StringBuilder();
@@ -493,6 +978,7 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
         return sb.ToString();
     }
 
+    /// <inheritdoc/>
     public override void WriteTo(TextWriter tw, string name = null!)
     {
         // If it's a normal array, write it as usual
@@ -547,20 +1033,40 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
     }
 }
 
+/// <summary>
+/// Toml表格
+/// </summary>
 public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 {
+    /// <inheritdoc/>
     public new IEnumerator<KeyValuePair<string, TomlNode>> GetEnumerator() =>
-        children.GetEnumerator();
+        RawTable.GetEnumerator();
 
+    /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    private readonly Dictionary<string, TomlNode> children = new();
+    /// <summary>
+    /// 是隐式的
+    /// </summary>
     internal bool isImplicit;
-    public override bool HasValue { get; } = false;
-    public override bool IsTomlTable { get; } = true;
-    public bool IsInline { get; set; }
-    public Dictionary<string, TomlNode> RawTable => children;
 
+    /// <inheritdoc/>
+    public override bool HasValue { get; } = false;
+
+    /// <inheritdoc/>
+    public override bool IsTomlTable { get; } = true;
+
+    /// <summary>
+    /// 在行内
+    /// </summary>
+    public bool IsInline { get; set; }
+
+    /// <summary>
+    /// 原始值
+    /// </summary>
+    public Dictionary<string, TomlNode> RawTable { get; private set; } = new();
+
+    /// <inheritdoc/>
     public override TomlNode this[string key]
     {
         get
@@ -574,39 +1080,62 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         set => RawTable[key] = value;
     }
 
+    /// <inheritdoc/>
     public override int ChildrenCount => RawTable.Count;
+
+    /// <inheritdoc/>
     public override IEnumerable<TomlNode> Children => RawTable.Select(kv => kv.Value);
+
+    /// <inheritdoc/>
     public override IEnumerable<string> Keys => RawTable.Select(kv => kv.Key);
 
+    /// <inheritdoc/>
     ICollection<string> IDictionary<string, TomlNode>.Keys =>
         ((IDictionary<string, TomlNode>)RawTable).Keys;
 
+    /// <inheritdoc/>
     public ICollection<TomlNode> Values => ((IDictionary<string, TomlNode>)RawTable).Values;
 
+    /// <inheritdoc/>
     public int Count => ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Count;
 
+    /// <inheritdoc/>
     public bool IsReadOnly => ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).IsReadOnly;
 
+    /// <inheritdoc/>
     public override bool HasKey(string key) => RawTable.ContainsKey(key);
 
+    /// <inheritdoc/>
     public override void Add(string key, TomlNode node) => RawTable.Add(key, node);
 
+    /// <summary>
+    /// 添加多个键值对
+    /// </summary>
+    /// <param name="table">Toml表格</param>
     public void AddRange(TomlTable table) => AddRange(table.AsDictionary);
 
+    /// <summary>
+    /// 添加多个键值对
+    /// </summary>
+    /// <param name="dic">多个键值对</param>
     public void AddRange(IDictionary<string, TomlNode> dic)
     {
         foreach (var kv in dic)
             RawTable.Add(kv.Key, kv.Value);
     }
 
+    /// <inheritdoc/>
     public override bool TryGetNode(string key, out TomlNode node) =>
         RawTable.TryGetValue(key, out node!);
 
+    /// <inheritdoc/>
     public override void Delete(TomlNode node) =>
         RawTable.Remove(RawTable.First(kv => kv.Value == node).Key);
 
+    /// <inheritdoc/>
     public override void Delete(string key) => RawTable.Remove(key);
 
+    /// <inheritdoc/>
     public override string ToString()
     {
         var sb = new StringBuilder();
@@ -633,6 +1162,13 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         return sb.ToString();
     }
 
+    /// <summary>
+    /// 收集折叠的项目
+    /// </summary>
+    /// <param name="prefix">前缀</param>
+    /// <param name="level">等级</param>
+    /// <param name="normalizeOrder">正常顺序</param>
+    /// <returns></returns>
     private LinkedList<KeyValuePair<string, TomlNode>> CollectCollapsedItems(
         string prefix = "",
         int level = 0,
@@ -647,9 +1183,9 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
             var node = keyValuePair.Value;
             var key = keyValuePair.Key.AsKey();
 
-            if (node is TomlTable tbl)
+            if (node is TomlTable table)
             {
-                var subnodes = tbl.CollectCollapsedItems(
+                var subnodes = table.CollectCollapsedItems(
                     $"{prefix}{key}.",
                     level + 1,
                     normalizeOrder
@@ -673,18 +1209,29 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         return nodes;
     }
 
+    /// <summary>
+    /// 保存至
+    /// </summary>
+    /// <param name="tomlFile">Toml文件</param>
     public void SaveTo(string tomlFile)
     {
         using var tw = new StreamWriter(tomlFile);
         WriteTo(tw, null!, false);
     }
 
+    /// <inheritdoc/>
     public override void WriteTo(TextWriter tw, string tomlFile) => WriteTo(tw, tomlFile, true);
 
+    /// <summary>
+    /// 写入至
+    /// </summary>
+    /// <param name="tw">文本写入器</param>
+    /// <param name="tomlFile">Toml文件</param>
+    /// <param name="writeSectionName">写入章节名</param>
     internal void WriteTo(TextWriter tw, string tomlFile, bool writeSectionName)
     {
         // The table is inline table
-        if (IsInline && tomlFile != null)
+        if (IsInline && tomlFile is not null)
         {
             tw.WriteLine(ToInlineToml());
             return;
@@ -701,14 +1248,14 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 
         Comment?.AsComment(tw);
 
-        if (tomlFile != null && (hasRealValues || Comment != null) && writeSectionName)
+        if (tomlFile is not null && (hasRealValues || Comment is not null) && writeSectionName)
         {
             tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
             tw.Write(tomlFile);
             tw.Write(TomlSyntax.ARRAY_END_SYMBOL);
             tw.WriteLine();
         }
-        else if (Comment != null) // Add some spacing between the first node and the comment
+        else if (Comment is not null) // Add some spacing between the first node and the comment
         {
             tw.WriteLine();
         }
@@ -743,25 +1290,33 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         }
     }
 
+    /// <inheritdoc/>
     public bool ContainsKey(string key) =>
         ((IDictionary<string, TomlNode>)RawTable).ContainsKey(key);
 
+    /// <inheritdoc/>
     public bool Remove(string key) => ((IDictionary<string, TomlNode>)RawTable).Remove(key);
 
+    /// <inheritdoc/>
     public bool TryGetValue(string key, [MaybeNullWhen(false)] out TomlNode value) =>
         ((IDictionary<string, TomlNode>)RawTable).TryGetValue(key, out value);
 
+    /// <inheritdoc/>
     public void Add(KeyValuePair<string, TomlNode> item) =>
         ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Add(item);
 
+    /// <inheritdoc/>
     public void Clear() => ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Clear();
 
+    /// <inheritdoc/>
     public bool Contains(KeyValuePair<string, TomlNode> item) =>
         ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Contains(item);
 
+    /// <inheritdoc/>
     public void CopyTo(KeyValuePair<string, TomlNode>[] array, int arrayIndex) =>
         ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).CopyTo(array, arrayIndex);
 
+    /// <inheritdoc/>
     public bool Remove(KeyValuePair<string, TomlNode> item) =>
         ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Remove(item);
 }
@@ -773,28 +1328,38 @@ internal class TomlLazy : TomlNode
 
     public TomlLazy(TomlNode parent) => this.parent = parent;
 
+    /// <inheritdoc/>
     public override TomlNode this[int index]
     {
         get => Set<TomlArray>()[index];
         set => Set<TomlArray>()[index] = value;
     }
 
+    /// <inheritdoc/>
     public override TomlNode this[string key]
     {
         get => Set<TomlTable>()[key];
         set => Set<TomlTable>()[key] = value;
     }
 
+    /// <inheritdoc/>
     public override void Add(TomlNode node) => Set<TomlArray>().Add(node);
 
+    /// <inheritdoc/>
     public override void Add(string key, TomlNode node) => Set<TomlTable>().Add(key, node);
 
+    /// <inheritdoc/>
     public override void AddRange(IEnumerable<TomlNode> nodes) => Set<TomlArray>().AddRange(nodes);
 
+    /// <summary>
+    /// 设置Toml节点
+    /// </summary>
+    /// <typeparam name="T">TomlNode</typeparam>
+    /// <returns>Toml节点</returns>
     private TomlNode Set<T>()
         where T : TomlNode, new()
     {
-        if (replacement != null)
+        if (replacement is not null)
             return replacement;
 
         var newNode = new T { Comment = Comment };
@@ -830,56 +1395,106 @@ internal class TomlLazy : TomlNode
 
 #region Parser
 
+/// <summary>
+/// TOML解析器
+/// </summary>
 public class TOMLParser : IDisposable
 {
+    /// <summary>
+    /// 解析状态
+    /// </summary>
     public enum ParseState
     {
+        /// <summary>
+        /// 空
+        /// </summary>
         None,
+
+        /// <summary>
+        /// 键值对
+        /// </summary>
         KeyValuePair,
+
+        /// <summary>
+        /// 跳过下一行
+        /// </summary>
         SkipToNextLine,
+
+        /// <summary>
+        /// 表格
+        /// </summary>
         Table
     }
 
-    private readonly TextReader reader;
-    private ParseState currentState;
+    /// <summary>
+    /// 强制ASCII编码
+    /// </summary>
+    public bool ForceASCII { get; set; }
 
-    private int line,
-        col;
+    /// <summary>
+    /// 文明写入器
+    /// </summary>
+    private readonly TextReader s_reader;
+
+    /// <summary>
+    /// 当前状态
+    /// </summary>
+    private ParseState s_currentState;
+
+    /// <summary>
+    /// 行
+    /// </summary>
+    private int s_line;
+
+    /// <summary>
+    /// 列
+    /// </summary>
+    private int s_column;
 
     private List<TomlSyntaxException> syntaxErrors = null!;
 
+    /// <summary>
+    /// 从文本读入器解析
+    /// </summary>
+    /// <param name="reader">文明读入器</param>
     public TOMLParser(TextReader reader)
     {
-        this.reader = reader;
-        line = col = 0;
+        s_reader = reader;
+        s_line = s_column = 0;
     }
 
-    public bool ForceASCII { get; set; }
-
+    /// <summary>
+    /// 弃置
+    /// </summary>
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        reader?.Dispose();
+        s_reader?.Dispose();
     }
 
+    /// <summary>
+    /// 解析
+    /// </summary>
+    /// <returns>解析完成的Toml表格</returns>
+    /// <exception cref="TomlParseException">解析错误</exception>
     public TomlTable Parse()
     {
         syntaxErrors = new List<TomlSyntaxException>();
-        line = col = 1;
-        var rootNode = new TomlTable();
-        var currentNode = rootNode;
-        currentState = ParseState.None;
+        s_line = s_column = 1;
+        var rootTable = new TomlTable();
+        var currentTable = rootTable;
+        s_currentState = ParseState.None;
         var keyParts = new List<string>();
         var arrayTable = false;
         StringBuilder latestComment = null!;
         var firstComment = true;
 
         int currentChar;
-        while ((currentChar = reader.Peek()) >= 0)
+        while ((currentChar = s_reader.Peek()) >= 0)
         {
             var c = (char)currentChar;
 
-            if (currentState == ParseState.None)
+            if (s_currentState is ParseState.None)
             {
                 // Skip white space
                 if (TomlSyntax.IsWhiteSpace(c))
@@ -888,9 +1503,9 @@ public class TOMLParser : IDisposable
                 if (TomlSyntax.IsNewLine(c))
                 {
                     // Check if there are any comments and so far no items being declared
-                    if (latestComment != null && firstComment)
+                    if (latestComment is not null && firstComment)
                     {
-                        rootNode.Comment = latestComment.ToString().TrimEnd();
+                        rootTable.Comment = latestComment.ToString().TrimEnd();
                         latestComment = null!;
                         firstComment = false;
                     }
@@ -902,7 +1517,7 @@ public class TOMLParser : IDisposable
                 }
 
                 // Start of a comment; ignore until newline
-                if (c == TomlSyntax.COMMENT_SYMBOL)
+                if (c is TomlSyntax.COMMENT_SYMBOL)
                 {
                     latestComment ??= new StringBuilder();
                     latestComment.AppendLine(ParseComment());
@@ -913,15 +1528,15 @@ public class TOMLParser : IDisposable
                 // Encountered a non-comment value. The comment must belong to it (ignore possible newlines)!
                 firstComment = false;
 
-                if (c == TomlSyntax.TABLE_START_SYMBOL)
+                if (c is TomlSyntax.TABLE_START_SYMBOL)
                 {
-                    currentState = ParseState.Table;
+                    s_currentState = ParseState.Table;
                     goto consume_character;
                 }
 
                 if (TomlSyntax.IsBareKey(c) || TomlSyntax.IsQuoted(c))
                 {
-                    currentState = ParseState.KeyValuePair;
+                    s_currentState = ParseState.KeyValuePair;
                 }
                 else
                 {
@@ -929,7 +1544,7 @@ public class TOMLParser : IDisposable
                     continue;
                 }
             }
-            if (currentState == ParseState.KeyValuePair)
+            if (s_currentState is ParseState.KeyValuePair)
             {
                 var keyValuePair = ReadKeyValuePair(keyParts);
 
@@ -938,25 +1553,25 @@ public class TOMLParser : IDisposable
                     latestComment = null!;
                     keyParts.Clear();
 
-                    if (currentState != ParseState.None)
+                    if (s_currentState != ParseState.None)
                         AddError("Failed to parse key-value pair!");
                     continue;
                 }
 
                 keyValuePair.Comment = latestComment?.ToString()?.TrimEnd()!;
-                var inserted = InsertNode(keyValuePair, currentNode, keyParts);
+                var inserted = InsertNode(keyValuePair, currentTable, keyParts);
                 latestComment = null!;
                 keyParts.Clear();
                 if (inserted)
-                    currentState = ParseState.SkipToNextLine;
+                    s_currentState = ParseState.SkipToNextLine;
                 continue;
             }
-            if (currentState == ParseState.Table)
+            if (s_currentState is ParseState.Table)
             {
                 if (keyParts.Count == 0)
                 {
                     // We have array table
-                    if (c == TomlSyntax.TABLE_START_SYMBOL)
+                    if (c is TomlSyntax.TABLE_START_SYMBOL)
                     {
                         // Consume the character
                         ConsumeChar();
@@ -980,13 +1595,13 @@ public class TOMLParser : IDisposable
                     continue;
                 }
 
-                if (c == TomlSyntax.TABLE_END_SYMBOL)
+                if (c is TomlSyntax.TABLE_END_SYMBOL)
                 {
                     if (arrayTable)
                     {
                         // Consume the ending bracket so we can peek the next character
                         ConsumeChar();
-                        var nextChar = reader.Peek();
+                        var nextChar = s_reader.Peek();
                         if (nextChar < 0 || (char)nextChar != TomlSyntax.TABLE_END_SYMBOL)
                         {
                             AddError(
@@ -999,27 +1614,27 @@ public class TOMLParser : IDisposable
                         }
                     }
 
-                    currentNode = CreateTable(rootNode, keyParts, arrayTable);
-                    if (currentNode != null)
+                    currentTable = CreateTable(rootTable, keyParts, arrayTable);
+                    if (currentTable is not null)
                     {
-                        currentNode.IsInline = false;
-                        currentNode.Comment = latestComment?.ToString()?.TrimEnd()!;
+                        currentTable.IsInline = false;
+                        currentTable.Comment = latestComment?.ToString()?.TrimEnd()!;
                     }
 
                     keyParts.Clear();
                     arrayTable = false;
                     latestComment = null!;
 
-                    if (currentNode == null)
+                    if (currentTable == null)
                     {
-                        if (currentState != ParseState.None)
+                        if (s_currentState != ParseState.None)
                             AddError("Error creating table array!");
                         // Reset a node to root in order to try and continue parsing
-                        currentNode = rootNode;
+                        currentTable = rootTable;
                         continue;
                     }
 
-                    currentState = ParseState.SkipToNextLine;
+                    s_currentState = ParseState.SkipToNextLine;
                     goto consume_character;
                 }
 
@@ -1031,19 +1646,19 @@ public class TOMLParser : IDisposable
                     latestComment = null!;
                 }
             }
-            if (currentState == ParseState.SkipToNextLine)
+            if (s_currentState is ParseState.SkipToNextLine)
             {
-                if (TomlSyntax.IsWhiteSpace(c) || c == TomlSyntax.NEWLINE_CARRIAGE_RETURN_CHARACTER)
+                if (TomlSyntax.IsWhiteSpace(c) || c is TomlSyntax.NEWLINE_CARRIAGE_RETURN_CHARACTER)
                     goto consume_character;
 
                 if (c is TomlSyntax.COMMENT_SYMBOL or TomlSyntax.NEWLINE_CHARACTER)
                 {
-                    currentState = ParseState.None;
+                    s_currentState = ParseState.None;
                     AdvanceLine();
 
-                    if (c == TomlSyntax.COMMENT_SYMBOL)
+                    if (c is TomlSyntax.COMMENT_SYMBOL)
                     {
-                        col++;
+                        s_column++;
                         ParseComment();
                         continue;
                     }
@@ -1055,42 +1670,42 @@ public class TOMLParser : IDisposable
             }
 
         consume_character:
-            reader.Read();
-            col++;
+            s_reader.Read();
+            s_column++;
         }
 
-        if (currentState != ParseState.None && currentState != ParseState.SkipToNextLine)
+        if (s_currentState != ParseState.None && s_currentState != ParseState.SkipToNextLine)
             AddError("Unexpected end of file!");
 
         if (syntaxErrors.Count > 0)
-            throw new TomlParseException(rootNode, syntaxErrors);
+            throw new TomlParseException(rootTable, syntaxErrors);
 
-        return rootNode;
+        return rootTable;
     }
 
     private bool AddError(string message, bool skipLine = true)
     {
-        syntaxErrors.Add(new TomlSyntaxException(message, currentState, line, col));
-        // Skip the whole line in hope that it was only a single faulty value (and non-multiline one at that)
+        syntaxErrors.Add(new TomlSyntaxException(message, s_currentState, s_line, s_column));
+        // Skip the whole s_line in hope that it was only a single faulty value (and non-multiline one at that)
         if (skipLine)
         {
-            reader.ReadLine();
+            s_reader.ReadLine();
             AdvanceLine(1);
         }
-        currentState = ParseState.None;
+        s_currentState = ParseState.None;
         return false;
     }
 
     private void AdvanceLine(int startCol = 0)
     {
-        line++;
-        col = startCol;
+        s_line++;
+        s_column = startCol;
     }
 
     private int ConsumeChar()
     {
-        col++;
-        return reader.Read();
+        s_column++;
+        return s_reader.Read();
     }
 
     #region Key-Value pair parsing
@@ -1108,7 +1723,7 @@ public class TOMLParser : IDisposable
     private TomlNode ReadKeyValuePair(List<string> keyParts)
     {
         int cur;
-        while ((cur = reader.Peek()) >= 0)
+        while ((cur = s_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -1132,7 +1747,7 @@ public class TOMLParser : IDisposable
                 continue;
             }
 
-            if (c == TomlSyntax.KEY_VALUE_SEPARATOR)
+            if (c is TomlSyntax.KEY_VALUE_SEPARATOR)
             {
                 ConsumeChar();
                 return ReadValue();
@@ -1158,7 +1773,7 @@ public class TOMLParser : IDisposable
     private TomlNode ReadValue(bool skipNewlines = false)
     {
         int cur;
-        while ((cur = reader.Peek()) >= 0)
+        while ((cur = s_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -1168,7 +1783,7 @@ public class TOMLParser : IDisposable
                 continue;
             }
 
-            if (c == TomlSyntax.COMMENT_SYMBOL)
+            if (c is TomlSyntax.COMMENT_SYMBOL)
             {
                 AddError("No value found!");
                 return null!;
@@ -1178,7 +1793,7 @@ public class TOMLParser : IDisposable
             {
                 if (skipNewlines)
                 {
-                    reader.Read();
+                    s_reader.Read();
                     AdvanceLine(1);
                     continue;
                 }
@@ -1192,7 +1807,7 @@ public class TOMLParser : IDisposable
                 var isMultiline = IsTripleQuote(c, out var excess);
 
                 // Error occurred in triple quote parsing
-                if (currentState == ParseState.None)
+                if (s_currentState is ParseState.None)
                     return null!;
 
                 var value = isMultiline
@@ -1206,7 +1821,7 @@ public class TOMLParser : IDisposable
                 {
                     Value = value,
                     IsMultiline = isMultiline,
-                    PreferLiteral = c == TomlSyntax.LITERAL_STRING_SYMBOL
+                    PreferLiteral = c is TomlSyntax.LITERAL_STRING_SYMBOL
                 };
             }
 
@@ -1241,7 +1856,7 @@ public class TOMLParser : IDisposable
         var quoted = false;
         var prevWasSpace = false;
         int cur;
-        while ((cur = reader.Peek()) >= 0)
+        while ((cur = s_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -1258,7 +1873,7 @@ public class TOMLParser : IDisposable
             if (buffer.Length == 0)
                 prevWasSpace = false;
 
-            if (c == TomlSyntax.SUBKEY_SEPARATOR)
+            if (c is TomlSyntax.SUBKEY_SEPARATOR)
             {
                 if (buffer.Length == 0 && !quoted)
                     return AddError($"Found an extra subkey separator in {".".Join(parts)}...");
@@ -1283,8 +1898,8 @@ public class TOMLParser : IDisposable
                     return AddError("Encountered a quote in the middle of subkey name!");
 
                 // Consume the quote character and read the key tomlFile
-                col++;
-                buffer.Append(ReadQuotedValueSingleLine((char)reader.Read()));
+                s_column++;
+                buffer.Append(ReadQuotedValueSingleLine((char)s_reader.Read()));
                 quoted = true;
                 continue;
             }
@@ -1299,8 +1914,8 @@ public class TOMLParser : IDisposable
             break;
 
         consume_character:
-            reader.Read();
-            col++;
+            s_reader.Read();
+            s_column++;
         }
 
         if (buffer.Length == 0 && !quoted)
@@ -1328,11 +1943,11 @@ public class TOMLParser : IDisposable
     {
         var result = new StringBuilder();
         int cur;
-        while ((cur = reader.Peek()) >= 0)
+        while ((cur = s_reader.Peek()) >= 0)
         {
             var c = (char)cur;
             if (
-                c == TomlSyntax.COMMENT_SYMBOL
+                c is TomlSyntax.COMMENT_SYMBOL
                 || TomlSyntax.IsNewLine(c)
                 || TomlSyntax.IsValueSeparator(c)
             )
@@ -1388,7 +2003,7 @@ public class TOMLParser : IDisposable
                 },
             var _ => null!
         };
-        if (node != null)
+        if (node is not null)
             return node;
 
         // Normalize by removing space separator
@@ -1475,19 +2090,19 @@ public class TOMLParser : IDisposable
         var expectValue = true;
 
         int cur;
-        while ((cur = reader.Peek()) >= 0)
+        while ((cur = s_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
-            if (c == TomlSyntax.ARRAY_END_SYMBOL)
+            if (c is TomlSyntax.ARRAY_END_SYMBOL)
             {
                 ConsumeChar();
                 break;
             }
 
-            if (c == TomlSyntax.COMMENT_SYMBOL)
+            if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                reader.ReadLine();
+                s_reader.ReadLine();
                 AdvanceLine(1);
                 continue;
             }
@@ -1499,7 +2114,7 @@ public class TOMLParser : IDisposable
                 goto consume_character;
             }
 
-            if (c == TomlSyntax.ITEM_SEPARATOR)
+            if (c is TomlSyntax.ITEM_SEPARATOR)
             {
                 if (currentValue == null)
                 {
@@ -1521,7 +2136,7 @@ public class TOMLParser : IDisposable
             currentValue = ReadValue(true);
             if (currentValue == null)
             {
-                if (currentState != ParseState.None)
+                if (s_currentState != ParseState.None)
                     AddError("Failed to determine and parse a value!");
                 return null!;
             }
@@ -1532,7 +2147,7 @@ public class TOMLParser : IDisposable
             ConsumeChar();
         }
 
-        if (currentValue != null)
+        if (currentValue is not null)
             result.Add(currentValue);
         return result;
     }
@@ -1554,17 +2169,17 @@ public class TOMLParser : IDisposable
         var separator = false;
         var keyParts = new List<string>();
         int cur;
-        while ((cur = reader.Peek()) >= 0)
+        while ((cur = s_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
-            if (c == TomlSyntax.INLINE_TABLE_END_SYMBOL)
+            if (c is TomlSyntax.INLINE_TABLE_END_SYMBOL)
             {
                 ConsumeChar();
                 break;
             }
 
-            if (c == TomlSyntax.COMMENT_SYMBOL)
+            if (c is TomlSyntax.COMMENT_SYMBOL)
             {
                 AddError("Incomplete inline table definition!");
                 return null!;
@@ -1579,7 +2194,7 @@ public class TOMLParser : IDisposable
             if (TomlSyntax.IsWhiteSpace(c))
                 goto consume_character;
 
-            if (c == TomlSyntax.ITEM_SEPARATOR)
+            if (c is TomlSyntax.ITEM_SEPARATOR)
             {
                 if (currentValue == null)
                 {
@@ -1609,7 +2224,7 @@ public class TOMLParser : IDisposable
             return null!;
         }
 
-        if (currentValue != null && !InsertNode(currentValue, result, keyParts))
+        if (currentValue is not null && !InsertNode(currentValue, result, keyParts))
             return null!;
 
         return result;
@@ -1645,7 +2260,7 @@ public class TOMLParser : IDisposable
         int cur;
         // Consume the first quote
         ConsumeChar();
-        if ((cur = reader.Peek()) < 0)
+        if ((cur = s_reader.Peek()) < 0)
         {
             excess = '\0';
             return AddError("Unexpected end of file!");
@@ -1659,7 +2274,7 @@ public class TOMLParser : IDisposable
 
         // Consume the second quote
         excess = (char)ConsumeChar();
-        if ((cur = reader.Peek()) < 0 || (char)cur != quote)
+        if ((cur = s_reader.Peek()) < 0 || (char)cur != quote)
             return false;
 
         // Consume the final quote
@@ -1692,9 +2307,9 @@ public class TOMLParser : IDisposable
 
         if (c == quote)
             return true;
-        if (isNonLiteral && c == TomlSyntax.ESCAPE_SYMBOL)
+        if (isNonLiteral && c is TomlSyntax.ESCAPE_SYMBOL)
             escaped = true;
-        if (c == TomlSyntax.NEWLINE_CHARACTER)
+        if (c is TomlSyntax.NEWLINE_CHARACTER)
             return AddError("Encountered newline in single line string!");
 
         sb.Append(c);
@@ -1702,7 +2317,7 @@ public class TOMLParser : IDisposable
     }
 
     /**
-     * Reads a single-line string.
+     * Reads a single-s_line string.
      * Assumes the cursor is at the first character that belongs to the string.
      * Consumes all characters that belong to the string (including the closing quote).
      *
@@ -1713,7 +2328,7 @@ public class TOMLParser : IDisposable
 
     private string ReadQuotedValueSingleLine(char quote, char initialData = '\0')
     {
-        var isNonLiteral = quote == TomlSyntax.BASIC_STRING_SYMBOL;
+        var isNonLiteral = quote is TomlSyntax.BASIC_STRING_SYMBOL;
         var sb = new StringBuilder();
         var escaped = false;
 
@@ -1726,7 +2341,7 @@ public class TOMLParser : IDisposable
                 sb,
                 ref escaped
             );
-            if (currentState == ParseState.None)
+            if (s_currentState is ParseState.None)
                 return null!;
             if (shouldReturn)
                 if (isNonLiteral)
@@ -1742,15 +2357,15 @@ public class TOMLParser : IDisposable
 
         int cur;
         var readDone = false;
-        while ((cur = reader.Read()) >= 0)
+        while ((cur = s_reader.Read()) >= 0)
         {
             // Consume the character
-            col++;
+            s_column++;
             var c = (char)cur;
             readDone = ProcessQuotedValueCharacter(quote, isNonLiteral, c, sb, ref escaped);
             if (readDone)
             {
-                if (currentState == ParseState.None)
+                if (s_currentState is ParseState.None)
                     return null!;
                 break;
             }
@@ -1782,7 +2397,7 @@ public class TOMLParser : IDisposable
 
     private string ReadQuotedValueMultiLine(char quote)
     {
-        var isBasic = quote == TomlSyntax.BASIC_STRING_SYMBOL;
+        var isBasic = quote is TomlSyntax.BASIC_STRING_SYMBOL;
         var sb = new StringBuilder();
         var escaped = false;
         var skipWhitespace = false;
@@ -1842,9 +2457,9 @@ public class TOMLParser : IDisposable
             }
 
             // If we encounter an escape sequence...
-            if (isBasic && c == TomlSyntax.ESCAPE_SYMBOL)
+            if (isBasic && c is TomlSyntax.ESCAPE_SYMBOL)
             {
-                var next = reader.Peek();
+                var next = s_reader.Peek();
                 var nc = (char)next;
                 if (next >= 0)
                 {
@@ -1856,7 +2471,7 @@ public class TOMLParser : IDisposable
                     }
 
                     // ...and we have \" or \, skip the character
-                    if (nc == quote || nc == TomlSyntax.ESCAPE_SYMBOL)
+                    if (nc == quote || nc is TomlSyntax.ESCAPE_SYMBOL)
                         escaped = true;
                 }
             }
@@ -1877,7 +2492,7 @@ public class TOMLParser : IDisposable
         // TOML actually allows to have five ending quotes like
         // """"" => "" belong to the string + """ is the actual ending
         quotesEncountered = 0;
-        while ((cur = reader.Peek()) >= 0)
+        while ((cur = s_reader.Peek()) >= 0)
         {
             var c = (char)cur;
             if (c == quote && ++quotesEncountered < 3)
@@ -2039,7 +2654,7 @@ public class TOMLParser : IDisposable
     private string ParseComment()
     {
         ConsumeChar();
-        var commentLine = reader.ReadLine()?.Trim() ?? string.Empty;
+        var commentLine = s_reader.ReadLine()?.Trim() ?? string.Empty;
         if (commentLine.Any(ch => TomlSyntax.MustBeEscaped(ch)))
             AddError("Comment must not contain control characters other than tab.", false);
         return commentLine;
@@ -2050,10 +2665,21 @@ public class TOMLParser : IDisposable
 
 #endregion
 
+/// <summary>
+/// TOML
+/// </summary>
 public static class TOML
 {
+    /// <summary>
+    /// 强制ASCII编码
+    /// </summary>
     public static bool ForceASCII { get; set; } = false;
 
+    /// <summary>
+    /// 从文本读入器解析
+    /// </summary>
+    /// <param name="reader"></param>
+    /// <returns>解析完成的Toml表格</returns>
     public static TomlTable Parse(TextReader reader)
     {
         try
@@ -2067,6 +2693,11 @@ public static class TOML
         }
     }
 
+    /// <summary>
+    /// 从文件解析
+    /// </summary>
+    /// <param name="tomlFile">Toml文件</param>
+    /// <returns>解析完成的Toml表格</returns>
     public static TomlTable Parse(string tomlFile)
     {
         try
@@ -2084,72 +2715,166 @@ public static class TOML
 
 #region Exception Types
 
+/// <summary>
+/// Toml格式化错误
+/// </summary>
 public class TomlFormatException : Exception
 {
+    /// <summary>
+    /// Toml格式化错误
+    /// </summary>
+    /// <param name="message">信息</param>
     public TomlFormatException(string message)
         : base(message) { }
 }
 
+/// <summary>
+/// Toml解析错误
+/// </summary>
 public class TomlParseException : Exception
 {
+    /// <summary>
+    /// 解析过的表格
+    /// </summary>
+    public TomlTable ParsedTable { get; }
+
+    /// <summary>
+    /// 语法错误
+    /// </summary>
+    public IEnumerable<TomlSyntaxException> SyntaxErrors { get; }
+
+    /// <summary>
+    /// Toml解析错误
+    /// </summary>
+    /// <param name="parsed">解析过的表格</param>
+    /// <param name="exceptions">语法错误</param>
     public TomlParseException(TomlTable parsed, IEnumerable<TomlSyntaxException> exceptions)
         : base("TOML file contains format errors")
     {
         ParsedTable = parsed;
         SyntaxErrors = exceptions;
     }
-
-    public TomlTable ParsedTable { get; }
-
-    public IEnumerable<TomlSyntaxException> SyntaxErrors { get; }
 }
 
+/// <summary>
+/// Toml语法错误
+/// </summary>
 public class TomlSyntaxException : Exception
 {
-    public TomlSyntaxException(string message, TOMLParser.ParseState state, int line, int col)
+    /// <summary>
+    /// 解析状态
+    /// </summary>
+    public TOMLParser.ParseState ParseState { get; }
+
+    /// <summary>
+    /// 行
+    /// </summary>
+    public int Line { get; }
+
+    /// <summary>
+    /// 列
+    /// </summary>
+    public int Column { get; }
+
+    /// <summary>
+    /// Toml语法错误
+    /// </summary>
+    /// <param name="message">信息</param>
+    /// <param name="state">解析状态</param>
+    /// <param name="line">行</param>
+    /// <param name="column">列</param>
+    public TomlSyntaxException(string message, TOMLParser.ParseState state, int line, int column)
         : base(message)
     {
         ParseState = state;
         Line = line;
-        Column = col;
+        Column = column;
     }
-
-    public TOMLParser.ParseState ParseState { get; }
-
-    public int Line { get; }
-
-    public int Column { get; }
 }
 
 #endregion
 
 #region Parse utilities
-
+/// <summary>
+/// Toml语法
+/// </summary>
 internal static class TomlSyntax
 {
     #region Type Patterns
-
+    /// <summary>
+    /// Boolean真值
+    /// </summary>
     public const string TRUE_VALUE = "true";
+    /// <summary>
+    /// Boolean假值
+    /// </summary>
     public const string FALSE_VALUE = "false";
+    /// <summary>
+    /// 无效值
+    /// </summary>
     public const string NAN_VALUE = "nan";
+    /// <summary>
+    /// 正无效值
+    /// </summary>
     public const string POS_NAN_VALUE = "+nan";
+    /// <summary>
+    /// 负无效值
+    /// </summary>
     public const string NEG_NAN_VALUE = "-nan";
+    /// <summary>
+    /// 无穷
+    /// </summary>
     public const string INF_VALUE = "inf";
+    /// <summary>
+    /// 正无穷
+    /// </summary>
     public const string POS_INF_VALUE = "+inf";
+    /// <summary>
+    /// 负无穷
+    /// </summary>
     public const string NEG_INF_VALUE = "-inf";
-
+    /// <summary>
+    /// 是布尔类型
+    /// </summary>
+    /// <param name="s">字符串</param>
+    /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsBoolean(string s) => s is TRUE_VALUE or FALSE_VALUE;
-
+    /// <summary>
+    /// 是正无穷
+    /// </summary>
+    /// <param name="s">字符串</param>
+    /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsPosInf(string s) => s is INF_VALUE or POS_INF_VALUE;
-
+    /// <summary>
+    /// 是负无穷
+    /// </summary>
+    /// <param name="s">字符串</param>
+    /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsNegInf(string s) => s == NEG_INF_VALUE;
-
+    /// <summary>
+    /// 是无效值
+    /// </summary>
+    /// <param name="s">字符串</param>
+    /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsNaN(string s) => s is NAN_VALUE or POS_NAN_VALUE or NEG_NAN_VALUE;
-
+    /// <summary>
+    /// 是整型
+    /// </summary>
+    /// <param name="s">字符串</param>
+    /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsInteger(string s) => IntegerPattern.IsMatch(s);
-
+    /// <summary>
+    /// 是浮点型
+    /// </summary>
+    /// <param name="s">字符串</param>
+    /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsFloat(string s) => FloatPattern.IsMatch(s);
-
+    /// <summary>
+    /// 是进位制整型
+    /// </summary>
+    /// <param name="s">字符串</param>
+    /// <param name="numberBase">进位制</param>
+    /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
     public static bool IsIntegerWithBase(string s, out int numberBase)
     {
         numberBase = 10;
@@ -2331,9 +3056,16 @@ internal static class TomlSyntax
 
     #endregion
 }
-
+/// <summary>
+/// 字符串工具
+/// </summary>
 internal static class StringUtils
 {
+    /// <summary>
+    /// 转换为键
+    /// </summary>
+    /// <param name="key">值</param>
+    /// <returns></returns>
     public static string AsKey(this string key)
     {
         var quote = key == string.Empty || key.Any(c => !TomlSyntax.IsBareKey(c));
@@ -2341,7 +3073,12 @@ internal static class StringUtils
             ? key
             : $"{TomlSyntax.BASIC_STRING_SYMBOL}{key.Escape()}{TomlSyntax.BASIC_STRING_SYMBOL}";
     }
-
+    /// <summary>
+    /// 加入值
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="subItems"></param>
+    /// <returns></returns>
     public static string Join(this string self, IEnumerable<string> subItems)
     {
         var sb = new StringBuilder();
@@ -2358,6 +3095,16 @@ internal static class StringUtils
         return sb.ToString();
     }
 
+    /// <summary>
+    /// 尝试解析日期时间委托
+    /// </summary>
+    /// <typeparam name="T">日期时间</typeparam>
+    /// <param name="s">字符串</param>
+    /// <param name="format">格式</param>
+    /// <param name="ci">样式供应器</param>
+    /// <param name="dts">日期时间风格</param>
+    /// <param name="dt">日期时间</param>
+    /// <returns>成功为 <see langword="true"/> 失败为 <see langword="false"/></returns>
     public delegate bool TryDateParseDelegate<T>(
         string s,
         string format,
@@ -2365,7 +3112,17 @@ internal static class StringUtils
         DateTimeStyles dts,
         out T dt
     );
-
+    /// <summary>
+    /// 尝试解析日期时间
+    /// </summary>
+    /// <typeparam name="T">日期时间</typeparam>
+    /// <param name="s">字符串</param>
+    /// <param name="formats">格式</param>
+    /// <param name="styles">日期时间格式</param>
+    /// <param name="parser">尝试解析委托</param>
+    /// <param name="dateTime">日期时间</param>
+    /// <param name="parsedFormat">解析格式</param>
+    /// <returns>成功为 <see langword="true"/> 失败为 <see langword="false"/></returns>
     public static bool TryParseDateTime<T>(
         string s,
         string[] formats,
@@ -2388,13 +3145,22 @@ internal static class StringUtils
 
         return false;
     }
-
+    /// <summary>
+    /// 转换为注释
+    /// </summary>
+    /// <param name="self">文本</param>
+    /// <param name="tw">文本写入器</param>
     public static void AsComment(this string self, TextWriter tw)
     {
         foreach (var line in self.Split(TomlSyntax.NEWLINE_CHARACTER))
             tw.WriteLine($"{TomlSyntax.COMMENT_SYMBOL} {line.Trim()}");
     }
-
+    /// <summary>
+    /// 删除所有指定字符
+    /// </summary>
+    /// <param name="txt">文本</param>
+    /// <param name="toRemove">指定字符</param>
+    /// <returns>完成的字符串</returns>
     public static string RemoveAll(this string txt, char toRemove)
     {
         var sb = new StringBuilder(txt.Length);
@@ -2402,7 +3168,12 @@ internal static class StringUtils
             sb.Append(c);
         return sb.ToString();
     }
-
+    /// <summary>
+    /// 编码
+    /// </summary>
+    /// <param name="txt">文本</param>
+    /// <param name="escapeNewlines">编码至新行</param>
+    /// <returns>编码完成的字符串</returns>
     public static string Escape(this string txt, bool escapeNewlines = true)
     {
         var stringBuilder = new StringBuilder(txt.Length + 2);
@@ -2436,7 +3207,13 @@ internal static class StringUtils
 
         return stringBuilder.ToString();
     }
-
+    /// <summary>
+    /// 尝试解码
+    /// </summary>
+    /// <param name="txt">文本</param>
+    /// <param name="unescaped">解码字符串</param>
+    /// <param name="exception">异常</param>
+    /// <returns>成功为 <see langword="true"/> 失败为 <see langword="false"/></returns>
     public static bool TryUnescape(this string txt, out string unescaped, out Exception exception)
     {
         try
@@ -2452,7 +3229,12 @@ internal static class StringUtils
             return false;
         }
     }
-
+    /// <summary>
+    /// 字符串解码
+    /// </summary>
+    /// <param name="txt">文本</param>
+    /// <returns>解码后的字符串</returns>
+    /// <exception cref="Exception">没码</exception>
     public static string Unescape(this string txt)
     {
         if (string.IsNullOrWhiteSpace(txt))

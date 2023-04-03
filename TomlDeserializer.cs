@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKW.Libs.TOML;
+namespace HKW.TOML;
 
 /// <summary>
 /// Toml反序列化
@@ -21,6 +21,7 @@ public class TomlDeserializer
     /// </summary>
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="tomlFile">Toml文件</param>
+    /// <param name="options">反序列化设置</param>
     /// <returns>完成反序列化的对象</returns>
     public static T DeserializeFromFile<T>(string tomlFile, TomlDeserializerOptions? options = null)
         where T : class, new()
@@ -33,6 +34,7 @@ public class TomlDeserializer
     /// </summary>
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="tomlFile">Toml文件</param>
+    /// <param name="options">反序列化设置</param>
     /// <returns>完成反序列化的对象</returns>
     public static async Task<T> DeserializeFromFileAsync<T>(string tomlFile, TomlDeserializerOptions? options = null)
         where T : class, new()
@@ -45,6 +47,7 @@ public class TomlDeserializer
     /// </summary>
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="table">Toml表格</param>
+    /// <param name="options">反序列化设置</param>
     /// <returns>完成反序列化的对象</returns>
     public static T Deserialize<T>(TomlTable table, TomlDeserializerOptions? options = null)
         where T : class, new()
@@ -61,6 +64,7 @@ public class TomlDeserializer
     /// </summary>
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="table">Toml表格</param>
+    /// <param name="options">反序列化设置</param>
     /// <returns>完成反序列化的对象</returns>
     public static async Task<T> DeserializeAsync<T>(TomlTable table, TomlDeserializerOptions? options = null)
         where T : class, new()
@@ -112,6 +116,7 @@ public class TomlDeserializer
     /// <summary>
     /// 检查TomlName特性
     /// </summary>
+    /// <param name="iTomlClass">Toml类接口</param>
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
     /// <param name="table">Toml表格</param>
@@ -257,7 +262,7 @@ public class TomlDeserializer
             TypeCode.Single => Convert.ChangeType(node.AsDouble, TypeCode.Single),
             TypeCode.Double => Convert.ChangeType(node.AsDouble, TypeCode.Double),
 
-            // 整形
+            // 整型
             TypeCode.SByte => Convert.ChangeType(node.AsDouble, TypeCode.SByte),
             TypeCode.Byte => Convert.ChangeType(node.AsDouble, TypeCode.Byte),
             TypeCode.Int16 => Convert.ChangeType(node.AsDouble, TypeCode.Int16),

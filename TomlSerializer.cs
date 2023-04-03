@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKW.Libs.TOML;
+namespace HKW.TOML;
 
 /// <summary>
 /// Toml序列化
@@ -24,38 +24,41 @@ public class TomlSerializer
     /// 序列化至Toml文件
     /// </summary>
     /// <param name="source">源</param>
+    /// <param name="options">序列化设置</param>
     /// <param name="tomlFile">Toml文件</param>
     public static void SerializeToFile(
         object source,
         string tomlFile,
-        TomlSerializerOptions? option = null
+        TomlSerializerOptions? options = null
     )
     {
-        Serialize(source, option).SaveTo(tomlFile);
+        Serialize(source, options).SaveTo(tomlFile);
     }
 
     /// <summary>
     /// 异步序列化至Toml文件
     /// </summary>
     /// <param name="source">源</param>
+    /// <param name="options">序列化设置</param>
     /// <param name="tomlFile">Toml文件</param>
     public static async Task SerializeToFileAsync(
         object source,
         string tomlFile,
-        TomlSerializerOptions? option = null
+        TomlSerializerOptions? options = null
     )
     {
-        (await SerializeAsync(source, option)).SaveTo(tomlFile);
+        (await SerializeAsync(source, options)).SaveTo(tomlFile);
     }
 
     /// <summary>
     /// 序列化至Toml表格数据
     /// </summary>
     /// <param name="source">源</param>
+    /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
-    public static TomlTable Serialize(object source, TomlSerializerOptions? option = null)
+    public static TomlTable Serialize(object source, TomlSerializerOptions? options = null)
     {
-        s_options = option ?? new();
+        s_options = options ?? new();
         var table = CreateTomlTable(source);
         s_options = null!;
         return table;
@@ -65,13 +68,14 @@ public class TomlSerializer
     /// 异步序列化至Toml表格数据
     /// </summary>
     /// <param name="source">源</param>
+    /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
     public static async Task<TomlTable> SerializeAsync(
         object source,
-        TomlSerializerOptions? option = null
+        TomlSerializerOptions? options = null
     )
     {
-        s_options = option ?? new();
+        s_options = options ?? new();
         var table = await Task.Run(() =>
         {
             return CreateTomlTable(source);
@@ -193,6 +197,7 @@ public class TomlSerializer
     /// 创建Toml节点
     /// </summary>
     /// <param name="source">源</param>
+    /// <param name="type">类型</param>
     /// <returns>Toml节点</returns>
     private static TomlNode CreateTomlNode(object source, Type? type = null)
     {
@@ -210,7 +215,7 @@ public class TomlSerializer
             TypeCode.Double
                 => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
 
-            // 整形
+            // 整型
             TypeCode.SByte
                 => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
             TypeCode.Byte
@@ -246,7 +251,7 @@ public class TomlSerializer
     /// 设置注释
     /// </summary>
     /// <param name="iTomlClass">TomlClass接口</param>
-    /// <param name="node">Toml表格</param>
+    /// <param name="name">键名</param>
     private static string? SetCommentToNode(ITomlClassComment? iTomlClass, string name)
     {
         // 检查值注释

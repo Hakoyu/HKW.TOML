@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKW.Libs.TOML;
+namespace HKW.TOML;
 
 /// <summary>
 /// Toml类接口

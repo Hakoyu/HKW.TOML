@@ -3,13 +3,15 @@ using System.Reflection;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
-using HKW.Libs.TOML;
+using HKW.TOML;
 using HKWToml;
 
 System.Diagnostics.Stopwatch stopWatch = new();
 stopWatch.Start();
-var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
+var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml".AsKey();
 var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
+//var i = (int)long.MaxValue;
+int i = ((TomlNode)(float)114.514).AsInt32;
 //var classString = TomlAsClasses.Construct(
 //    "Test",
 //    TOML.Parse(file),
@@ -24,8 +26,8 @@ var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
 //Console.WriteLine(classString);
 
 //var table = TOML.Parse(file);
-var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
-await TomlSerializer.SerializeToFileAsync(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
+//var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
+//await TomlSerializer.SerializeToFileAsync(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
 //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
 //Console.WriteLine(test);
 //var banchMark = BenchmarkRunner.Run<Benchmark>();

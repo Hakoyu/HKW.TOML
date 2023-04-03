@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using HKW.Libs.TOML;
+using HKW.TOML;
 
 namespace HKWToml
 {

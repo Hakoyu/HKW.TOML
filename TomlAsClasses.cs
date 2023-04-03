@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace HKW.Libs.TOML;
+namespace HKW.TOML;
 
 /// <summary>
 /// Toml转换为类
@@ -132,6 +132,7 @@ public partial class TomlAsClasses
     /// <param name="className">类名称</param>
     /// <param name="parentClassName">父类名称</param>
     /// <param name="table">表格</param>
+    /// <param name="isAnonymousClass">是匿名函数</param>
     /// <exception cref="Exception">toml中使用的Csharp的关键字</exception>
     private static void ParseTable(
         string className,
@@ -434,6 +435,7 @@ public partial class TomlAsClasses
         /// </summary>
         /// <param name="name">名称</param>
         /// <param name="parentName">父类名称</param>
+        /// <param name="isAnonymous">是匿名函数</param>
         public TomlClass(string name, string parentName = "", bool isAnonymous = false)
         {
             Name = name;
