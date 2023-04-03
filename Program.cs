@@ -26,7 +26,7 @@ var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
 //Console.WriteLine(classString);
 
 var table = TOML.Parse(file);
-Console.WriteLine(table.ToString());
+Console.WriteLine(table.ToTomlString());
 //var test = await TomlDeserializer.DeserializeFromFileAsync<Test>(file);
 //await TomlSerializer.SerializeToFileAsync(test, "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml");
 //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);

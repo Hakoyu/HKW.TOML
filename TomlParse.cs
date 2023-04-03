@@ -767,7 +767,7 @@ public class TomlBoolean : TomlNode
 public class TomlDateTime : TomlNode, IFormattable
 {
     /// <summary>
-    ///
+    /// 秒级精度
     /// </summary>
     public int SecondsPrecision { get; set; }
 
@@ -1216,8 +1216,24 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     /// <param name="tomlFile">Toml文件</param>
     public void SaveTo(string tomlFile)
     {
-        using var tw = new StreamWriter(tomlFile);
-        WriteTo(tw, null!, false);
+        using var sw = new StreamWriter(tomlFile);
+        WriteTo(sw, null!, false);
+    }
+
+    /// <summary>
+    /// 转换为Toml格式文本
+    /// </summary>
+    /// <returns></returns>
+    public string ToTomlString()
+    {
+        using var ms = new MemoryStream();
+        using (var sw = new StreamWriter(ms, leaveOpen: true))
+        {
+            WriteTo(sw, null!, false);
+        }
+        ms.Position = 0;
+        using var rw = new StreamReader(ms);
+        return rw.ReadToEnd();
     }
 
     /// <inheritdoc/>
@@ -1435,24 +1451,24 @@ public class TOMLParser : IDisposable
     /// <summary>
     /// 文明写入器
     /// </summary>
-    private readonly TextReader s_reader;
+    private readonly TextReader r_reader;
 
     /// <summary>
     /// 当前状态
     /// </summary>
-    private ParseState s_currentState;
+    private ParseState _currentState;
 
     /// <summary>
     /// 行
     /// </summary>
-    private int s_line;
+    private int _line;
 
     /// <summary>
     /// 列
     /// </summary>
-    private int s_column;
+    private int _column;
 
-    private List<TomlSyntaxException> s_syntaxErrors = null!;
+    private List<TomlSyntaxException> _syntaxErrors = null!;
 
     /// <summary>
     /// 从文本读入器解析
@@ -1460,8 +1476,8 @@ public class TOMLParser : IDisposable
     /// <param name="reader">文明读入器</param>
     public TOMLParser(TextReader reader)
     {
-        s_reader = reader;
-        s_line = s_column = 0;
+        r_reader = reader;
+        _line = _column = 0;
     }
 
     /// <summary>
@@ -1470,7 +1486,7 @@ public class TOMLParser : IDisposable
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        s_reader?.Dispose();
+        r_reader?.Dispose();
     }
 
     /// <summary>
@@ -1480,22 +1496,22 @@ public class TOMLParser : IDisposable
     /// <exception cref="TomlParseException">解析错误</exception>
     public TomlTable Parse()
     {
-        s_syntaxErrors = new List<TomlSyntaxException>();
-        s_line = s_column = 1;
+        _syntaxErrors = new List<TomlSyntaxException>();
+        _line = _column = 1;
         var rootTable = new TomlTable();
         var currentTable = rootTable;
-        s_currentState = ParseState.None;
+        _currentState = ParseState.None;
         var keyParts = new List<string>();
         var isArrayTable = false;
         StringBuilder latestComment = null!;
         var isFirstComment = true;
 
         int currentChar;
-        while ((currentChar = s_reader.Peek()) >= 0)
+        while ((currentChar = r_reader.Peek()) >= 0)
         {
             var c = (char)currentChar;
 
-            if (s_currentState is ParseState.None)
+            if (_currentState is ParseState.None)
             {
                 if (
                     ParseNone(c, rootTable, ref isFirstComment, ref latestComment)
@@ -1507,12 +1523,12 @@ public class TOMLParser : IDisposable
                     continue;
                 }
             }
-            if (s_currentState is ParseState.KeyValuePair)
+            if (_currentState is ParseState.KeyValuePair)
             {
                 if (ParseKeyValuePair(currentTable, keyParts, ref latestComment))
                     continue;
             }
-            if (s_currentState is ParseState.Table)
+            if (_currentState is ParseState.Table)
             {
                 if (
                     ParseTable(
@@ -1531,7 +1547,7 @@ public class TOMLParser : IDisposable
                     continue;
                 }
             }
-            if (s_currentState is ParseState.SkipToNextLine)
+            if (_currentState is ParseState.SkipToNextLine)
             {
                 if (ParseSkipToNextLine(c) is bool skipPased)
                 {
@@ -1543,19 +1559,19 @@ public class TOMLParser : IDisposable
             ConsumeCharacter();
         }
 
-        if (s_currentState != ParseState.None && s_currentState != ParseState.SkipToNextLine)
+        if (_currentState != ParseState.None && _currentState != ParseState.SkipToNextLine)
             AddError("Unexpected end of file!");
 
-        if (s_syntaxErrors.Count > 0)
-            throw new TomlParseException(rootTable, s_syntaxErrors);
+        if (_syntaxErrors.Count > 0)
+            throw new TomlParseException(rootTable, _syntaxErrors);
 
         return rootTable;
     }
 
     private void ConsumeCharacter()
     {
-        s_reader.Read();
-        s_column++;
+        r_reader.Read();
+        _column++;
     }
 
     /// <summary>
@@ -1607,13 +1623,13 @@ public class TOMLParser : IDisposable
 
         if (c is TomlSyntax.TABLE_START_SYMBOL)
         {
-            s_currentState = ParseState.Table;
+            _currentState = ParseState.Table;
             return true;
         }
 
         if (TomlSyntax.IsBareKey(c) || TomlSyntax.IsQuoted(c))
         {
-            s_currentState = ParseState.KeyValuePair;
+            _currentState = ParseState.KeyValuePair;
             return null;
         }
         else
@@ -1643,7 +1659,7 @@ public class TOMLParser : IDisposable
             latestComment = null!;
             keyParts.Clear();
 
-            if (s_currentState != ParseState.None)
+            if (_currentState != ParseState.None)
                 AddError("Failed to parse key-value pair!");
             return true;
         }
@@ -1653,7 +1669,7 @@ public class TOMLParser : IDisposable
         latestComment = null!;
         keyParts.Clear();
         if (inserted)
-            s_currentState = ParseState.SkipToNextLine;
+            _currentState = ParseState.SkipToNextLine;
         return true;
     }
 
@@ -1709,7 +1725,7 @@ public class TOMLParser : IDisposable
             {
                 // Consume the ending bracket so we can peek the next character
                 ConsumeChar();
-                var nextChar = s_reader.Peek();
+                var nextChar = r_reader.Peek();
                 if (nextChar < 0 || (char)nextChar != TomlSyntax.TABLE_END_SYMBOL)
                 {
                     AddError($"Array table {".".Join(keyParts)} has only one closing bracket.");
@@ -1733,14 +1749,14 @@ public class TOMLParser : IDisposable
 
             if (currentTable == null)
             {
-                if (s_currentState != ParseState.None)
+                if (_currentState != ParseState.None)
                     AddError("Error creating table array!");
                 // Reset a node to root in order to try and continue parsing
                 currentTable = rootTable;
                 return false;
             }
 
-            s_currentState = ParseState.SkipToNextLine;
+            _currentState = ParseState.SkipToNextLine;
             return true;
         }
 
@@ -1766,12 +1782,12 @@ public class TOMLParser : IDisposable
 
         if (c is TomlSyntax.COMMENT_SYMBOL or TomlSyntax.NEWLINE_CHARACTER)
         {
-            s_currentState = ParseState.None;
+            _currentState = ParseState.None;
             AdvanceLine();
 
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                s_column++;
+                _column++;
                 ParseComment();
                 return false;
             }
@@ -1785,27 +1801,27 @@ public class TOMLParser : IDisposable
 
     private bool AddError(string message, bool skipLine = true)
     {
-        s_syntaxErrors.Add(new TomlSyntaxException(message, s_currentState, s_line, s_column));
-        // Skip the whole s_line in hope that it was only a single faulty value (and non-multiline one at that)
+        _syntaxErrors.Add(new TomlSyntaxException(message, _currentState, _line, _column));
+        // Skip the whole _line in hope that it was only a single faulty value (and non-multiline one at that)
         if (skipLine)
         {
-            s_reader.ReadLine();
+            r_reader.ReadLine();
             AdvanceLine(1);
         }
-        s_currentState = ParseState.None;
+        _currentState = ParseState.None;
         return false;
     }
 
     private void AdvanceLine(int startCol = 0)
     {
-        s_line++;
-        s_column = startCol;
+        _line++;
+        _column = startCol;
     }
 
     private int ConsumeChar()
     {
-        s_column++;
-        return s_reader.Read();
+        _column++;
+        return r_reader.Read();
     }
 
     #region Key-Value pair parsing
@@ -1823,7 +1839,7 @@ public class TOMLParser : IDisposable
     private TomlNode ReadKeyValuePair(List<string> keyParts)
     {
         int cur;
-        while ((cur = s_reader.Peek()) >= 0)
+        while ((cur = r_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -1873,7 +1889,7 @@ public class TOMLParser : IDisposable
     private TomlNode ReadValue(bool skipNewlines = false)
     {
         int cur;
-        while ((cur = s_reader.Peek()) >= 0)
+        while ((cur = r_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -1893,7 +1909,7 @@ public class TOMLParser : IDisposable
             {
                 if (skipNewlines)
                 {
-                    s_reader.Read();
+                    r_reader.Read();
                     AdvanceLine(1);
                     continue;
                 }
@@ -1907,7 +1923,7 @@ public class TOMLParser : IDisposable
                 var isMultiline = IsTripleQuote(c, out var excess);
 
                 // Error occurred in triple quote parsing
-                if (s_currentState is ParseState.None)
+                if (_currentState is ParseState.None)
                     return null!;
 
                 var value = isMultiline
@@ -1956,7 +1972,7 @@ public class TOMLParser : IDisposable
         var quoted = false;
         var prevWasSpace = false;
         int cur;
-        while ((cur = s_reader.Peek()) >= 0)
+        while ((cur = r_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -2000,8 +2016,8 @@ public class TOMLParser : IDisposable
                     return AddError("Encountered a quote in the middle of subkey name!");
 
                 // Consume the quote character and read the key tomlFile
-                s_column++;
-                buffer.Append(ReadQuotedValueSingleLine((char)s_reader.Read()));
+                _column++;
+                buffer.Append(ReadQuotedValueSingleLine((char)r_reader.Read()));
                 quoted = true;
                 continue;
             }
@@ -2042,7 +2058,7 @@ public class TOMLParser : IDisposable
     {
         var result = new StringBuilder();
         int cur;
-        while ((cur = s_reader.Peek()) >= 0)
+        while ((cur = r_reader.Peek()) >= 0)
         {
             var c = (char)cur;
             if (
@@ -2189,7 +2205,7 @@ public class TOMLParser : IDisposable
         var expectValue = true;
 
         int cur;
-        while ((cur = s_reader.Peek()) >= 0)
+        while ((cur = r_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -2201,7 +2217,7 @@ public class TOMLParser : IDisposable
 
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                s_reader.ReadLine();
+                r_reader.ReadLine();
                 AdvanceLine(1);
                 continue;
             }
@@ -2237,7 +2253,7 @@ public class TOMLParser : IDisposable
             currentValue = ReadValue(true);
             if (currentValue == null)
             {
-                if (s_currentState != ParseState.None)
+                if (_currentState != ParseState.None)
                     AddError("Failed to determine and parse a value!");
                 return null!;
             }
@@ -2266,7 +2282,7 @@ public class TOMLParser : IDisposable
         var separator = false;
         var keyParts = new List<string>();
         int cur;
-        while ((cur = s_reader.Peek()) >= 0)
+        while ((cur = r_reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -2357,7 +2373,7 @@ public class TOMLParser : IDisposable
         int cur;
         // Consume the first quote
         ConsumeChar();
-        if ((cur = s_reader.Peek()) < 0)
+        if ((cur = r_reader.Peek()) < 0)
         {
             excess = '\0';
             return AddError("Unexpected end of file!");
@@ -2371,7 +2387,7 @@ public class TOMLParser : IDisposable
 
         // Consume the second quote
         excess = (char)ConsumeChar();
-        if ((cur = s_reader.Peek()) < 0 || (char)cur != quote)
+        if ((cur = r_reader.Peek()) < 0 || (char)cur != quote)
             return false;
 
         // Consume the final quote
@@ -2414,7 +2430,7 @@ public class TOMLParser : IDisposable
     }
 
     /**
-     * Reads a single-s_line string.
+     * Reads a single-_line string.
      * Assumes the cursor is at the first character that belongs to the string.
      * Consumes all characters that belong to the string (including the closing quote).
      *
@@ -2438,7 +2454,7 @@ public class TOMLParser : IDisposable
                 sb,
                 ref escaped
             );
-            if (s_currentState is ParseState.None)
+            if (_currentState is ParseState.None)
                 return null!;
             if (shouldReturn)
                 if (isNonLiteral)
@@ -2454,15 +2470,15 @@ public class TOMLParser : IDisposable
 
         int cur;
         var readDone = false;
-        while ((cur = s_reader.Read()) >= 0)
+        while ((cur = r_reader.Read()) >= 0)
         {
             // Consume the character
-            s_column++;
+            _column++;
             var c = (char)cur;
             readDone = ProcessQuotedValueCharacter(quote, isNonLiteral, c, sb, ref escaped);
             if (readDone)
             {
-                if (s_currentState is ParseState.None)
+                if (_currentState is ParseState.None)
                     return null!;
                 break;
             }
@@ -2556,7 +2572,7 @@ public class TOMLParser : IDisposable
             // If we encounter an escape sequence...
             if (isBasic && c is TomlSyntax.ESCAPE_SYMBOL)
             {
-                var next = s_reader.Peek();
+                var next = r_reader.Peek();
                 var nc = (char)next;
                 if (next >= 0)
                 {
@@ -2589,7 +2605,7 @@ public class TOMLParser : IDisposable
         // TOML actually allows to have five ending quotes like
         // """"" => "" belong to the string + """ is the actual ending
         quotesEncountered = 0;
-        while ((cur = s_reader.Peek()) >= 0)
+        while ((cur = r_reader.Peek()) >= 0)
         {
             var c = (char)cur;
             if (c == quote && ++quotesEncountered < 3)
@@ -2751,7 +2767,7 @@ public class TOMLParser : IDisposable
     private string ParseComment()
     {
         ConsumeChar();
-        var commentLine = s_reader.ReadLine()?.Trim() ?? string.Empty;
+        var commentLine = r_reader.ReadLine()?.Trim() ?? string.Empty;
         if (commentLine.Any(ch => TomlSyntax.MustBeEscaped(ch)))
             AddError("Comment must not contain control characters other than tab.", false);
         return commentLine;
@@ -3359,7 +3375,7 @@ internal static class StringUtils
         if (string.IsNullOrWhiteSpace(txt))
             return txt;
         var stringBuilder = new StringBuilder(txt.Length);
-        for (var i = 0; i < txt.Length; )
+        for (var i = 0; i < txt.Length;)
         {
             var num = txt.IndexOf('\\', i);
             var next = num + 1;
