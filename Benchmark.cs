@@ -11,7 +11,7 @@ namespace HKWToml
 {
     [SimpleJob(RuntimeMoniker.Net60)]
     [MemoryDiagnoser]
-    public class Benchmark
+    internal class Benchmark
     {
         private static string s_tomlFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
         private static string s_outTomlFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml";
