@@ -131,8 +131,7 @@ toml.SaveTo(file);
 ```csharp
 using HKW.TOML
 string file = "test.toml";
-TomlTable table = TOML.Parse(file);
-string classString = TomlAsClasses.Construct("Test", table);
+string classString = TomlAsClasses.ConstructFromFile(file, "Test");
 Console.WriteLine(classString);
 ```
 
