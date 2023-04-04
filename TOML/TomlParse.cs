@@ -1,7 +1,8 @@
 #region TOML Official Site
 
 // https://toml.io
-// 
+// Original project
+// https://github.com/dezhidki/Tommy
 
 #endregion
 
@@ -2768,15 +2769,8 @@ public static class TOML
     /// <returns>解析完成的Toml表格</returns>
     public static TomlTable Parse(TextReader reader)
     {
-        try
-        {
-            using var parser = new TOMLParser(reader) { ForceASCII = ForceASCII };
-            return parser.Parse();
-        }
-        catch (TomlParseException ex)
-        {
-            throw ex;
-        }
+        using var parser = new TOMLParser(reader) { ForceASCII = ForceASCII };
+        return parser.Parse();
     }
 
     /// <summary>
@@ -2786,16 +2780,9 @@ public static class TOML
     /// <returns>解析完成的Toml表格</returns>
     public static TomlTable Parse(string tomlFile)
     {
-        try
-        {
-            using var reader = File.OpenText(tomlFile);
-            using var parser = new TOMLParser(reader) { ForceASCII = ForceASCII };
-            return parser.Parse();
-        }
-        catch (TomlParseException ex)
-        {
-            throw ex;
-        }
+        using var reader = File.OpenText(tomlFile);
+        using var parser = new TOMLParser(reader) { ForceASCII = ForceASCII };
+        return parser.Parse();
     }
 }
 
