@@ -94,8 +94,10 @@ public class TomlSerializer
         var table = new TomlTable();
         // 获取所有属性
         var properties = GetGetProperties(source);
-        var isITomlClass = source is ITomlClassComment;
         var iTomlClass = source as ITomlClassComment;
+        // 设置注释
+        if (iTomlClass is not null)
+            table.Comment = iTomlClass.ClassComment;
         foreach (var propertyInfo in properties)
         {
             // 检测是否有隐藏特性
@@ -103,7 +105,7 @@ public class TomlSerializer
                 continue;
             // 跳过ITomlClass生成的接口
             if (
-                isITomlClass
+                iTomlClass is not null
                 && (
                     propertyInfo.Name == nameof(ITomlClassComment.ClassComment)
                     || propertyInfo.Name == nameof(ITomlClassComment.ValueComments)
@@ -118,9 +120,9 @@ public class TomlSerializer
             // 创建Toml节点
             var node = CreateTomlNode(value);
             table.TryAdd(name, node);
+            // 设置注释
             node.Comment = SetCommentToNode(iTomlClass, propertyInfo.Name)!;
         }
-        // 设置注释
         return table;
     }
 
