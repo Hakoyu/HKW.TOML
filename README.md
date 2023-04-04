@@ -1,8 +1,8 @@
 # HKWToml
 
 [GitHub](https://github.com/Hakoyu/HKWToml)  
-HKWToml 是使用 C#编写的  
-包含有 TOML 的读取和编写,序列化反序列化, toml 转换为 C# 类功能  
+HKWToml 是使用 C# 编写的  
+包含有 TOML 的读取和编写,序列化反序列化, TOML 转换为 C# 类功能  
 其中 读取器和编写器 修改至[Tommy](https://github.com/dezhidki/Tommy)  
 可以添加单独的 TomlParse.cs 文件以只使用读取器和编写器功能  
 或者从[NuGet](https://www.nuget.org/packages/HKWToml)包中获取完整功能  
