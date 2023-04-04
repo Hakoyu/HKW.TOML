@@ -91,7 +91,7 @@ public class TomlType
             TomlInteger => TomlTypeCode.Integer,
             TomlFloat => TomlTypeCode.Float,
             TomlDateTimeOffset => TomlTypeCode.DateTimeOffset,
-            TomlDateTimeLocal => TomlTypeCode.DateTimeOffset,
+            TomlDateTimeLocal => TomlTypeCode.DateTime,
             TomlDateTime => TomlTypeCode.DateTime,
             TomlArray => TomlTypeCode.Array,
             TomlTable => TomlTypeCode.Table,

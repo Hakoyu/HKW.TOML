@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Reflection;
 using HKW.TOML;
+
 namespace HKWToml;
 
 internal class HKWToml
@@ -14,18 +15,8 @@ internal class HKWToml
         var outFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml";
         //var i = (int)long.MaxValue;
         //int i = ((TomlNode)(float)114.514).AsInt32;
-        //var classString = TomlAsClasses.Construct(
-        //    "Test",
-        //    TOML.Parse(file),
-        //    new()
-        //    {
-        //        AddComment = true,
-        //        AddITomlClassInterface = true,
-        //        AddTomlParameterOrderAttribute = true,
-        //        KeyNameConverterFunc = (s) => s + "999"
-        //    }
-        //);
-        //Console.WriteLine(classString);
+        var classString = TomlAsClasses.ConstructFromFile(file, "Test");
+        Console.WriteLine(classString);
 
         //var table = TOML.Parse(file);
         //Console.WriteLine(table.ToTomlString());
@@ -36,6 +27,7 @@ internal class HKWToml
         stopWatch.Stop();
         Console.WriteLine($"\nSTOP {stopWatch.Elapsed.TotalMilliseconds.ToString():f4}ms");
     }
+
     public class Noop : IComparer<PropertyInfo>
     {
         public int Compare(PropertyInfo? x, PropertyInfo? y)
@@ -125,5 +117,3 @@ internal class HKWToml
         public string Role { get; set; }
     }
 }
-
-
