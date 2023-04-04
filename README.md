@@ -126,7 +126,7 @@ toml.SaveTo(file);
 
 ### 从 TomlTable 生成 C# 的类
 
-生成相关设置请查看[TomlAsClassesOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlAsClasses.cs#L723)
+生成相关设置请查看[TomlAsClassesOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlAsClassesOptions.cs)
 
 ```csharp
 using HKW.TOML
