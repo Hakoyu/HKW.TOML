@@ -32,13 +32,13 @@ public class TomlKeyName : Attribute
 /// Toml参数顺序
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-public class TomlParameterOrder : Attribute
+public class TomlSortOrder : Attribute
 {
     /// <summary>
     /// 顺序
     /// </summary>
     public int Order { get; }
     /// <inheritdoc/>
-    public TomlParameterOrder(int order) => Order  = order;
+    public TomlSortOrder(int order) => Order = order;
 }
 

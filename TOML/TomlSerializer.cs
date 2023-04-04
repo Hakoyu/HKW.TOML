@@ -157,8 +157,8 @@ public class TomlSerializer
         foreach (PropertyInfo property in properties)
         {
             if (
-                property.GetCustomAttribute<TomlParameterOrder>()
-                is TomlParameterOrder parameterOrder
+                property.GetCustomAttribute<TomlSortOrder>()
+                is TomlSortOrder parameterOrder
             )
                 newProperties.Insert(parameterOrder.Order, property);
             else

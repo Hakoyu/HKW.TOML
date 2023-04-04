@@ -1,8 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Reflection;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Running;
 using HKW.TOML;
 using HKWToml;
 namespace HKWToml;
@@ -58,7 +55,7 @@ public class Test : ITomlClassComment
     public string ClassComment { get; set; } = string.Empty;
     public Dictionary<string, string> ValueComments { get; set; } = new();
 
-    [TomlParameterOrder(0)]
+    [TomlSortOrder(0)]
     [TomlKeyName("title")]
     public string AAA { get; set; }
     public int Int1 { get; set; }

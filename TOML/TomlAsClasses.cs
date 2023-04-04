@@ -777,7 +777,7 @@ public class TomlAsClassesOptions
 
     /// <summary>
     /// 添加Toml参数顺序特性
-    /// <para>默认为 "<see langword="TomlParameterOrder({0})"/>"</para>
+    /// <para>默认为 "<see langword="TomlSortOrder({0})"/>"</para>
     /// </summary>
     public string TomlParameterOrderAttributeFomat { get; set; } = "TomlParameterOrder({0})";
 
