@@ -114,7 +114,7 @@ public class TomlAsClassesOptions
     public string ITomlClassInterface { get; set; } = nameof(ITomlClassComment);
 
     /// <summary>
-    /// 接口格式化文本
+    /// 继承格式化文本
     /// <para>默认为 "<see langword=" : {0}"/>"</para>
     /// </summary>
     public string InheritanceFormat { get; set; } = " : {0}";
