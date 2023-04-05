@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 namespace HKW.TOML;
 
 #region TOML TypeCode
+
 /// <summary>
 /// Toml类型代码
 /// </summary>
@@ -115,6 +116,7 @@ public abstract class TomlNode : IEnumerable
     public virtual bool HasValue { get; } = false;
 
     #region TypeCheck
+
     /// <summary>
     /// 是Toml数组
     /// </summary>
@@ -352,31 +354,36 @@ public abstract class TomlNode : IEnumerable
     /// </summary>
     /// <param name="key">键</param>
     /// <param name="node">值</param>
-    public virtual void Add(string key, TomlNode node) { }
+    public virtual void Add(string key, TomlNode node)
+    { }
 
     /// <summary>
     /// 添加值(用于Toml数组)
     /// </summary>
     /// <param name="node">值</param>
-    public virtual void Add(TomlNode node) { }
+    public virtual void Add(TomlNode node)
+    { }
 
     /// <summary>
     /// 删除值(用于Toml数组)
     /// </summary>
     /// <param name="node">值</param>
-    public virtual void Delete(TomlNode node) { }
+    public virtual void Delete(TomlNode node)
+    { }
 
     /// <summary>
     /// 使用键删除值(用于Toml表格)
     /// </summary>
     /// <param name="key"></param>
-    public virtual void Delete(string key) { }
+    public virtual void Delete(string key)
+    { }
 
     /// <summary>
     /// 使用索引删除值(用于Toml数组)
     /// </summary>
     /// <param name="index"></param>
-    public virtual void Delete(int index) { }
+    public virtual void Delete(int index)
+    { }
 
     /// <summary>
     /// 添加多个值(用于Toml数组)
@@ -2880,12 +2887,14 @@ public class TomlSyntaxException : Exception
 #endregion
 
 #region Parse utilities
+
 /// <summary>
 /// Toml语法
 /// </summary>
 internal static class TomlSyntax
 {
     #region Type Patterns
+
     /// <summary>
     /// Boolean真值
     /// </summary>

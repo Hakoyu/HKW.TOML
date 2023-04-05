@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HKW.TOML;
 
@@ -18,7 +13,8 @@ public class TomlSerializer
     /// </summary>
     private static TomlSerializerOptions s_options = null!;
 
-    private TomlSerializer() { }
+    private TomlSerializer()
+    { }
 
     /// <summary>
     /// 序列化至Toml文件

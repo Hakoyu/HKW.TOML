@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HKW.TOML;
+﻿namespace HKW.TOML;
 
 /// <summary>
 /// Toml忽略值
@@ -24,6 +18,7 @@ public class TomlKeyName : Attribute
     /// 键名
     /// </summary>
     public string Value { get; }
+
     /// <inheritdoc/>
     public TomlKeyName(string name) => Value = name;
 }
@@ -38,7 +33,7 @@ public class TomlSortOrder : Attribute
     /// 顺序
     /// </summary>
     public int Value { get; }
+
     /// <inheritdoc/>
     public TomlSortOrder(int order) => Value = order;
 }
-

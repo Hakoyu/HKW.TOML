@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
 using System.Text;
 
 namespace HKW.TOML;
@@ -32,7 +30,8 @@ public partial class TomlAsClasses
     /// </summary>
     private static TomlAsClassesOptions s_options = new();
 
-    private TomlAsClasses() { }
+    private TomlAsClasses()
+    { }
 
     /// <summary>
     /// 从文件中构造

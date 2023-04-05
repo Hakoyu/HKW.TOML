@@ -44,6 +44,7 @@ internal class HKWToml
         [TomlSortOrder(0)]
         [TomlKeyName("title")]
         public string AAA { get; set; }
+
         public int Int1 { get; set; }
         public long Long1 { get; set; }
         public List<NoopClass0> Noop { get; set; }

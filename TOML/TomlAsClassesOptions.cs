@@ -19,6 +19,7 @@ public class TomlAsClassesOptions
     public string Indent { get; set; } = "    ";
 
     #region Comment
+
     /// <summary>
     /// 添加注释
     /// <para>默认为 <see langword="false"/></para>
@@ -36,8 +37,11 @@ public class TomlAsClassesOptions
     /// <para>默认为 "<see langword="{0}/// &lt;para&gt;{1}&lt;/para&gt;"/>"</para>
     /// </summary>
     public string CommentParaFormat { get; set; } = "{0}/// <para>{1}</para>";
-    #endregion
+
+    #endregion Comment
+
     #region KeyName
+
     /// <summary>
     /// 将键名称转换为帕斯卡命名格式(属性命名格式)
     /// <para>默认为 <see langword="true"/></para>
@@ -49,9 +53,11 @@ public class TomlAsClassesOptions
     /// <para>默认为 <see langword="null"/></para>
     /// </summary>
     public Func<string, string>? KeyNameConverterFunc { get; set; }
-    #endregion
+
+    #endregion KeyName
 
     #region Attribute
+
     /// <summary>
     /// 添加Toml参数顺序特性
     /// <para>默认为 <see langword="false"/></para>
@@ -70,7 +76,6 @@ public class TomlAsClassesOptions
     /// </summary>
     public string AttributeFomat { get; set; } = "{0}[{1}]";
 
-
     /// <summary>
     /// 类添加的特性
     /// </summary>
@@ -80,8 +85,11 @@ public class TomlAsClassesOptions
     /// 属性添加的特性
     /// </summary>
     public HashSet<string> PropertyAttributes { get; set; } = new();
-    #endregion
+
+    #endregion Attribute
+
     #region KeyWordSeparator
+
     /// <summary>
     /// 删除键的单词分隔符 如 "_"
     /// <para>默认为 <see langword="true"/></para>
@@ -93,9 +101,11 @@ public class TomlAsClassesOptions
     /// <para>默认为 "<see langword="_"/>"</para>
     /// </summary>
     public string KeyWordSeparator { get; set; } = "_";
-    #endregion
+
+    #endregion KeyWordSeparator
 
     #region Interfaces
+
     /// <summary>
     /// 为所有非匿名类添加的接口
     /// </summary>
@@ -133,8 +143,11 @@ public class TomlAsClassesOptions
     public string ITomlClassInterfaceValueFomat { get; set; } =
         "{0}/// <inheritdoc/>\n{0}public string TableComment { get; set; } = string.Empty;\n"
         + "{0}/// <inheritdoc/>\n{0}public Dictionary<string, string> ValueComments { get; set; } = new();\n";
-    #endregion
+
+    #endregion Interfaces
+
     #region ValueTypeNameConvert
+
     /// <summary>
     /// TomlBoolean类型名称转换
     /// <para>默认为 "<see langword="bool"/></para>
@@ -182,8 +195,11 @@ public class TomlAsClassesOptions
     /// <para>默认为 "<see langword="DateTimeOffset"/>"</para>
     /// </summary>
     public string TomlDateTimeOffsetNameConvert { get; set; } = "DateTimeOffset";
-    #endregion
+
+    #endregion ValueTypeNameConvert
+
     #region Format
+
     /// <summary>
     /// 类名称格式化文本
     /// <para>默认为 "<see langword="{0}Class"/>"</para>
@@ -214,7 +230,8 @@ public class TomlAsClassesOptions
     /// </summary>
     public string ClassFormat { get; set; } = "{0}public class {1} \n{{\n{2}}}\n";
 
-    #endregion
+    #endregion Format
+
     /// <summary>
     /// 获取Toml类转换后的类名称
     /// </summary>
