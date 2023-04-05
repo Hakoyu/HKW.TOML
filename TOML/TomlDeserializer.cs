@@ -26,7 +26,7 @@ public class TomlDeserializer
     public static T DeserializeFromFile<T>(string tomlFile, TomlDeserializerOptions? options = null)
         where T : class, new()
     {
-        return Deserialize<T>(TOML.Parse(tomlFile), options);
+        return Deserialize<T>(TOML.ParseFromFile(tomlFile), options);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public class TomlDeserializer
     public static async Task<T> DeserializeFromFileAsync<T>(string tomlFile, TomlDeserializerOptions? options = null)
         where T : class, new()
     {
-        return await DeserializeAsync<T>(TOML.Parse(tomlFile), options);
+        return await DeserializeAsync<T>(TOML.ParseFromFile(tomlFile), options);
     }
 
     /// <summary>
@@ -110,7 +110,7 @@ public class TomlDeserializer
         }
 
         // 检查TomlName特性
-        CheckTomlName(iTomlClass, target, type, table);
+        CheckTomlKeyName(iTomlClass, target, type, table);
     }
 
     /// <summary>
@@ -120,15 +120,16 @@ public class TomlDeserializer
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
     /// <param name="table">Toml表格</param>
-    private static void CheckTomlName(ITomlClassComment? iTomlClass, object target, Type type, TomlTable table)
+    private static void CheckTomlKeyName(ITomlClassComment? iTomlClass, object target, Type type, TomlTable table)
     {
         foreach (var propertyInfo in type.GetProperties())
         {
+            // 获取TomlKeyName
             if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName keyName)
                 continue;
-            if (string.IsNullOrWhiteSpace(keyName.Name))
+            if (string.IsNullOrWhiteSpace(keyName.Value))
                 continue;
-            var node = table[keyName.Name];
+            var node = table[keyName.Value];
             iTomlClass?.ValueComments.TryAdd(propertyInfo.Name, node.Comment ?? string.Empty);
             DeserializeTableValue(target, node, propertyInfo);
         }

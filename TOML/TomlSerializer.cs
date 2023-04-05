@@ -32,7 +32,7 @@ public class TomlSerializer
         TomlSerializerOptions? options = null
     )
     {
-        Serialize(source, options).SaveTo(tomlFile);
+        Serialize(source, options).SaveToFile(tomlFile);
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public class TomlSerializer
         TomlSerializerOptions? options = null
     )
     {
-        (await SerializeAsync(source, options)).SaveTo(tomlFile);
+        (await SerializeAsync(source, options)).SaveToFile(tomlFile);
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ public class TomlSerializer
                 property.GetCustomAttribute<TomlSortOrder>()
                 is TomlSortOrder parameterOrder
             )
-                newProperties.Insert(parameterOrder.Order, property);
+                newProperties.Insert(parameterOrder.Value, property);
             else
                 newProperties.Add(property);
         }
@@ -177,9 +177,9 @@ public class TomlSerializer
         // 检查TomlName特性
         if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName tomlName)
             return null;
-        if (string.IsNullOrWhiteSpace(tomlName.Name))
+        if (string.IsNullOrWhiteSpace(tomlName.Value))
             return null;
-        return tomlName.Name;
+        return tomlName.Value;
     }
 
     /// <summary>

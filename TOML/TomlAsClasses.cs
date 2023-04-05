@@ -42,7 +42,7 @@ public partial class TomlAsClasses
     /// <returns>构造的数据</returns>
     public static string ConstructFromFile(string tomlFile, TomlAsClassesOptions? options = null)
     {
-        var toml = TOML.Parse(tomlFile);
+        var toml = TOML.ParseFromFile(tomlFile);
         var rootClassName = Path.GetFileNameWithoutExtension(tomlFile);
         return Construct(rootClassName, toml, options);
     }
@@ -60,7 +60,7 @@ public partial class TomlAsClasses
         TomlAsClassesOptions? options = null
     )
     {
-        var toml = TOML.Parse(tomlFile);
+        var toml = TOML.ParseFromFile(tomlFile);
         if (string.IsNullOrWhiteSpace(rootClassName))
             rootClassName = Path.GetFileNameWithoutExtension(tomlFile);
         return Construct(rootClassName, toml, options);

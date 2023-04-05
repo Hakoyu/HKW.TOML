@@ -1188,7 +1188,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     /// 保存至
     /// </summary>
     /// <param name="tomlFile">Toml文件</param>
-    public void SaveTo(string tomlFile)
+    public void SaveToFile(string tomlFile)
     {
         using var sw = new StreamWriter(tomlFile);
         WriteTo(sw, null!, false);
@@ -1445,9 +1445,9 @@ public class TOMLParser : IDisposable
     private List<TomlSyntaxException> _syntaxErrors = null!;
 
     /// <summary>
-    /// 从文本读入器解析
+    /// 从文本读取器解析
     /// </summary>
-    /// <param name="reader">文明读入器</param>
+    /// <param name="reader">文明读取器</param>
     public TOMLParser(TextReader reader)
     {
         r_reader = reader;
@@ -2763,9 +2763,9 @@ public static class TOML
     public static bool ForceASCII { get; set; } = false;
 
     /// <summary>
-    /// 从文本读入器解析
+    /// 从文本读取器解析
     /// </summary>
-    /// <param name="reader"></param>
+    /// <param name="reader">读取器</param>
     /// <returns>解析完成的Toml表格</returns>
     public static TomlTable Parse(TextReader reader)
     {
@@ -2774,11 +2774,23 @@ public static class TOML
     }
 
     /// <summary>
+    /// 从字符串解析
+    /// </summary>
+    /// <param name="tomlData">Toml数据</param>
+    /// <returns>解析完成的Toml表格</returns>
+    public static TomlTable Parse(string tomlData)
+    {
+        using var sr = new StringReader(tomlData);
+        using var parser = new TOMLParser(sr) { ForceASCII = ForceASCII };
+        return parser.Parse();
+    }
+
+    /// <summary>
     /// 从文件解析
     /// </summary>
     /// <param name="tomlFile">Toml文件</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static TomlTable Parse(string tomlFile)
+    public static TomlTable ParseFromFile(string tomlFile)
     {
         using var reader = File.OpenText(tomlFile);
         using var parser = new TOMLParser(reader) { ForceASCII = ForceASCII };

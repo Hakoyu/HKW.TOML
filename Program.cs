@@ -15,13 +15,13 @@ internal class HKWToml
         var outFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml";
         //var i = (int)long.MaxValue;
         //int i = ((TomlNode)(float)114.514).AsInt32;
-        var classString = TomlAsClasses.ConstructFromFile(file, "Test");
-        Console.WriteLine(classString);
+        //var classString = TomlAsClasses.ConstructFromFile(file, "Test");
+        //Console.WriteLine(classString);
 
-        //var table = TOML.Parse(file);
+        //var table = TOML.ParseFromFile(file);
         //Console.WriteLine(table.ToTomlString());
-        //var test = TomlDeserializer.DeserializeFromFile<Test>(file);
-        //TomlSerializer.SerializeToFile(test, outFile);
+        var test = TomlDeserializer.DeserializeFromFile<Test>(file);
+        TomlSerializer.SerializeToFile(test, outFile);
         //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
         //Console.WriteLine(test);
         stopWatch.Stop();
