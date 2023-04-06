@@ -68,13 +68,13 @@ public class TomlAsClassesOptions
     /// 添加Toml参数顺序特性
     /// <para>默认为 "<see langword="TomlSortOrder({0})"/>"</para>
     /// </summary>
-    public string TomlSortOrderAttributeFomat { get; set; } = "TomlSortOrder({0})";
+    public string TomlSortOrderAttributeFormat { get; set; } = "TomlSortOrder({0})";
 
     /// <summary>
     /// 特性格式化文本
     /// <para>默认为 "<see langword="{0}[{1}]"/>"</para>
     /// </summary>
-    public string AttributeFomat { get; set; } = "{0}[{1}]";
+    public string AttributeFormat { get; set; } = "{0}[{1}]";
 
     /// <summary>
     /// 类添加的特性
@@ -140,7 +140,7 @@ public class TomlAsClassesOptions
     /// ]]>
     /// </para>
     /// </summary>
-    public string ITomlClassInterfaceValueFomat { get; set; } =
+    public string ITomlClassInterfaceValueFormat { get; set; } =
         "{0}/// <inheritdoc/>\n{0}public string TableComment { get; set; } = string.Empty;\n"
         + "{0}/// <inheritdoc/>\n{0}public Dictionary<string, string> ValueComments { get; set; } = new();\n";
 

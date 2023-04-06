@@ -160,7 +160,7 @@ public partial class TomlAsClasses
             if (s_options.AddComment)
                 tomlClass.Values[name].Comment = node.Comment;
             if (s_options.AddTomlSortOrderAttribute)
-                tomlClass.Values[name].Attributes.Add(string.Format(s_options.TomlSortOrderAttributeFomat, index++));
+                tomlClass.Values[name].Attributes.Add(string.Format(s_options.TomlSortOrderAttributeFormat, index++));
         }
     }
 
@@ -500,7 +500,7 @@ public partial class TomlAsClasses
         {
             var sb = new StringBuilder();
             foreach (var attribute in attributes)
-                sb.AppendLine(string.Format(s_options.AttributeFomat, string.Empty, attribute));
+                sb.AppendLine(string.Format(s_options.AttributeFormat, string.Empty, attribute));
             return sb.ToString();
         }
 
@@ -625,7 +625,7 @@ public partial class TomlAsClasses
         {
             var sb = new StringBuilder();
             foreach (var attribute in attributes)
-                sb.AppendLine(string.Format(s_options.AttributeFomat, s_options.Indent, attribute));
+                sb.AppendLine(string.Format(s_options.AttributeFormat, s_options.Indent, attribute));
             return sb.ToString();
         }
     }
