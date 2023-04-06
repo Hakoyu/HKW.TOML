@@ -159,8 +159,8 @@ public partial class TomlAsClasses
             ParseTableValue(tomlClass, name, node);
             if (s_options.AddComment)
                 tomlClass.Values[name].Comment = node.Comment;
-            if (s_options.AddTomlParameterOrderAttribute)
-                tomlClass.Values[name].Attributes.Add(string.Format(s_options.TomlParameterOrderAttributeFomat, index++));
+            if (s_options.AddTomlSortOrderAttribute)
+                tomlClass.Values[name].Attributes.Add(string.Format(s_options.TomlSortOrderAttributeFomat, index++));
         }
     }
 

@@ -62,13 +62,13 @@ public class TomlAsClassesOptions
     /// 添加Toml参数顺序特性
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
-    public bool AddTomlParameterOrderAttribute { get; set; } = false;
+    public bool AddTomlSortOrderAttribute { get; set; } = false;
 
     /// <summary>
     /// 添加Toml参数顺序特性
     /// <para>默认为 "<see langword="TomlSortOrder({0})"/>"</para>
     /// </summary>
-    public string TomlParameterOrderAttributeFomat { get; set; } = "TomlParameterOrder({0})";
+    public string TomlSortOrderAttributeFomat { get; set; } = "TomlSortOrder({0})";
 
     /// <summary>
     /// 特性格式化文本
