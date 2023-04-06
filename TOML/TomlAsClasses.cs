@@ -121,8 +121,8 @@ public partial class TomlAsClasses
             string.Format(s_options.ListFormat, nameof(TomlNode))
         );
 
-        if (s_options.AddITomlClassInterface)
-            s_options.MultipleInheritance.Add(s_options.ITomlClassInterface);
+        if (s_options.AddITomlClassCommentInterface)
+            s_options.MultipleInheritance.Add(s_options.ITomlClassCommentInterface);
     }
 
     /// <summary>
@@ -451,6 +451,7 @@ public partial class TomlAsClasses
         {
             var sb = new StringBuilder();
             var classname = Name;
+            var iTomlClassCommentValue = string.Empty;
             // 为匿名函数时,不设置注释,特性,继承
             if (IsAnonymous is false)
             {
@@ -458,10 +459,13 @@ public partial class TomlAsClasses
                     sb.AppendLine(comment);
                 if (GetAttribute(s_options.ClassAttributes) is string attribute)
                     sb.AppendLine(attribute);
-                Name += GetInheritance(s_options.MultipleInheritance);
+                classname += GetInheritance(s_options.MultipleInheritance);
+                // 添加ITomlClass接口中的值
+                if (s_options.AddITomlClassCommentInterface)
+                    iTomlClassCommentValue = string.Format(s_options.ITomlClassInterfaceValueFormat, s_options.Indent) + "\n";
             }
 
-            return string.Format(s_options.ClassFormat, sb.ToString(), classname, GetValues(Values.Values));
+            return string.Format(s_options.ClassFormat, sb.ToString(), classname, iTomlClassCommentValue + GetValues(Values.Values));
         }
 
         /// <summary>

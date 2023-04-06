@@ -115,13 +115,13 @@ public class TomlAsClassesOptions
     /// 为所有非匿名类添加 <see cref="ITomlClassComment"/> 接口
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
-    public bool AddITomlClassInterface { get; set; } = false;
+    public bool AddITomlClassCommentInterface { get; set; } = false;
 
     /// <summary>
-    /// ITomlClass接口名称
+    /// ITomlClassComment接口名称
     /// <para>默认为 <see langword="nameof(ITomlClassComment)"/></para>
     /// </summary>
-    public string ITomlClassInterface { get; set; } = nameof(ITomlClassComment);
+    public string ITomlClassCommentInterface { get; set; } = nameof(ITomlClassComment);
 
     /// <summary>
     /// 继承格式化文本
@@ -130,7 +130,7 @@ public class TomlAsClassesOptions
     public string InheritanceFormat { get; set; } = " : {0}";
 
     /// <summary>
-    /// ITomlClass接口值格式化文本
+    /// ITomlClassComment接口值格式化文本
     /// <para>默认为
     /// <![CDATA[
     /// {0}/// <inheritdoc/>
@@ -141,8 +141,8 @@ public class TomlAsClassesOptions
     /// </para>
     /// </summary>
     public string ITomlClassInterfaceValueFormat { get; set; } =
-        "{0}/// <inheritdoc/>\n{0}public string TableComment { get; set; } = string.Empty;\n"
-        + "{0}/// <inheritdoc/>\n{0}public Dictionary<string, string> ValueComments { get; set; } = new();\n";
+        "{0}/// <inheritdoc/>\n{0}public string TableComment {{ get; set; }} = string.Empty;\n"
+        + "{0}/// <inheritdoc/>\n{0}public Dictionary<string, string> ValueComments {{ get; set; }} = new();\n";
 
     #endregion Inheritance
 
