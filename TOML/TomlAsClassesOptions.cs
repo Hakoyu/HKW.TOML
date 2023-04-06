@@ -141,7 +141,7 @@ public class TomlAsClassesOptions
     /// </para>
     /// </summary>
     public string ITomlClassInterfaceValueFormat { get; set; } =
-        "{0}/// <inheritdoc/>\n{0}public string TableComment {{ get; set; }} = string.Empty;\n"
+        "{0}/// <inheritdoc/>\n{0}public string ClassComment {{ get; set; }} = string.Empty;\n"
         + "{0}/// <inheritdoc/>\n{0}public Dictionary<string, string> ValueComments {{ get; set; }} = new();\n";
 
     #endregion Inheritance
