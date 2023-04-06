@@ -455,9 +455,9 @@ public partial class TomlAsClasses
             // 为匿名函数时,不设置注释,特性,继承
             if (IsAnonymous is false)
             {
-                if (GetComment(Comment) is string comment)
+                if (GetComment(Comment) is string comment && string.IsNullOrWhiteSpace(comment) is false)
                     sb.AppendLine(comment);
-                if (GetAttribute(s_options.ClassAttributes) is string attribute)
+                if (GetAttribute(s_options.ClassAttributes) is string attribute && string.IsNullOrWhiteSpace(attribute) is false)
                     sb.AppendLine(attribute);
                 classname += GetInheritance(s_options.MultipleInheritance);
                 // 添加ITomlClass接口中的值

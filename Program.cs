@@ -15,6 +15,7 @@ internal class HKWToml
         var outFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml";
         //var classString = TomlAsClasses.ConstructFromFile(file, "Test", new()
         //{
+        //    AddTomlSortOrderAttribute = true,
         //    AddITomlClassCommentInterface = true,
         //});
         //Console.WriteLine(classString);
