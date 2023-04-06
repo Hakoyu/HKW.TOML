@@ -104,15 +104,15 @@ public class TomlAsClassesOptions
 
     #endregion KeyWordSeparator
 
-    #region Interfaces
+    #region Inheritance
 
     /// <summary>
-    /// 为所有非匿名类添加的接口
+    /// 为所有非匿名类添加的继承
     /// </summary>
-    public HashSet<string> Interfaces { get; set; } = new();
+    public HashSet<string> MultipleInheritance { get; set; } = new();
 
     /// <summary>
-    /// 为所有非匿名类添加ITomlClass接口
+    /// 为所有非匿名类添加 <see cref="ITomlClassComment"/> 接口
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
     public bool AddITomlClassInterface { get; set; } = false;
@@ -144,7 +144,7 @@ public class TomlAsClassesOptions
         "{0}/// <inheritdoc/>\n{0}public string TableComment { get; set; } = string.Empty;\n"
         + "{0}/// <inheritdoc/>\n{0}public Dictionary<string, string> ValueComments { get; set; } = new();\n";
 
-    #endregion Interfaces
+    #endregion Inheritance
 
     #region ValueTypeNameConvert
 
