@@ -22,8 +22,8 @@ internal class HKWToml
 
         //var table = TOML.ParseFromFile(file);
         //Console.WriteLine(table.ToTomlString());
-        //var test = TomlDeserializer.DeserializeFromFile<Test>(file);
-        //TomlSerializer.SerializeToFile(test, outFile);
+        var test = TomlDeserializer.DeserializeFromFile<Test>(file);
+        TomlSerializer.SerializeToFile(test, outFile);
         //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
         //Console.WriteLine(test);
         stopWatch.Stop();

@@ -157,6 +157,8 @@ public partial class TomlAsClasses
                 throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
             // 解析表格的值
             ParseTableValue(tomlClass, name, node);
+            if (isAnonymousClass)
+                continue;
             if (s_options.AddComment)
                 tomlClass.Values[name].Comment = node.Comment;
             if (s_options.AddTomlSortOrderAttribute)

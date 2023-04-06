@@ -606,13 +606,13 @@ public class TomlString : TomlNode
             PreferLiteral ? TomlSyntax.LITERAL_STRING_SYMBOL : TomlSyntax.BASIC_STRING_SYMBOL,
             IsMultiline ? 3 : 1
         );
-        var result = PreferLiteral ? Value : Value.Escape(!IsMultiline);
+        var result = PreferLiteral ? Value : Value.Escape(IsMultiline is false);
         if (IsMultiline)
         {
             result = result.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
             if (
                 MultilineTrimFirstLine
-                || !MultilineTrimFirstLine && result.StartsWith(Environment.NewLine)
+                || MultilineTrimFirstLine is false && result.StartsWith(Environment.NewLine)
             )
                 result = $"{Environment.NewLine}{result}";
         }
@@ -962,13 +962,13 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
     public override void WriteTo(TextWriter tw, string name = null!)
     {
         // If it's a normal array, write it as usual
-        if (!IsTableArray)
+        if (IsTableArray is false)
         {
             tw.WriteLine(ToString(IsMultiline));
             return;
         }
 
-        if (Comment is not null)
+        if (string.IsNullOrWhiteSpace(Comment) is false)
         {
             tw.WriteLine();
             Comment.AsComment(tw);
@@ -992,11 +992,12 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
             // Ensure it's parsed as a section
             tbl.IsInline = false;
 
-            if (!first)
+            if (first is false)
             {
                 tw.WriteLine();
 
-                Comment?.AsComment(tw);
+                if (string.IsNullOrWhiteSpace(Comment) is false)
+                    Comment?.AsComment(tw);
                 tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
                 tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
                 tw.Write(name);
@@ -1244,16 +1245,17 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
             n => n.Value is TomlTable { IsInline: false } or TomlArray { IsTableArray: true }
         );
 
-        Comment?.AsComment(tw);
+        if (string.IsNullOrWhiteSpace(Comment) is false)
+            Comment.AsComment(tw);
 
-        if (tomlFile is not null && (hasRealValues || Comment is not null) && writeSectionName)
+        if (tomlFile is not null && (hasRealValues || string.IsNullOrWhiteSpace(Comment) is false) && writeSectionName)
         {
             tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
             tw.Write(tomlFile);
             tw.Write(TomlSyntax.ARRAY_END_SYMBOL);
             tw.WriteLine();
         }
-        else if (Comment is not null) // Add some spacing between the first node and the comment
+        else if (string.IsNullOrWhiteSpace(Comment) is false) // Add some spacing between the first node and the comment
         {
             tw.WriteLine();
         }
@@ -1270,15 +1272,15 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
                     or TomlTable { IsInline: false }
             )
             {
-                if (!first)
+                if (first is false)
                     tw.WriteLine();
                 first = false;
                 collapsedItem.Value.WriteTo(tw, $"{namePrefix}{key}");
                 continue;
             }
             first = false;
-
-            collapsedItem.Value.Comment?.AsComment(tw);
+            if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment) is false)
+                collapsedItem.Value.Comment.AsComment(tw);
             tw.Write(key);
             tw.Write(' ');
             tw.Write(TomlSyntax.KEY_VALUE_SEPARATOR);
@@ -1430,7 +1432,7 @@ public class TOMLParser : IDisposable
     public bool ForceASCII { get; set; }
 
     /// <summary>
-    /// 文明写入器
+    /// 文本写入器
     /// </summary>
     private readonly TextReader r_reader;
 
@@ -1683,7 +1685,7 @@ public class TOMLParser : IDisposable
                 isArrayTable = true;
             }
 
-            if (!ReadKeyName(ref keyParts, TomlSyntax.TABLE_END_SYMBOL))
+            if (ReadKeyName(ref keyParts, TomlSyntax.TABLE_END_SYMBOL) is false)
             {
                 keyParts.Clear();
                 return false;
@@ -1832,7 +1834,7 @@ public class TOMLParser : IDisposable
                     return null!;
                 }
 
-                if (!ReadKeyName(ref keyParts, TomlSyntax.KEY_VALUE_SEPARATOR))
+                if (ReadKeyName(ref keyParts, TomlSyntax.KEY_VALUE_SEPARATOR) is false)
                     return null!;
 
                 continue;
@@ -1973,7 +1975,7 @@ public class TOMLParser : IDisposable
 
             if (c is TomlSyntax.SUBKEY_SEPARATOR)
             {
-                if (buffer.Length == 0 && !quoted)
+                if (buffer.Length == 0 && quoted is false)
                     return AddError($"Found an extra subkey separator in {".".Join(parts)}...");
 
                 parts.Add(buffer.ToString());
@@ -2014,7 +2016,7 @@ public class TOMLParser : IDisposable
             break;
         }
 
-        if (buffer.Length == 0 && !quoted)
+        if (buffer.Length == 0 && quoted is false)
             return AddError($"Found an extra subkey separator in {".".Join(parts)}...");
 
         parts.Add(buffer.ToString());
@@ -2226,7 +2228,7 @@ public class TOMLParser : IDisposable
                 continue;
             }
 
-            if (!expectValue)
+            if (expectValue is false)
             {
                 AddError("Missing separator between values");
                 return null!;
@@ -2299,7 +2301,7 @@ public class TOMLParser : IDisposable
                     return null!;
                 }
 
-                if (!InsertNode(currentValue, result, keyParts))
+                if (InsertNode(currentValue, result, keyParts) is false)
                     return null!;
                 keyParts.Clear();
                 currentValue = null!;
@@ -2465,13 +2467,13 @@ public class TOMLParser : IDisposable
             }
         }
 
-        if (!readDone)
+        if (readDone is false)
         {
             AddError("Unclosed string.");
             return null!;
         }
 
-        if (!isNonLiteral)
+        if (isNonLiteral is false)
             return sb.ToString();
         if (sb.ToString().TryUnescape(out var unescaped, out var unescapedEx))
             return unescaped;
@@ -2540,7 +2542,7 @@ public class TOMLParser : IDisposable
                     continue;
                 }
 
-                if (!skipWhitespaceLineSkipped)
+                if (skipWhitespaceLineSkipped is false)
                 {
                     AddError("Non-whitespace character after trim marker.");
                     return null!;
@@ -2600,7 +2602,7 @@ public class TOMLParser : IDisposable
 
         // Remove last two quotes (third one wasn't included by default)
         sb.Length -= 2;
-        if (!isBasic)
+        if (isBasic is false)
             return sb.ToString();
         if (sb.ToString().TryUnescape(out var res, out var ex))
             return res;
@@ -2661,7 +2663,7 @@ public class TOMLParser : IDisposable
                 {
                     var arr = (TomlArray)node;
 
-                    if (!arr.IsTableArray)
+                    if (arr.IsTableArray is false)
                     {
                         AddError(
                             $"The array {".".Join(path)} cannot be redefined as an array table!"
@@ -2987,7 +2989,7 @@ internal static class TomlSyntax
     {
         numberBase = 10;
         var match = BasedIntegerPattern.Match(s);
-        if (!match.Success)
+        if (match.Success is false)
             return false;
         IntegerBases.TryGetValue(match.Groups["base"].Value, out numberBase);
         return true;
@@ -3154,7 +3156,7 @@ internal static class TomlSyntax
                     or >= '\u000e'
                     and <= '\u001f'
                     or '\u007f';
-        if (!allowNewLines)
+        if (allowNewLines is false)
             result |= c is >= '\u000a' and <= '\u000e';
         return result;
     }
@@ -3178,7 +3180,7 @@ internal static class StringUtils
     public static string AsKey(this string key)
     {
         var quote = key == string.Empty || key.Any(c => !TomlSyntax.IsBareKey(c));
-        return !quote
+        return quote is false
             ? key
             : $"{TomlSyntax.BASIC_STRING_SYMBOL}{key.Escape()}{TomlSyntax.BASIC_STRING_SYMBOL}";
     }
@@ -3196,7 +3198,7 @@ internal static class StringUtils
 
         foreach (var subItem in subItems)
         {
-            if (!first)
+            if (first is false)
                 sb.Append(self);
             first = false;
             sb.Append(subItem);
@@ -3248,7 +3250,7 @@ internal static class StringUtils
         for (var i = 0; i < formats.Length; i++)
         {
             var format = formats[i];
-            if (!parser(s, format, CultureInfo.InvariantCulture, styles, out dateTime))
+            if (parser(s, format, CultureInfo.InvariantCulture, styles, out dateTime) is false)
                 continue;
             parsedFormat = i;
             return true;
@@ -3311,7 +3313,7 @@ internal static class StringUtils
                     '\\' => @"\\",
                     '\"' => @"\""",
                     var _
-                        when TomlSyntax.MustBeEscaped(c, !escapeNewlines)
+                        when TomlSyntax.MustBeEscaped(c, escapeNewlines is false)
                             || TOML.ForceASCII && c > sbyte.MaxValue
                         => CodePoint(txt, ref i, c),
                     var _ => c

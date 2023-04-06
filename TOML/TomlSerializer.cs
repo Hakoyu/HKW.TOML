@@ -250,15 +250,11 @@ public class TomlSerializer
     /// </summary>
     /// <param name="iTomlClass">TomlClass接口</param>
     /// <param name="name">键名</param>
-    private static string? SetCommentToNode(ITomlClassComment? iTomlClass, string name)
+    private static string SetCommentToNode(ITomlClassComment? iTomlClass, string name)
     {
         // 检查值注释
         if (iTomlClass?.ValueComments?.TryGetValue(name, out var comment) is true)
-        {
-            if (string.IsNullOrWhiteSpace(comment))
-                return null;
             return comment;
-        }
-        return null;
+        return string.Empty;
     }
 }
