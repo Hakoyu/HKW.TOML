@@ -122,7 +122,7 @@ public partial class TomlAsClasses
         );
 
         if (s_options.AddITomlClassInterface)
-            s_options.Interfaces.Add(s_options.ITomlClassInterface);
+            s_options.MultipleInheritance.Add(s_options.ITomlClassInterface);
     }
 
     /// <summary>
@@ -458,7 +458,7 @@ public partial class TomlAsClasses
                     sb.AppendLine(comment);
                 if (GetAttribute(s_options.ClassAttributes) is string attribute)
                     sb.AppendLine(attribute);
-                Name += GetInheritance(s_options.Interfaces);
+                Name += GetInheritance(s_options.MultipleInheritance);
             }
 
             return string.Format(s_options.ClassFormat, sb.ToString(), classname, GetValues(Values.Values));
