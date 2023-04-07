@@ -8,7 +8,20 @@ namespace HKW.TOML;
 /// </summary>
 public class TomlDeserializer
 {
+    /// <summary>
+    /// 设置
+    /// </summary>
     private static TomlDeserializerOptions s_options = null!;
+
+    /// <summary>
+    /// 缺失的属性
+    /// </summary>
+    private static HashSet<string> s_missingProperties = null!;
+
+    /// <summary>
+    /// 缺失的Toml节点
+    /// </summary>
+    private static HashSet<string> s_missingTomlNodes = null!;
 
     /// <summary>
     /// 从Toml文件反序列化
@@ -16,6 +29,7 @@ public class TomlDeserializer
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="options">反序列化设置</param>
+    /// <exception cref="ConsistencyException">一致性异常</exception>
     /// <returns>完成反序列化的对象</returns>
     public static T DeserializeFromFile<T>(string tomlFile, TomlDeserializerOptions? options = null)
         where T : class, new()
@@ -29,8 +43,12 @@ public class TomlDeserializer
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="options">反序列化设置</param>
+    /// <exception cref="ConsistencyException">一致性异常</exception>
     /// <returns>完成反序列化的对象</returns>
-    public static async Task<T> DeserializeFromFileAsync<T>(string tomlFile, TomlDeserializerOptions? options = null)
+    public static async Task<T> DeserializeFromFileAsync<T>(
+        string tomlFile,
+        TomlDeserializerOptions? options = null
+    )
         where T : class, new()
     {
         return await DeserializeAsync<T>(TOML.ParseFromFile(tomlFile), options);
@@ -42,13 +60,14 @@ public class TomlDeserializer
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="table">Toml表格</param>
     /// <param name="options">反序列化设置</param>
+    /// <exception cref="ConsistencyException">一致性异常</exception>
     /// <returns>完成反序列化的对象</returns>
     public static T Deserialize<T>(TomlTable table, TomlDeserializerOptions? options = null)
         where T : class, new()
     {
         var t = new T();
         s_options = options ?? new();
-        DeserializeTable(t, t.GetType(), table);
+        PreviewDeserializeTable(t, t.GetType(), table);
         s_options = null!;
         return t;
     }
@@ -59,18 +78,124 @@ public class TomlDeserializer
     /// <typeparam name="T">targetType</typeparam>
     /// <param name="table">Toml表格</param>
     /// <param name="options">反序列化设置</param>
+    /// <exception cref="ConsistencyException">一致性异常</exception>
     /// <returns>完成反序列化的对象</returns>
-    public static async Task<T> DeserializeAsync<T>(TomlTable table, TomlDeserializerOptions? options = null)
+    public static async Task<T> DeserializeAsync<T>(
+        TomlTable table,
+        TomlDeserializerOptions? options = null
+    )
         where T : class, new()
     {
         var t = new T();
         s_options = options ?? new();
         await Task.Run(() =>
         {
-            DeserializeTable(t, t.GetType(), table);
+            PreviewDeserializeTable(t, t.GetType(), table);
         });
         s_options = null!;
         return t;
+    }
+    /// <summary>
+    /// 预处理
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="type">目标类型</param>
+    /// <param name="table">Toml表格</param>
+    /// <exception cref="ConsistencyException">一致性异常</exception>
+    private static void PreviewDeserializeTable(object target, Type type, TomlTable table)
+    {
+        if (s_options.CheckConsistency)
+        {
+            s_missingProperties = new();
+            s_missingTomlNodes = new();
+            DeserializeTableOnCheckConsistency(target, type, table, string.Empty);
+            if (s_missingProperties.Any() || s_missingTomlNodes.Any())
+            {
+                var missingProperties = s_missingProperties.ToArray();
+                Array.Sort(missingProperties);
+                var missingTomlNodes = s_missingTomlNodes.ToArray();
+                Array.Sort(missingTomlNodes);
+                throw new ConsistencyException("Deserialize error", missingProperties, missingTomlNodes);
+            }
+        }
+        else
+            DeserializeTable(target, type, table);
+    }
+    /// <summary>
+    /// 反序列化Toml表格并检查一致性
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="type">目标类型</param>
+    /// <param name="table">Toml表格</param>
+    /// <param name="tableName">Toml表格名称</param>
+    private static void DeserializeTableOnCheckConsistency(
+        object target,
+        Type type,
+        TomlTable table,
+        string tableName
+    )
+    {
+        // 设置注释
+        var iTomlClass = target as ITomlClassComment;
+        if (iTomlClass is not null)
+        {
+            iTomlClass.ClassComment = table.Comment ?? string.Empty;
+            iTomlClass.ValueComments ??= new();
+        }
+        // 设置一致性信息
+        var missingProperties = type.GetProperties().Select(i => i.Name).ToHashSet();
+        missingProperties.Remove(nameof(ITomlClassComment.ClassComment));
+        missingProperties.Remove(nameof(ITomlClassComment.ValueComments));
+        var missingTomlNodes = table.Keys.ToHashSet();
+
+        foreach (var kv in table)
+        {
+            var name = ToPascal(kv.Key);
+            var node = kv.Value;
+            if (type.GetProperty(name) is not PropertyInfo propertyInfo)
+                continue;
+            // 检测是否包含隐藏特性
+            if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnore)))
+                continue;
+            // 删除存在的内容
+            missingProperties.Remove(propertyInfo.Name);
+            missingTomlNodes.Remove(kv.Key);
+            // 设置注释
+            iTomlClass?.ValueComments.TryAdd(name, node.Comment ?? string.Empty);
+            DeserializeTableValueOnCheckConsistency(target, kv.Key, node, propertyInfo);
+        }
+
+        // 检查TomlName特性
+        CheckTomlKeyNameOnCheckConsistency(
+            iTomlClass,
+            target,
+            type,
+            table,
+            missingProperties,
+            missingTomlNodes
+        );
+        // 合并一致性信息
+        AddMissingValue(type.FullName!, tableName, missingProperties, missingTomlNodes);
+    }
+
+    /// <summary>
+    /// 添加一致性信息
+    /// </summary>
+    /// <param name="className">类名</param>
+    /// <param name="tableName">Toml表格名</param>
+    /// <param name="missingProperties">缺失数据的属性</param>
+    /// <param name="missingTomlNodes">缺失数据的Toml节点</param>
+    private static void AddMissingValue(
+        string className,
+        string tableName,
+        HashSet<string> missingProperties,
+        HashSet<string> missingTomlNodes
+    )
+    {
+        foreach (var propertyName in missingProperties)
+            s_missingProperties.Add($"{className}.{propertyName}");
+        foreach (var nodeName in missingTomlNodes)
+            s_missingTomlNodes.Add($"{tableName}.{nodeName}");
     }
 
     /// <summary>
@@ -114,7 +239,12 @@ public class TomlDeserializer
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
     /// <param name="table">Toml表格</param>
-    private static void CheckTomlKeyName(ITomlClassComment? iTomlClass, object target, Type type, TomlTable table)
+    private static void CheckTomlKeyName(
+        ITomlClassComment? iTomlClass,
+        object target,
+        Type type,
+        TomlTable table
+    )
     {
         foreach (var propertyInfo in type.GetProperties())
         {
@@ -123,9 +253,45 @@ public class TomlDeserializer
                 continue;
             if (string.IsNullOrWhiteSpace(keyName.Value))
                 continue;
+            // 设置值
             var node = table[keyName.Value];
             iTomlClass?.ValueComments.TryAdd(propertyInfo.Name, node.Comment ?? string.Empty);
             DeserializeTableValue(target, node, propertyInfo);
+        }
+    }
+
+    /// <summary>
+    /// 检查TomlName特性并检查一致性
+    /// </summary>
+    /// <param name="iTomlClass">Toml类接口</param>
+    /// <param name="target">目标</param>
+    /// <param name="type">目标类型</param>
+    /// <param name="table">Toml表格</param>
+    /// <param name="missingProperties">缺失数据的属性</param>
+    /// <param name="missingTomlNodes">缺失数据的Toml节点</param>
+    private static void CheckTomlKeyNameOnCheckConsistency(
+        ITomlClassComment? iTomlClass,
+        object target,
+        Type type,
+        TomlTable table,
+        HashSet<string> missingProperties,
+        HashSet<string> missingTomlNodes
+    )
+    {
+        foreach (var propertyInfo in type.GetProperties())
+        {
+            // 获取TomlKeyName
+            if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName keyName)
+                continue;
+            if (string.IsNullOrWhiteSpace(keyName.Value))
+                continue;
+            // 删除存在的内容
+            missingProperties.Remove(propertyInfo.Name);
+            missingTomlNodes.Remove(keyName.Value);
+            // 设置值
+            var node = table[keyName.Value];
+            iTomlClass?.ValueComments.TryAdd(propertyInfo.Name, node.Comment ?? string.Empty);
+            DeserializeTableValueOnCheckConsistency(target, keyName.Value, node, propertyInfo);
         }
     }
 
@@ -153,6 +319,52 @@ public class TomlDeserializer
             propertyInfo.SetValue(target, nestedTarget);
             // 递归Toml表格
             DeserializeTable(nestedTarget, propertyType, node.AsTomlTable);
+        }
+        else if (node.IsTomlArray)
+        {
+            // 如果是Toml数组,则检测是否为IList类型
+            if (
+                propertyType.Assembly.CreateInstance(propertyType.FullName!)
+                is not IList nestedTarget
+            )
+                return;
+            propertyInfo.SetValue(target, nestedTarget);
+            DeserializeArray(propertyType, nestedTarget, node.AsTomlArray);
+        }
+        else
+        {
+            // 获取并设定属性值
+            var value = GetNodeVale(node, Type.GetTypeCode(propertyType));
+            propertyInfo.SetValue(target, value);
+        }
+    }
+
+    /// <summary>
+    /// 反序列化Toml表格的值并检查一致性
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="nodeKeyName">Toml节点键名</param>
+    /// <param name="node">值</param>
+    /// <param name="propertyInfo">属性信息</param>
+    private static void DeserializeTableValueOnCheckConsistency(
+        object target,
+        string nodeKeyName,
+        TomlNode node,
+        PropertyInfo propertyInfo
+    )
+    {
+        var propertyType = propertyInfo.PropertyType;
+        if (node.IsTomlTable)
+        {
+            // 如果值是Toml表格,则创建一个新的对象
+            if (
+                propertyType.Assembly.CreateInstance(propertyType.FullName!)
+                is not object nestedTarget
+            )
+                return;
+            propertyInfo.SetValue(target, nestedTarget);
+            // 递归Toml表格
+            DeserializeTableOnCheckConsistency(nestedTarget, propertyType, node.AsTomlTable, nodeKeyName);
         }
         else if (node.IsTomlArray)
         {
@@ -254,11 +466,13 @@ public class TomlDeserializer
             TypeCode.String => node.AsString,
 
             // 浮点型
-            TypeCode.Single => Convert.ChangeType(node.AsDouble, TypeCode.Single),
+            TypeCode.Single
+                => Convert.ChangeType(node.AsDouble, TypeCode.Single),
             TypeCode.Double => Convert.ChangeType(node.AsDouble, TypeCode.Double),
 
             // 整型
-            TypeCode.SByte => Convert.ChangeType(node.AsDouble, TypeCode.SByte),
+            TypeCode.SByte
+                => Convert.ChangeType(node.AsDouble, TypeCode.SByte),
             TypeCode.Byte => Convert.ChangeType(node.AsDouble, TypeCode.Byte),
             TypeCode.Int16 => Convert.ChangeType(node.AsDouble, TypeCode.Int16),
             TypeCode.UInt16 => Convert.ChangeType(node.AsDouble, TypeCode.UInt16),

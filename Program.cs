@@ -22,8 +22,15 @@ internal class HKWToml
 
         //var table = TOML.ParseFromFile(file);
         //Console.WriteLine(table.ToTomlString());
-        var test = TomlDeserializer.DeserializeFromFile<Test>(file);
-        TomlSerializer.SerializeToFile(test, outFile);
+        try
+        {
+            var test = TomlDeserializer.DeserializeFromFile<Test>(file, new() { CheckConsistency = true });
+        }
+        catch (ConsistencyException ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+        //TomlSerializer.SerializeToFile(test, outFile);
         //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
         //Console.WriteLine(test);
         stopWatch.Stop();
@@ -46,7 +53,6 @@ internal class HKWToml
         [TomlSortOrder(0)]
         [TomlKeyName("title")]
         public string AAA { get; set; }
-
         public int Int1 { get; set; }
         public long Long1 { get; set; }
         public List<NoopClass0> Noop { get; set; }
@@ -66,7 +72,6 @@ internal class HKWToml
     {
         public string ClassComment { get; set; } = string.Empty;
         public Dictionary<string, string> ValueComments { get; set; } = new();
-
         public string Name { get; set; }
         public DateTime Date { get; set; }
         public DateTimeOffset Dob { get; set; }
