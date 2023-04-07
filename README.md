@@ -126,7 +126,7 @@ toml.SaveTo(file);
 
 ### 从 TOML 文件 生成 C# 的类
 
-生成相关设置请查看[TomlAsClassesOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlAsClassesOptions.cs)
+生成相关设置请查看[TomlAsClassesOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlAsClasses/TomlAsClassesOptions.cs)
 
 ```csharp
 using HKW.TOML
@@ -137,7 +137,7 @@ Console.WriteLine(classString);
 
 ### TOML 反序列化
 
-反序列化相关设置请查看[TomlDeserializerOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlDeserializerOptions.cs)
+反序列化相关设置请查看[TomlDeserializerOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlDeserializer/TomlDeserializerOptions.cs)
 
 ```csharp
 using HKW.TOML
@@ -147,7 +147,7 @@ Test test = TomlDeserializer.DeserializeFromFile<Test>(file);
 
 ### TOML 序列化
 
-序列化相关设置请查看[TomlSerializerOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlSerializerOptions.cs)
+序列化相关设置请查看[TomlSerializerOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlSerializer/TomlSerializerOptions.cs)
 
 ```csharp
 using HKW.TOML
