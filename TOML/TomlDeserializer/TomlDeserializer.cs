@@ -1,7 +1,8 @@
 ﻿using System.Collections;
 using System.Reflection;
+using HKW.TOML.TomlAttribute;
 
-namespace HKW.TOML;
+namespace HKW.TOML.TomlDeserializer;
 
 /// <summary>
 /// Toml反序列化
@@ -249,7 +250,7 @@ public class TomlDeserializer
         foreach (var propertyInfo in type.GetProperties())
         {
             // 获取TomlKeyName
-            if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName keyName)
+            if (propertyInfo.GetCustomAttribute<TomlPropertyName>() is not TomlPropertyName keyName)
                 continue;
             if (string.IsNullOrWhiteSpace(keyName.Value))
                 continue;
@@ -281,7 +282,7 @@ public class TomlDeserializer
         foreach (var propertyInfo in type.GetProperties())
         {
             // 获取TomlKeyName
-            if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName keyName)
+            if (propertyInfo.GetCustomAttribute<TomlPropertyName>() is not TomlPropertyName keyName)
                 continue;
             if (string.IsNullOrWhiteSpace(keyName.Value))
                 continue;

@@ -1,7 +1,8 @@
 ﻿using System.Collections;
 using System.Reflection;
+using HKW.TOML.TomlAttribute;
 
-namespace HKW.TOML;
+namespace HKW.TOML.TomlSerializer;
 
 /// <summary>
 /// Toml序列化
@@ -171,7 +172,7 @@ public class TomlSerializer
     private static string? GetTomlKeyName(PropertyInfo propertyInfo)
     {
         // 检查TomlName特性
-        if (propertyInfo.GetCustomAttribute<TomlKeyName>() is not TomlKeyName tomlName)
+        if (propertyInfo.GetCustomAttribute<TomlPropertyName>() is not TomlPropertyName tomlName)
             return null;
         if (string.IsNullOrWhiteSpace(tomlName.Value))
             return null;

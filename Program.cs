@@ -1,6 +1,9 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Reflection;
 using HKW.TOML;
+using HKW.TOML.TomlSerializer;
+using HKW.TOML.TomlDeserializer;
+using HKW.TOML.TomlAttribute;
 
 namespace HKWToml;
 
@@ -51,7 +54,7 @@ internal class HKWToml
         public Dictionary<string, string> ValueComments { get; set; } = new();
 
         [TomlSortOrder(0)]
-        [TomlKeyName("title")]
+        [TomlPropertyName("title")]
         public string AAA { get; set; }
         public int Int1 { get; set; }
         public long Long1 { get; set; }

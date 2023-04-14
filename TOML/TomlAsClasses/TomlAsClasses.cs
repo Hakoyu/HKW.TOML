@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 
-namespace HKW.TOML;
+namespace HKW.TOML.TomlAsClasses;
 
 /// <summary>
 /// Toml转换为类

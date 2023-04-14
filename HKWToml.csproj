@@ -22,4 +22,11 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Tests\TomlParse\" />
+    <Folder Include="Tests\TomlDeserializer\" />
+    <Folder Include="Tests\TomlSerializer\" />
+    <Folder Include="Tests\TomlAsClasses\" />
+  </ItemGroup>
+
 </Project>

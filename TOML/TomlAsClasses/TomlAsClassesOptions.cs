@@ -1,5 +1,5 @@
 ﻿
-namespace HKW.TOML;
+namespace HKW.TOML.TomlAsClasses;
 
 /// <summary>
 /// Toml转换为类设置
