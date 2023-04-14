@@ -4,13 +4,14 @@ using HKW.TOML;
 using HKW.TOML.TomlSerializer;
 using HKW.TOML.TomlDeserializer;
 using HKW.TOML.TomlAttribute;
+using System.Diagnostics;
 
 namespace HKWToml;
-
 internal class HKWToml
 {
     public static void Main(string[] args)
     {
+#if DEBUG
         System.Diagnostics.Stopwatch stopWatch = new();
         stopWatch.Start();
         var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
@@ -38,8 +39,10 @@ internal class HKWToml
         //Console.WriteLine(test);
         stopWatch.Stop();
         Console.WriteLine($"\nSTOP {stopWatch.Elapsed.TotalMilliseconds.ToString():f4}ms");
+#endif
     }
 
+#if DEBUG
     public class Noop : IComparer<PropertyInfo>
     {
         public int Compare(PropertyInfo? x, PropertyInfo? y)
@@ -127,4 +130,6 @@ internal class HKWToml
         public string Ip { get; set; }
         public string Role { get; set; }
     }
+#endif
 }
+
