@@ -1,4 +1,4 @@
-﻿namespace HKW.TOML.TomlDeserializer;
+﻿namespace HKW.TOML.Deserializer;
 
 /// <summary>
 /// Toml反序列化设置

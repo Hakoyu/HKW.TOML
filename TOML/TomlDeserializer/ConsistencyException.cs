@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace HKW.TOML.TomlDeserializer;
+namespace HKW.TOML.Deserializer;
 
 /// <summary>
 /// 一致性异常

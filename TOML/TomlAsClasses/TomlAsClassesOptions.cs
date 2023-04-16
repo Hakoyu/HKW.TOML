@@ -1,4 +1,6 @@
 ﻿
+using HKW.TOML.Interface;
+
 namespace HKW.TOML.TomlAsClasses;
 
 /// <summary>

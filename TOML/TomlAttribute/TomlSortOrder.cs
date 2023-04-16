@@ -1,10 +1,10 @@
-﻿namespace HKW.TOML.TomlAttribute;
+﻿namespace HKW.TOML.Attribute;
 
 /// <summary>
 /// Toml参数顺序
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class TomlSortOrder : Attribute
+public class TomlPropertyOrderAttribute : System.Attribute
 {
     /// <summary>
     /// 顺序
@@ -12,5 +12,5 @@ public class TomlSortOrder : Attribute
     public int Value { get; }
 
     /// <inheritdoc/>
-    public TomlSortOrder(int order) => Value = order;
+    public TomlPropertyOrderAttribute(int order) => Value = order;
 }

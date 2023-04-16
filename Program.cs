@@ -1,10 +1,11 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Reflection;
 using HKW.TOML;
-using HKW.TOML.TomlSerializer;
-using HKW.TOML.TomlDeserializer;
-using HKW.TOML.TomlAttribute;
+using HKW.TOML.Serializer;
+using HKW.TOML.Deserializer;
+using HKW.TOML.Attribute;
 using System.Diagnostics;
+using HKW.TOML.Interface;
 
 namespace HKWToml;
 internal class HKWToml
@@ -26,23 +27,38 @@ internal class HKWToml
 
         //var table = TOML.ParseFromFile(file);
         //Console.WriteLine(table.ToTomlString());
-        try
-        {
-            var test = TomlDeserializer.DeserializeFromFile<Test>(file, new() { CheckConsistency = true });
-        }
-        catch (ConsistencyException ex)
-        {
-            Console.WriteLine(ex.ToString());
-        }
+        //try
+        //{
+        //    var test = TomlDeserializer.DeserializeFromFile<Test>(file, new() { CheckConsistency = true });
+        //}
+        //catch (ConsistencyException ex)
+        //{
+        //    Console.WriteLine(ex.ToString());
+        //}
+        var test = TomlDeserializer.DeserializeFromFile<Test>(file);
         //TomlSerializer.SerializeToFile(test, outFile);
-        //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
-        //Console.WriteLine(test);
+        //var test1 = Deserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
+        Console.WriteLine(TomlSerializer.Serialize(test).ToTomlString());
         stopWatch.Stop();
         Console.WriteLine($"\nSTOP {stopWatch.Elapsed.TotalMilliseconds.ToString():f4}ms");
 #endif
     }
 
 #if DEBUG
+    public class BBBConverter : ITomlConverter<int>
+    {
+        public int Read(TomlNode node)
+        {
+            return 114514;
+        }
+
+        public TomlNode Write(int item)
+        {
+            return new TomlString() { Value = item.ToString() };
+        }
+    }
+
+
     public class Noop : IComparer<PropertyInfo>
     {
         public int Compare(PropertyInfo? x, PropertyInfo? y)
@@ -56,9 +72,12 @@ internal class HKWToml
         public string ClassComment { get; set; } = string.Empty;
         public Dictionary<string, string> ValueComments { get; set; } = new();
 
-        [TomlSortOrder(0)]
+        //[TomlSortOrder(0)]
+        //[TomlPropertyName("title")]
+        //public string AAA { get; set; }
         [TomlPropertyName("title")]
-        public string AAA { get; set; }
+        [TomlConverter(typeof(BBBConverter))]
+        public int BBB { get; set; }
         public int Int1 { get; set; }
         public long Long1 { get; set; }
         public List<NoopClass0> Noop { get; set; }

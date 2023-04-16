@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Reflection;
-using HKW.TOML.TomlAttribute;
+using HKW.TOML.Attribute;
+using HKW.TOML.Interface;
 
-namespace HKW.TOML.TomlSerializer;
+namespace HKW.TOML.Serializer;
 
 /// <summary>
 /// Toml序列化
@@ -98,7 +99,7 @@ public class TomlSerializer
         foreach (var propertyInfo in properties)
         {
             // 检测是否有隐藏特性
-            if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnore)))
+            if (System.Attribute.IsDefined(propertyInfo, typeof(TomlIgnoreAttribute)))
                 continue;
             // 跳过ITomlClass生成的接口
             if (
@@ -115,12 +116,25 @@ public class TomlSerializer
             // 获取名称
             var name = GetTomlKeyName(propertyInfo) ?? propertyInfo.Name;
             // 创建Toml节点
-            var node = CreateTomlNode(value);
+            var node = CheckTomlConverter(value, propertyInfo) ?? CreateTomlNode(value);
             table.TryAdd(name, node);
             // 设置注释
             node.Comment = SetCommentToNode(iTomlClass, propertyInfo.Name)!;
         }
         return table;
+    }
+
+    /// <summary>
+    /// 检查Toml值转换特性
+    /// </summary>
+    /// <param name="value">值</param>
+    /// <param name="propertyInfo">属性信息</param>
+    /// <returns>特性存在返回 <see cref="TomlNode"/> 否则返回 <see langword="null"/></returns>
+    private static TomlNode? CheckTomlConverter(object value, PropertyInfo propertyInfo)
+    {
+        if (propertyInfo.GetCustomAttribute(typeof(TomlConverterAttribute)) is not TomlConverterAttribute tomlConverter)
+            return null;
+        return tomlConverter.Write(value);
     }
 
     /// <summary>
@@ -154,8 +168,8 @@ public class TomlSerializer
         foreach (PropertyInfo property in properties)
         {
             if (
-                property.GetCustomAttribute<TomlSortOrder>()
-                is TomlSortOrder parameterOrder
+                property.GetCustomAttribute<TomlPropertyOrderAttribute>()
+                is TomlPropertyOrderAttribute parameterOrder
             )
                 newProperties.Insert(parameterOrder.Value, property);
             else
@@ -172,7 +186,7 @@ public class TomlSerializer
     private static string? GetTomlKeyName(PropertyInfo propertyInfo)
     {
         // 检查TomlName特性
-        if (propertyInfo.GetCustomAttribute<TomlPropertyName>() is not TomlPropertyName tomlName)
+        if (propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>() is not TomlPropertyNameAttribute tomlName)
             return null;
         if (string.IsNullOrWhiteSpace(tomlName.Value))
             return null;
