@@ -15,8 +15,7 @@ public class TomlSerializer
     /// </summary>
     private static TomlSerializerOptions s_options = null!;
 
-    private TomlSerializer()
-    { }
+    private TomlSerializer() { }
 
     /// <summary>
     /// 序列化至Toml文件
@@ -132,7 +131,10 @@ public class TomlSerializer
     /// <returns>特性存在返回 <see cref="TomlNode"/> 否则返回 <see langword="null"/></returns>
     private static TomlNode? CheckTomlConverter(object value, PropertyInfo propertyInfo)
     {
-        if (propertyInfo.GetCustomAttribute(typeof(TomlConverterAttribute)) is not TomlConverterAttribute tomlConverter)
+        if (
+            propertyInfo.GetCustomAttribute(typeof(TomlConverterAttribute))
+            is not TomlConverterAttribute tomlConverter
+        )
             return null;
         return tomlConverter.Write(value);
     }
@@ -186,7 +188,10 @@ public class TomlSerializer
     private static string? GetTomlKeyName(PropertyInfo propertyInfo)
     {
         // 检查TomlName特性
-        if (propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>() is not TomlPropertyNameAttribute tomlName)
+        if (
+            propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>()
+            is not TomlPropertyNameAttribute tomlName
+        )
             return null;
         if (string.IsNullOrWhiteSpace(tomlName.Value))
             return null;

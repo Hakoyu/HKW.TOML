@@ -354,36 +354,31 @@ public abstract class TomlNode : IEnumerable
     /// </summary>
     /// <param name="key">键</param>
     /// <param name="node">值</param>
-    public virtual void Add(string key, TomlNode node)
-    { }
+    public virtual void Add(string key, TomlNode node) { }
 
     /// <summary>
     /// 添加值(用于Toml数组)
     /// </summary>
     /// <param name="node">值</param>
-    public virtual void Add(TomlNode node)
-    { }
+    public virtual void Add(TomlNode node) { }
 
     /// <summary>
     /// 删除值(用于Toml数组)
     /// </summary>
     /// <param name="node">值</param>
-    public virtual void Delete(TomlNode node)
-    { }
+    public virtual void Delete(TomlNode node) { }
 
     /// <summary>
     /// 使用键删除值(用于Toml表格)
     /// </summary>
     /// <param name="key"></param>
-    public virtual void Delete(string key)
-    { }
+    public virtual void Delete(string key) { }
 
     /// <summary>
     /// 使用索引删除值(用于Toml数组)
     /// </summary>
     /// <param name="index"></param>
-    public virtual void Delete(int index)
-    { }
+    public virtual void Delete(int index) { }
 
     /// <summary>
     /// 添加多个值(用于Toml数组)
@@ -1248,7 +1243,11 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         if (string.IsNullOrWhiteSpace(Comment) is false)
             Comment.AsComment(tw);
 
-        if (tomlFile is not null && (hasRealValues || string.IsNullOrWhiteSpace(Comment) is false) && writeSectionName)
+        if (
+            tomlFile is not null
+            && (hasRealValues || string.IsNullOrWhiteSpace(Comment) is false)
+            && writeSectionName
+        )
         {
             tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
             tw.Write(tomlFile);
@@ -3358,7 +3357,7 @@ internal static class StringUtils
         if (string.IsNullOrWhiteSpace(txt))
             return txt;
         var stringBuilder = new StringBuilder(txt.Length);
-        for (var i = 0; i < txt.Length;)
+        for (var i = 0; i < txt.Length; )
         {
             var num = txt.IndexOf('\\', i);
             var next = num + 1;

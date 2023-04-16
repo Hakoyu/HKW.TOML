@@ -255,7 +255,10 @@ public class TomlDeserializer
         foreach (var propertyInfo in type.GetProperties())
         {
             // 获取TomlKeyName
-            if (propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>() is not TomlPropertyNameAttribute keyName)
+            if (
+                propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>()
+                is not TomlPropertyNameAttribute keyName
+            )
                 continue;
             if (string.IsNullOrWhiteSpace(keyName.Value))
                 continue;
@@ -285,7 +288,10 @@ public class TomlDeserializer
         var propertyType = propertyInfo.PropertyType;
 
         // 检测TomlConverter
-        if (propertyInfo.GetCustomAttribute(typeof(TomlConverterAttribute)) is TomlConverterAttribute tomlConverter)
+        if (
+            propertyInfo.GetCustomAttribute(typeof(TomlConverterAttribute))
+            is TomlConverterAttribute tomlConverter
+        )
         {
             propertyInfo.SetValue(target, tomlConverter.Read(node));
             return;
