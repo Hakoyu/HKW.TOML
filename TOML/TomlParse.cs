@@ -2330,7 +2330,7 @@ public class TOMLParser : IDisposable
     #region String parsing
 
     /**
-     * Checks if the string value a multiline string (i.e. a triple quoted string).
+     * Checks if the string value a multiline string (i.ex. a triple quoted string).
      * Assumes the cursor is at the first quote character. Consumes the least amount of characters needed to determine if the string is multiline.
      *
      * If the result is false, returns the consumed character through the `excess` variable.
@@ -3338,9 +3338,9 @@ internal static class StringUtils
             unescaped = txt.Unescape();
             return true;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            exception = e;
+            exception = ex;
             unescaped = null!;
             return false;
         }

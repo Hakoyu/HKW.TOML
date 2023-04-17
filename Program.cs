@@ -1,11 +1,14 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Reflection;
 using HKW.TOML;
-using HKW.TOML.Serializer;
-using HKW.TOML.Deserializer;
-using HKW.TOML.Attribute;
+using HKW.TOML.TomlSerializer;
+using HKW.TOML.TomlDeserializer;
+using HKW.TOML.TomlAttribute;
 using System.Diagnostics;
-using HKW.TOML.Interface;
+using HKW.TOML.TomlInterface;
+using HKW.TOML.TomlException;
+using HKW.TOML.TomlAsClasses;
+using HKWToml.Tests;
 
 namespace HKWToml;
 internal class HKWToml
@@ -13,34 +16,29 @@ internal class HKWToml
     public static void Main(string[] args)
     {
 #if DEBUG
-        System.Diagnostics.Stopwatch stopWatch = new();
-        stopWatch.Start();
-        var file = "C:\\Users\\HKW\\Desktop\\Dotnet\\test.toml";
-        var sFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\allTest.toml";
-        var outFile = "C:\\Users\\HKW\\Desktop\\Dotnet\\test1.toml";
-        //var classString = TomlAsClasses.ConstructFromFile(file, "Test", new()
-        //{
-        //    AddTomlSortOrderAttribute = true,
-        //    AddITomlClassCommentInterface = true,
-        //});
-        //Console.WriteLine(classString);
+        var table = TOML.Parse(TestExample.TomlExample);
+        var classString = TomlAsClasses.Construct(table, "Test", new()
+        {
+            AddITomlClassCommentInterface = true,
+            AddTomlPropertyOrderAttribute = true,
+            AddTomlRequiredAttribute = true,
+            KeyWordSeparators = new() { '-' }
+        });
+        Console.WriteLine(classString);
 
-        //var table = TOML.ParseFromFile(file);
         //Console.WriteLine(table.ToTomlString());
         //try
         //{
-        //    var test = TomlDeserializer.DeserializeFromFile<Test>(file, new() { CheckConsistency = true });
+        //    //var test = TomlDeserializer.DeserializeFromFile<Test>(file, new() { CheckConsistency = true });
+        //    var test = TomlDeserializer.DeserializeFromFile<Test>(file);
         //}
-        //catch (ConsistencyException ex)
+        //catch (Exception ex)
         //{
         //    Console.WriteLine(ex.ToString());
         //}
-        var test = TomlDeserializer.DeserializeFromFile<Test>(file);
         //TomlSerializer.SerializeToFile(test, outFile);
-        //var test1 = Deserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
-        Console.WriteLine(TomlSerializer.Serialize(test).ToTomlString());
-        stopWatch.Stop();
-        Console.WriteLine($"\nSTOP {stopWatch.Elapsed.TotalMilliseconds.ToString():f4}ms");
+        //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
+        //Console.WriteLine(TomlSerializer.Serialize(test).ToTomlString());
 #endif
     }
 
@@ -75,8 +73,9 @@ internal class HKWToml
         //[TomlSortOrder(0)]
         //[TomlPropertyName("title")]
         //public string AAA { get; set; }
-        [TomlPropertyName("title")]
-        [TomlConverter(typeof(BBBConverter))]
+        //[TomlPropertyName("title")]
+        //[TomlConverter(typeof(BBBConverter))]
+        [TomlRequired]
         public int BBB { get; set; }
         public int Int1 { get; set; }
         public long Long1 { get; set; }

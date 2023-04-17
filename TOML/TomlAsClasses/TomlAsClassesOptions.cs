@@ -1,5 +1,6 @@
 ﻿
-using HKW.TOML.Interface;
+using HKW.TOML.TomlInterface;
+using HKW.TOML.TomlAttribute;
 
 namespace HKW.TOML.TomlAsClasses;
 
@@ -62,16 +63,28 @@ public class TomlAsClassesOptions
     #region Attribute
 
     /// <summary>
-    /// 添加Toml参数顺序特性
+    /// 所有属性添加 <see cref="TomlPropertyOrderAttribute"/>
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
-    public bool AddTomlSortOrderAttribute { get; set; } = false;
+    public bool AddTomlPropertyOrderAttribute { get; set; } = false;
 
     /// <summary>
-    /// 添加Toml参数顺序特性
-    /// <para>默认为 "<see langword="TomlSortOrder({0})"/>"</para>
+    /// 特性 <see cref="TomlPropertyOrderAttribute"/> 格式化文本
+    /// <para>默认为 "<see langword="TomlPropertyOrder({0})"/>"</para>
     /// </summary>
-    public string TomlSortOrderAttributeFormat { get; set; } = "TomlSortOrder({0})";
+    public string TomlPropertyOrderAttributeFormat { get; set; } = "TomlPropertyOrder({0})";
+
+    /// <summary>
+    /// 所有属性添加 <see cref="TomlRequiredAttribute"/>
+    /// <para>默认为 <see langword="false"/></para>
+    /// </summary>
+    public bool AddTomlRequiredAttribute { get; set; } = false;
+
+    /// <summary>
+    /// 特性 <see cref="TomlRequiredAttribute"/> 文本
+    /// <para>默认为 "<see langword="TomlRequired"/>"</para>
+    /// </summary>
+    public string TomlRequiredAttribute { get; set; } = "TomlRequired";
 
     /// <summary>
     /// 特性格式化文本
@@ -97,13 +110,13 @@ public class TomlAsClassesOptions
     /// 删除键的单词分隔符 如 "_"
     /// <para>默认为 <see langword="true"/></para>
     /// </summary>
-    public bool RemoveKeyWordSeparator { get; set; } = true;
+    public bool RemoveKeyWordSeparators { get; set; } = true;
 
     /// <summary>
     /// 单词分隔符
-    /// <para>默认为 "<see langword="_"/>"</para>
+    /// <para>默认为 { '<see langword="_"/>' }</para>
     /// </summary>
-    public string KeyWordSeparator { get; set; } = "_";
+    public HashSet<char> KeyWordSeparators { get; set; } = new() { '_' };
 
     #endregion KeyWordSeparator
 

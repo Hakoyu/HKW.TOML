@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKW.TOML.Attribute;
+namespace HKW.TOML.TomlAttribute;
 
-public class TomlRequiredAttribute : System.Attribute
-{
-
-}
+/// <summary>
+/// 必要属性
+/// </summary>
+[AttributeUsage(AttributeTargets.Property)]
+public class TomlRequiredAttribute : Attribute { }

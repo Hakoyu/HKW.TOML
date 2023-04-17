@@ -1,10 +1,10 @@
-﻿namespace HKW.TOML.Attribute;
+﻿namespace HKW.TOML.TomlAttribute;
 
 /// <summary>
 /// Toml参数顺序
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class TomlPropertyOrderAttribute : System.Attribute
+public class TomlPropertyOrderAttribute : Attribute
 {
     /// <summary>
     /// 顺序

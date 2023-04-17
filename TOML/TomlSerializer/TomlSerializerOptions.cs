@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace HKW.TOML.Serializer;
+namespace HKW.TOML.TomlSerializer;
 
 /// <summary>
 /// Toml序列化设置

@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Reflection;
-using HKW.TOML.Attribute;
-using HKW.TOML.Interface;
+using HKW.TOML.TomlAttribute;
+using HKW.TOML.TomlInterface;
 
-namespace HKW.TOML.Serializer;
+namespace HKW.TOML.TomlSerializer;
 
 /// <summary>
 /// Toml序列化

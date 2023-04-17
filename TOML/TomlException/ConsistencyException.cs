@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace HKW.TOML.Deserializer;
+namespace HKW.TOML.TomlException;
 
 /// <summary>
 /// 一致性异常
@@ -25,14 +25,15 @@ public class ConsistencyException : Exception
     /// <param name="missingDataTomlNodes">缺失的Toml节点</param>
     public ConsistencyException(
         string message,
-        string[] missingDataProperties,
-        string[] missingDataTomlNodes
+        IEnumerable<string> missingDataProperties,
+        IEnumerable<string> missingDataTomlNodes
     )
         : base(message)
     {
-        MissingDataProperties = missingDataProperties;
-        MissingDataTomlNodes = missingDataTomlNodes;
+        MissingDataProperties = missingDataProperties.ToArray();
+        MissingDataTomlNodes = missingDataTomlNodes.ToArray();
     }
+
     /// <inheritdoc/>
     public override string ToString()
     {
@@ -40,19 +41,17 @@ public class ConsistencyException : Exception
         if (MissingDataProperties.Any())
         {
             sb.AppendLine($"{nameof(MissingDataProperties)} Size: {MissingDataProperties.Length}");
-            sb.AppendLine("    " + string.Join(Environment.NewLine + "    ", MissingDataProperties));
+            sb.AppendLine("    " + string.Join("\n    ", MissingDataProperties));
         }
         if (MissingDataTomlNodes.Any())
         {
             sb.AppendLine($"{nameof(MissingDataTomlNodes)} Size: {MissingDataTomlNodes.Length}");
-            sb.AppendLine("    " + string.Join(Environment.NewLine + "    ", MissingDataTomlNodes));
+            sb.AppendLine("    " + string.Join("\n    ", MissingDataTomlNodes));
         }
         return Message
-            + Environment.NewLine
+            + "\n"
             + sb.ToString()
-            + Environment.NewLine
-            + "---------StackTraceInfo---------"
-            + Environment.NewLine
+            + "\n---------StackTraceInfo---------\n"
             + StackTrace?.ToString();
     }
 }

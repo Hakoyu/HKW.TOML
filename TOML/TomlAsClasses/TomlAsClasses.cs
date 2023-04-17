@@ -17,13 +17,18 @@ public partial class TomlAsClasses
     /// 所有类
     /// <para>(类名称, 类值)</para>
     /// </summary>
-    private static readonly Dictionary<string, TomlClass> s_tomlClasses = new();
+    private static readonly Dictionary<string, TomlClass> sr_tomlClasses = new();
 
     /// <summary>
     /// 所有数组名称
     /// <para>(数组值类型名称, 数组名称)</para>
     /// </summary>
-    private static readonly Dictionary<string, string> s_arrayTypeNames = new();
+    private static readonly Dictionary<string, string> sr_arrayTypeNames = new();
+
+    /// <summary>
+    /// 所有单词分隔符
+    /// </summary>
+    private static char[] s_keyWordSeparators = null!;
 
     /// <summary>
     /// 设置
@@ -43,7 +48,7 @@ public partial class TomlAsClasses
     {
         var toml = TOML.ParseFromFile(tomlFile);
         var rootClassName = Path.GetFileNameWithoutExtension(tomlFile);
-        return Construct(rootClassName, toml, options);
+        return Construct(toml, rootClassName, options);
     }
 
     /// <summary>
@@ -62,7 +67,7 @@ public partial class TomlAsClasses
         var toml = TOML.ParseFromFile(tomlFile);
         if (string.IsNullOrWhiteSpace(rootClassName))
             rootClassName = Path.GetFileNameWithoutExtension(tomlFile);
-        return Construct(rootClassName, toml, options);
+        return Construct(toml, rootClassName, options);
     }
 
     /// <summary>
@@ -73,8 +78,8 @@ public partial class TomlAsClasses
     /// <param name="options">设置</param>
     /// <returns>构造的数据</returns>
     public static string Construct(
-        string rootClassName,
         TomlTable table,
+        string rootClassName,
         TomlAsClassesOptions? options = null
     )
     {
@@ -84,16 +89,16 @@ public partial class TomlAsClasses
         InitializeData();
 
         // 解析tbale
-        ParseTable(rootClassName, string.Empty, table, false);
+        ParseTable(rootClassName, null, table);
 
         // 生成数据
         var sb = new StringBuilder();
-        foreach (var tomlClass in s_tomlClasses.Values)
+        foreach (var tomlClass in sr_tomlClasses.Values)
             sb.AppendLine(tomlClass.ToString());
 
         // 清空数据
-        s_tomlClasses.Clear();
-        s_arrayTypeNames.Clear();
+        sr_tomlClasses.Clear();
+        sr_arrayTypeNames.Clear();
         s_anonymousTableCount = 0;
         s_options = null!;
         return sb.ToString();
@@ -104,19 +109,20 @@ public partial class TomlAsClasses
     /// </summary>
     private static void InitializeData()
     {
-        s_arrayTypeNames.Add(
+        s_keyWordSeparators = s_options.KeyWordSeparators.ToArray();
+        sr_arrayTypeNames.Add(
             s_options.TomlFloatNameConvert,
             string.Format(s_options.ListFormat, s_options.TomlFloatNameConvert)
         );
-        s_arrayTypeNames.Add(
+        sr_arrayTypeNames.Add(
             s_options.TomlIntegerNameConvert,
             string.Format(s_options.ListFormat, s_options.TomlIntegerNameConvert)
         );
-        s_arrayTypeNames.Add(
+        sr_arrayTypeNames.Add(
             s_options.TomlInteger64NameConvert,
             string.Format(s_options.ListFormat, s_options.TomlInteger64NameConvert)
         );
-        s_arrayTypeNames.Add(
+        sr_arrayTypeNames.Add(
             nameof(TomlNode),
             string.Format(s_options.ListFormat, nameof(TomlNode))
         );
@@ -131,17 +137,15 @@ public partial class TomlAsClasses
     /// <param name="className">类名称</param>
     /// <param name="parentClassName">父类名称</param>
     /// <param name="table">表格</param>
-    /// <param name="isAnonymousClass">是匿名函数</param>
-    /// <exception cref="Exception">toml中使用的Csharp的关键字</exception>
+    /// <exception cref="TomlException">toml中使用的Csharp的关键字</exception>
     private static void ParseTable(
         string className,
-        string parentClassName,
-        TomlTable table,
-        bool isAnonymousClass
+        string? parentClassName,
+        TomlTable table
     )
     {
-        var tomlClass = GetTomlClass(className, parentClassName, table, isAnonymousClass);
-
+        var isAnonymousClass = parentClassName is not null && string.IsNullOrWhiteSpace(parentClassName);
+        var tomlClass = GetTomlClass(className, parentClassName, table);
         var index = 0;
         foreach (var kv in table)
         {
@@ -159,30 +163,51 @@ public partial class TomlAsClasses
             ParseTableValue(tomlClass, name, node);
             if (isAnonymousClass)
                 continue;
-            if (s_options.AddComment)
-                tomlClass.Values[name].Comment = node.Comment;
-            if (s_options.AddTomlSortOrderAttribute)
-                tomlClass.Values[name].Attributes.Add(string.Format(s_options.TomlSortOrderAttributeFormat, index++));
+            ChackOptions(ref index, tomlClass, name, node);
         }
     }
 
+    /// <summary>
+    /// 检查设置
+    /// </summary>
+    /// <param name="index">标识</param>
+    /// <param name="tomlClass">Toml类</param>
+    /// <param name="name">名称</param>
+    /// <param name="node">Toml节点</param>
+    private static void ChackOptions(ref int index, TomlClass tomlClass, string name, TomlNode node)
+    {
+        if (s_options.AddComment)
+            tomlClass.Values[name].Comment = node.Comment;
+        if (s_options.AddTomlRequiredAttribute)
+            tomlClass.Values[name].Attributes.Add(s_options.TomlRequiredAttribute);
+        if (s_options.AddTomlPropertyOrderAttribute)
+            tomlClass.Values[name].Attributes.Add(string.Format(s_options.TomlPropertyOrderAttributeFormat, index++));
+    }
+
+    /// <summary>
+    /// 获取Toml类
+    /// </summary>
+    /// <param name="className">类名</param>
+    /// <param name="parentClassName">父类名</param>
+    /// <param name="table">Toml表格</param>
+    /// <returns>Toml类</returns>
+    /// <exception cref="Exception">使用了Csharp的内部字符</exception>
     private static TomlClass GetTomlClass(
         string className,
-        string parentClassName,
-        TomlTable table,
-        bool isAnonymousClass
+        string? parentClassName,
+        TomlTable table
     )
     {
         // 检测关键字
         if (s_csharpKeywords.Contains(className))
             throw new Exception($"Used CsharpKeywords \"{className}\"");
         // 获取已存在的类
-        if (s_tomlClasses.TryGetValue(className, out var tomlClass) is false)
+        if (sr_tomlClasses.TryGetValue(className, out var tomlClass) is false)
         {
-            tomlClass = new(className, parentClassName, isAnonymousClass);
+            tomlClass = new(className, parentClassName);
             if (s_options.AddComment)
                 tomlClass.Comment = table.Comment;
-            s_tomlClasses.TryAdd(tomlClass.FullName, tomlClass);
+            sr_tomlClasses.TryAdd(tomlClass.FullName, tomlClass);
         }
         return tomlClass;
     }
@@ -203,9 +228,9 @@ public partial class TomlAsClasses
             if (string.IsNullOrWhiteSpace(tomlClass.ParentName))
                 tomlClass.Values.TryAdd(name, new(name, className));
             else
-                s_tomlClasses[tomlClass.FullName].Values.TryAdd(name, new(name, className));
+                sr_tomlClasses[tomlClass.FullName].Values.TryAdd(name, new(name, className));
             // 解析类
-            ParseTable(className, tomlClass.Name, node.AsTomlTable, false);
+            ParseTable(className, tomlClass.Name, node.AsTomlTable);
         }
         else if (node.IsTomlArray)
         {
@@ -229,7 +254,7 @@ public partial class TomlAsClasses
     {
         // 如果数值中没有值(无法判断值类型),则设置为TomlNode
         if (array.ChildrenCount is 0)
-            return s_arrayTypeNames[nameof(TomlNode)];
+            return sr_arrayTypeNames[nameof(TomlNode)];
 
         // 遍历所有值,并获取类型标识
         var tomlTypeCode = TomlType.GetTypeCode(array[0]);
@@ -255,8 +280,8 @@ public partial class TomlAsClasses
             );
 
         // 将数组名缓存
-        s_arrayTypeNames.TryAdd(typeName, string.Format(s_options.ListFormat, typeName));
-        return s_arrayTypeNames[typeName];
+        sr_arrayTypeNames.TryAdd(typeName, string.Format(s_options.ListFormat, typeName));
+        return sr_arrayTypeNames[typeName];
     }
 
     /// <summary>
@@ -304,40 +329,40 @@ public partial class TomlAsClasses
             return typeNames.First();
         else if (
             typeNames.Count is 2
-            && typeNames.Contains(s_arrayTypeNames[s_options.TomlIntegerNameConvert])
-            && typeNames.Contains(s_arrayTypeNames[s_options.TomlInteger64NameConvert])
+            && typeNames.Contains(sr_arrayTypeNames[s_options.TomlIntegerNameConvert])
+            && typeNames.Contains(sr_arrayTypeNames[s_options.TomlInteger64NameConvert])
         )
         {
             // 如果同时为int和int64,则变为int64
-            return s_arrayTypeNames[s_options.TomlInteger64NameConvert];
+            return sr_arrayTypeNames[s_options.TomlInteger64NameConvert];
         }
         else if (
             s_options.MergeIntegerAndFloat
             && typeNames.Count is 2
             && (
-                typeNames.Contains(s_arrayTypeNames[s_options.TomlIntegerNameConvert])
-                || typeNames.Contains(s_arrayTypeNames[s_options.TomlInteger64NameConvert])
+                typeNames.Contains(sr_arrayTypeNames[s_options.TomlIntegerNameConvert])
+                || typeNames.Contains(sr_arrayTypeNames[s_options.TomlInteger64NameConvert])
             )
-            && typeNames.Contains(s_arrayTypeNames[s_options.TomlFloatNameConvert])
+            && typeNames.Contains(sr_arrayTypeNames[s_options.TomlFloatNameConvert])
         )
         {
             // 如果同时为int或int64和float则返回float
-            return s_arrayTypeNames[s_options.TomlFloatNameConvert];
+            return sr_arrayTypeNames[s_options.TomlFloatNameConvert];
         }
         else if (
             s_options.MergeIntegerAndFloat
             && typeNames.Count is 3
-            && typeNames.Contains(s_arrayTypeNames[s_options.TomlIntegerNameConvert])
-            && typeNames.Contains(s_arrayTypeNames[s_options.TomlInteger64NameConvert])
-            && typeNames.Contains(s_arrayTypeNames[s_options.TomlFloatNameConvert])
+            && typeNames.Contains(sr_arrayTypeNames[s_options.TomlIntegerNameConvert])
+            && typeNames.Contains(sr_arrayTypeNames[s_options.TomlInteger64NameConvert])
+            && typeNames.Contains(sr_arrayTypeNames[s_options.TomlFloatNameConvert])
         )
         {
             // 如果同时为int和int64和float则返回float
-            return s_arrayTypeNames[s_options.TomlFloatNameConvert];
+            return sr_arrayTypeNames[s_options.TomlFloatNameConvert];
         }
         else
             // 否则返回TomlNode
-            return s_arrayTypeNames[nameof(TomlNode)];
+            return sr_arrayTypeNames[nameof(TomlNode)];
     }
 
     /// <summary>
@@ -357,7 +382,7 @@ public partial class TomlAsClasses
         foreach (var item in array)
         {
             var table = item.AsTomlTable;
-            ParseTable(anonymousClassName, string.Empty, table, true);
+            ParseTable(anonymousClassName, string.Empty, table);
         }
         return anonymousClassName;
     }
@@ -371,15 +396,14 @@ public partial class TomlAsClasses
     {
         if (string.IsNullOrWhiteSpace(str))
             return str;
+        if (s_options.RemoveKeyWordSeparators is false)
+            return str;
         // 使用分隔符拆分单词
-        var strs = str.Split(s_options.KeyWordSeparator);
+        var strs = str.Split(s_keyWordSeparators, StringSplitOptions.RemoveEmptyEntries);
         // 将单词首字母大写
         var newStrs = strs.Select(s => FirstLetterToUpper(s));
         // 是否保留分隔符
-        if (s_options.RemoveKeyWordSeparator)
-            return string.Join("", newStrs);
-        else
-            return string.Join(s_options.KeyWordSeparator, newStrs);
+        return string.Join("", newStrs);
     }
 
     /// <summary>
@@ -436,13 +460,12 @@ public partial class TomlAsClasses
         /// </summary>
         /// <param name="name">名称</param>
         /// <param name="parentName">父类名称</param>
-        /// <param name="isAnonymous">是匿名函数</param>
-        public TomlClass(string name, string parentName = "", bool isAnonymous = false)
+        public TomlClass(string name, string? parentName)
         {
             Name = name;
             FullName = name + parentName;
-            ParentName = parentName;
-            IsAnonymous = isAnonymous;
+            ParentName = parentName ?? string.Empty;
+            IsAnonymous = parentName is not null && string.IsNullOrWhiteSpace(parentName); ;
         }
 
         /// <summary>
