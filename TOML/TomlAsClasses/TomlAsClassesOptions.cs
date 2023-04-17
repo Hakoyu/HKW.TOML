@@ -230,9 +230,9 @@ public class TomlAsClassesOptions
 
     /// <summary>
     /// 匿名类名称格式化文本
-    /// <para>默认为 "<see langword="{0}Class{1}"/>"</para>
+    /// <para>默认为 "<see langword="{0}AnonymousClass"/>"</para>
     /// </summary>
-    public string AnonymousClassNameFormat { get; set; } = "{0}Class{1}";
+    public string AnonymousClassNameFormat { get; set; } = "{0}AnonymousClass";
 
     /// <summary>
     /// 属性格式化文本

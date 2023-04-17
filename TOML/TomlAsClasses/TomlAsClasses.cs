@@ -9,11 +9,6 @@ namespace HKW.TOML.TomlAsClasses;
 public partial class TomlAsClasses
 {
     /// <summary>
-    /// 匿名类数量
-    /// </summary>
-    private static int s_anonymousTableCount = 0;
-
-    /// <summary>
     /// 所有类
     /// <para>(类名称, 类值)</para>
     /// </summary>
@@ -99,7 +94,6 @@ public partial class TomlAsClasses
         // 清空数据
         sr_tomlClasses.Clear();
         sr_arrayTypeNames.Clear();
-        s_anonymousTableCount = 0;
         s_options = null!;
         return sb.ToString();
     }
@@ -163,7 +157,7 @@ public partial class TomlAsClasses
             ParseTableValue(tomlClass, name, node);
             if (isAnonymousClass)
                 continue;
-            ChackOptions(ref index, tomlClass, name, node);
+            ChackOptions(ref index, name, node, tomlClass);
         }
     }
 
@@ -174,10 +168,13 @@ public partial class TomlAsClasses
     /// <param name="tomlClass">Toml类</param>
     /// <param name="name">名称</param>
     /// <param name="node">Toml节点</param>
-    private static void ChackOptions(ref int index, TomlClass tomlClass, string name, TomlNode node)
+    private static void ChackOptions(ref int index, string name, TomlNode node, TomlClass tomlClass)
     {
         if (s_options.AddComment)
             tomlClass.Values[name].Comment = node.Comment;
+        if (s_options.PropertyAttributes is not null)
+            foreach (var attribute in s_options.PropertyAttributes)
+                tomlClass.Values[name].Attributes.Add(attribute);
         if (s_options.AddTomlRequiredAttribute)
             tomlClass.Values[name].Attributes.Add(s_options.TomlRequiredAttribute);
         if (s_options.AddTomlPropertyOrderAttribute)
@@ -376,8 +373,7 @@ public partial class TomlAsClasses
         // 获取匿名类名称
         var anonymousClassName = string.Format(
             s_options.AnonymousClassNameFormat,
-            name,
-            s_anonymousTableCount++
+            name
         );
         foreach (var item in array)
         {
@@ -394,9 +390,7 @@ public partial class TomlAsClasses
     /// <returns>帕斯卡格式字符串</returns>
     private static string ToPascal(string str)
     {
-        if (string.IsNullOrWhiteSpace(str))
-            return str;
-        if (s_options.RemoveKeyWordSeparators is false)
+        if (string.IsNullOrWhiteSpace(str) || s_options.RemoveKeyWordSeparators is false)
             return str;
         // 使用分隔符拆分单词
         var strs = str.Split(s_keyWordSeparators, StringSplitOptions.RemoveEmptyEntries);
@@ -412,252 +406,6 @@ public partial class TomlAsClasses
     /// <param name="str">字符串</param>
     /// <returns>第一个为大写的字符串</returns>
     private static string FirstLetterToUpper(string str) => $"{char.ToUpper(str[0])}{str[1..]}";
-
-    /// <summary>
-    /// Toml构造类
-    /// </summary>
-    [DebuggerDisplay("{Name},Count = {Count}")]
-    private class TomlClass
-    {
-        /// <summary>
-        /// 名称
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        ///  全名
-        /// </summary>
-        public string FullName { get; set; }
-
-        /// <summary>
-        /// 父类名称
-        /// </summary>
-        public string ParentName { get; set; }
-
-        /// <summary>
-        /// 注释
-        /// </summary>
-        public string Comment { get; set; } = string.Empty;
-
-        /// <summary>
-        /// 是匿名类
-        /// </summary>
-        public bool IsAnonymous { get; set; } = false;
-
-        /// <summary>
-        /// 值字典
-        /// <para>(值名称, 值)</para>
-        /// </summary>
-        public Dictionary<string, TomlClassValue> Values { get; set; } = new();
-
-        /// <summary>
-        /// 特性
-        /// </summary>
-        public HashSet<string> Attributes { get; set; } = new();
-
-        /// <summary>
-        /// 构造
-        /// </summary>
-        /// <param name="name">名称</param>
-        /// <param name="parentName">父类名称</param>
-        public TomlClass(string name, string? parentName)
-        {
-            Name = name;
-            FullName = name + parentName;
-            ParentName = parentName ?? string.Empty;
-            IsAnonymous = parentName is not null && string.IsNullOrWhiteSpace(parentName); ;
-        }
-
-        /// <summary>
-        /// 转化为格式化字符串
-        /// </summary>
-        /// <returns>格式化字符串</returns>
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            var classname = Name;
-            var iTomlClassCommentValue = string.Empty;
-            // 为匿名函数时,不设置注释,特性,继承
-            if (IsAnonymous is false)
-            {
-                if (GetComment(Comment) is string comment && string.IsNullOrWhiteSpace(comment) is false)
-                    sb.AppendLine(comment);
-                if (GetAttribute(s_options.ClassAttributes) is string attribute && string.IsNullOrWhiteSpace(attribute) is false)
-                    sb.AppendLine(attribute);
-                classname += GetInheritance(s_options.MultipleInheritance);
-                // 添加ITomlClass接口中的值
-                if (s_options.AddITomlClassCommentInterface)
-                    iTomlClassCommentValue = string.Format(s_options.ITomlClassInterfaceValueFormat, s_options.Indent) + "\n";
-            }
-
-            return string.Format(s_options.ClassFormat, sb.ToString(), classname, iTomlClassCommentValue + GetValues(Values.Values));
-        }
-
-        /// <summary>
-        /// 获取注释
-        /// </summary>
-        /// <param name="comment">注释</param>
-        /// <returns>格式化的注释</returns>
-        private static string GetComment(string comment)
-        {
-            if (string.IsNullOrWhiteSpace(comment))
-                return comment;
-            var comments = comment.Split(
-                new[] { '\r', '\n' },
-                StringSplitOptions.RemoveEmptyEntries
-            );
-            if (comments.Length is 1)
-                return string.Format(s_options.CommentFormat, string.Empty, comments[0]);
-            var multiLineComment =
-               comments[0]
-               + "\n"
-               + string.Join(
-                   "\n",
-                   comments[1..].Select(
-                       s => string.Format(s_options.CommentParaFormat, string.Empty, s)
-                   )
-               );
-            return string.Format(s_options.CommentFormat, string.Empty, multiLineComment);
-        }
-
-        /// <summary>
-        /// 获取特性数据
-        /// </summary>
-        /// <param name="attributes">特性</param>
-        /// <returns>格式化的特性数据</returns>
-        private static string GetAttribute(IEnumerable<string> attributes)
-        {
-            var sb = new StringBuilder();
-            foreach (var attribute in attributes)
-                sb.AppendLine(string.Format(s_options.AttributeFormat, string.Empty, attribute));
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// 获取继承数据
-        /// </summary>
-        /// <param name="inheritances">继承</param>
-        /// <returns>格式化的继承数据</returns>
-        private static string GetInheritance(IEnumerable<string> inheritances)
-        {
-            var str = string.Join(", ", inheritances);
-            if (string.IsNullOrWhiteSpace(str))
-                return string.Empty;
-            return string.Format(s_options.InheritanceFormat, str);
-        }
-
-        /// <summary>
-        /// 获取值数据
-        /// </summary>
-        /// <param name="values">值</param>
-        /// <returns>格式化的值数据</returns>
-        private static string GetValues(IEnumerable<TomlClassValue> values)
-        {
-            var sb = new StringBuilder();
-            foreach (var item in values)
-                sb.AppendLine(item.ToString());
-            return sb.ToString();
-        }
-    }
-
-    /// <summary>
-    /// toml类值
-    /// </summary>
-    [DebuggerDisplay("{TypeName}, {Name}")]
-    private class TomlClassValue
-    {
-        /// <summary>
-        /// 名称
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// 类型名称
-        /// </summary>
-        public string TypeName { get; set; }
-
-        /// <summary>
-        /// 注释
-        /// </summary>
-        public string Comment { get; set; } = string.Empty;
-
-        /// <summary>
-        /// 特性
-        /// </summary>
-        public HashSet<string> Attributes { get; set; } = new();
-
-        /// <summary>
-        /// 构造
-        /// </summary>
-        /// <param name="name">名称</param>
-        /// <param name="typeName">类型名称</param>
-        public TomlClassValue(string name, string typeName)
-        {
-            Name = name;
-            TypeName = typeName;
-        }
-
-        /// <summary>
-        /// 构造
-        /// </summary>
-        /// <param name="name">名称</param>
-        /// <param name="node">类值(推断类型名称)</param>
-        public TomlClassValue(string name, TomlNode node)
-        {
-            Name = name;
-            TypeName = s_options.GetConvertName(node, TomlType.GetTypeCode(node));
-        }
-
-        /// <summary>
-        /// 转化为格式化字符串
-        /// </summary>
-        /// <returns>字符串</returns>
-        public override string ToString()
-        {
-            var valueData = string.Format(s_options.ValueFormat, s_options.Indent, TypeName, Name);
-            return GetComment(Comment) + GetAttribute(Attributes) + valueData;
-        }
-
-        /// <summary>
-        /// 获取注释
-        /// </summary>
-        /// <param name="comment">注释</param>
-        /// <returns>格式化的注释</returns>
-        private static string GetComment(string comment)
-        {
-            if (string.IsNullOrWhiteSpace(comment))
-                return comment;
-            var comments = comment.Split(
-                new[] { '\r', '\n' },
-                StringSplitOptions.RemoveEmptyEntries
-            );
-            if (comments.Length is 1)
-                return string.Format(s_options.CommentFormat, s_options.Indent, comments[0]);
-            var multiLineComment =
-               comments[0]
-               + "\n"
-               + string.Join(
-                   "\n",
-                   comments[1..].Select(
-                       s => string.Format(s_options.CommentParaFormat, s_options.Indent, s)
-                   )
-               );
-            return string.Format(s_options.CommentFormat, s_options.Indent, multiLineComment);
-        }
-
-        /// <summary>
-        /// 获取特性数据
-        /// </summary>
-        /// <param name="attributes">特性</param>
-        /// <returns>格式化的特性数据</returns>
-        private static string GetAttribute(IEnumerable<string> attributes)
-        {
-            var sb = new StringBuilder();
-            foreach (var attribute in attributes)
-                sb.AppendLine(string.Format(s_options.AttributeFormat, s_options.Indent, attribute));
-            return sb.ToString();
-        }
-    }
 
     /// <summary>
     /// csharp关键字集合

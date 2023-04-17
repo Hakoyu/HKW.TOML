@@ -1813,7 +1813,7 @@ public class TOMLParser : IDisposable
      * Assumes the cursor is at the first character that belong to the pair (including possible whitespace).
      * Consumes all characters that belong to the key and the value (ignoring possible trailing whitespace at the end).
      *
-     * Example:
+     * CreateClassExample:
      * foo = "bar"  ==> foo = "bar"
      * ^                           ^
      */
@@ -1863,7 +1863,7 @@ public class TOMLParser : IDisposable
      * Assumes the cursor is at the first character that belongs to the value (including possible starting whitespace).
      * Consumes all characters belonging to the value (ignoring possible trailing whitespace at the end).
      *
-     * Example:
+     * CreateClassExample:
      * "Test"  ==> "Test"
      * ^                 ^
      */
@@ -1939,11 +1939,11 @@ public class TOMLParser : IDisposable
      * Assumes the cursor is at the first character belonging to the key (with possible trailing whitespace if `skipWhitespace = true`).
      * Consumes all the characters until the `until` character is met (but does not consume the character itself).
      *
-     * Example 1:
+     * CreateClassExample 1:
      * foo.bar  ==>  foo.bar           (`skipWhitespace = false`, `until = ' '`)
      * ^                    ^
      *
-     * Example 2:
+     * CreateClassExample 2:
      * [ foo . bar ] ==>  [ foo . bar ]     (`skipWhitespace = true`, `until = ']'`)
      * ^                             ^
      */
@@ -2030,7 +2030,7 @@ public class TOMLParser : IDisposable
     /**
      * Reads the whole raw value until the first non-value character is encountered.
      * Assumes the cursor start position at the first value character and consumes all characters that may be related to the value.
-     * Example:
+     * CreateClassExample:
      *
      * 1_0_0_0  ==>  1_0_0_0
      * ^                    ^
@@ -2062,7 +2062,7 @@ public class TOMLParser : IDisposable
      * Assumes the cursor at the first character that is related to the value (with possible spaces).
      * Consumes all the characters that are related to the value.
      *
-     * Example
+     * CreateClassExample
      * 1_0_0_0 # This is a comment
      * <newline>
      *     ==>  1_0_0_0 # This is a comment
@@ -2173,7 +2173,7 @@ public class TOMLParser : IDisposable
      * Reads an array value.
      * Assumes the cursor is at the start of the array definition. Reads all character until the array closing bracket.
      *
-     * Example:
+     * CreateClassExample:
      * [1, 2, 3]  ==>  [1, 2, 3]
      * ^                        ^
      */
@@ -2251,7 +2251,7 @@ public class TOMLParser : IDisposable
      * Reads an inline table.
      * Assumes the cursor is at the start of the table definition. Reads all character until the table closing bracket.
      *
-     * Example:
+     * CreateClassExample:
      * { Test = "foo", value = 1 }  ==>  { Test = "foo", value = 1 }
      * ^                                                            ^
      */
@@ -2335,15 +2335,15 @@ public class TOMLParser : IDisposable
      *
      * If the result is false, returns the consumed character through the `excess` variable.
      *
-     * Example 1:
+     * CreateClassExample 1:
      * """Test"""  ==>  """Test"""
      * ^                   ^
      *
-     * Example 2:
+     * CreateClassExample 2:
      * "Test"  ==>  "Test"         (doesn't return the first quote)
      * ^             ^
      *
-     * Example 3:
+     * CreateClassExample 3:
      * ""  ==>  ""        (returns the extra `"` through the `excess` variable)
      * ^          ^
      */
@@ -2416,7 +2416,7 @@ public class TOMLParser : IDisposable
      * Assumes the cursor is at the first character that belongs to the string.
      * Consumes all characters that belong to the string (including the closing quote).
      *
-     * Example:
+     * CreateClassExample:
      * "Test"  ==>  "Test"
      * ^                 ^
      */
@@ -2485,7 +2485,7 @@ public class TOMLParser : IDisposable
      * Assumes the cursor is at the first character that belongs to the string.
      * Consumes all characters that belong to the string and the three closing quotes.
      *
-     * Example:
+     * CreateClassExample:
      * """Test"""  ==>  """Test"""
      * ^                       ^
      */

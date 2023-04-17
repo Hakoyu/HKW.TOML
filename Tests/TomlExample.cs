@@ -2,9 +2,9 @@
 namespace HKWToml.Tests;
 
 #if DEBUG
-internal class TestExample
+internal class TomlExample
 {
-    public static string TomlExample { get; set; } = @"
+    public static string Example0 { get; set; } = @"
 # This is an example TOML document which shows most of its features.
 
 # Simple key/value with a string.

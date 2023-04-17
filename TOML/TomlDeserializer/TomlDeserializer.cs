@@ -32,6 +32,11 @@ public class TomlDeserializer
     private static readonly HashSet<string> sr_missingPequiredProperties = new();
 
     /// <summary>
+    /// 所有单词分隔符
+    /// </summary>
+    private static char[] s_keyWordSeparators = null!;
+
+    /// <summary>
     /// 从Toml文件反序列化
     /// </summary>
     /// <typeparam name="T">targetType</typeparam>
@@ -113,6 +118,7 @@ public class TomlDeserializer
     /// <exception cref="ConsistencyException">一致性异常</exception>
     private static void PreviewDeserializeTable(object target, Type type, TomlTable table)
     {
+        s_keyWordSeparators = s_options.KeyWordSeparators.ToArray();
         DeserializeTable(target, type, table, string.Empty);
 
         if (sr_missingProperties.Any() || sr_missingTomlNodes.Any())
@@ -473,17 +479,13 @@ public class TomlDeserializer
     /// <returns>帕斯卡格式字符串</returns>
     private static string ToPascal(string str)
     {
-        if (string.IsNullOrWhiteSpace(str))
+        if (string.IsNullOrWhiteSpace(str) || s_options.RemoveKeyWordSeparator is false)
             return str;
         // 使用分隔符拆分单词
-        var strs = str.Split(s_options.KeyWordSeparator);
+        var strs = str.Split(s_keyWordSeparators, StringSplitOptions.RemoveEmptyEntries);
         // 将单词首字母大写
         var newStrs = strs.Select(s => FirstLetterToUpper(s));
-        // 是否保留分隔符
-        if (s_options.RemoveKeyWordSeparator)
-            return string.Join("", newStrs);
-        else
-            return string.Join(s_options.KeyWordSeparator, newStrs);
+        return string.Join("", newStrs);
     }
 
     /// <summary>

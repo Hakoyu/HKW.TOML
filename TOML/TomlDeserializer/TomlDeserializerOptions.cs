@@ -13,9 +13,9 @@ public class TomlDeserializerOptions
 
     /// <summary>
     /// 单词分隔符
-    /// <para>默认为 "<see langword="_"/>"</para>
+    /// <para>默认为 { '<see langword="_"/>' }</para>
     /// </summary>
-    public string KeyWordSeparator { get; set; } = "_";
+    public HashSet<char> KeyWordSeparators { get; set; } = new() { '_' };
 
     /// <summary>
     /// 检查一致性
