@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>1.0.10</Version>
+    <Version>1.1.0</Version>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -13,6 +13,7 @@
     <RepositoryUrl>https://github.com/Hakoyu/HKWToml</RepositoryUrl>
     <Authors>HKW</Authors>
     <Company>HKW</Company>
+    <Description>HKWToml is TOML reader, writer, deserializer, serializer and generate classes for C#.</Description>
   </PropertyGroup>
 
   <ItemGroup>
