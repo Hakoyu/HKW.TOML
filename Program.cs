@@ -1,4 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
+#if DEBUG
 using System.Reflection;
 using HKW.TOML;
 using HKW.TOML.TomlSerializer;
@@ -12,6 +13,7 @@ using HKWToml.Tests;
 using HKWToml.Tests.TomlAsClassesCases;
 using HKWToml.Tests.TomlDeserializerCases;
 using HKWToml.Tests.TomlSerializerCases;
+#endif
 
 namespace HKWToml;
 internal class HKWToml

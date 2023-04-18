@@ -1,6 +1,4 @@
-﻿#if DEBUG
-
-namespace HKWToml.Tests;
+﻿namespace HKWToml.Tests;
 
 internal class TomlExample
 {
@@ -60,5 +58,3 @@ distros = [
 	key = ""This table intentionally left undecoded""
 ";
 }
-
-#endif
