@@ -30,30 +30,29 @@ public partial class TomlAsClasses
     /// </summary>
     private static TomlAsClassesOptions s_options = new();
 
-    private TomlAsClasses()
-    { }
+    private TomlAsClasses() { }
 
     /// <summary>
-    /// 从文件中构造
+    /// 从文件中生成
     /// </summary>
     /// <param name="tomlFile">toml文件</param>
     /// <param name="options">设置</param>
-    /// <returns>构造的数据</returns>
-    public static string ConstructFromFile(string tomlFile, TomlAsClassesOptions? options = null)
+    /// <returns>生成的数据</returns>
+    public static string GenerateFromFile(string tomlFile, TomlAsClassesOptions? options = null)
     {
         var toml = TOML.ParseFromFile(tomlFile);
         var rootClassName = Path.GetFileNameWithoutExtension(tomlFile);
-        return Construct(toml, rootClassName, options);
+        return Generate(toml, rootClassName, options);
     }
 
     /// <summary>
-    /// 从文件中构造
+    /// 从文件中生成
     /// </summary>
     /// <param name="tomlFile">toml文件</param>
     /// <param name="rootClassName">基类名称</param>
     /// <param name="options">设置</param>
-    /// <returns>构造的数据</returns>
-    public static string ConstructFromFile(
+    /// <returns>生成的数据</returns>
+    public static string GenerateFromFile(
         string tomlFile,
         string rootClassName = "",
         TomlAsClassesOptions? options = null
@@ -62,17 +61,17 @@ public partial class TomlAsClasses
         var toml = TOML.ParseFromFile(tomlFile);
         if (string.IsNullOrWhiteSpace(rootClassName))
             rootClassName = Path.GetFileNameWithoutExtension(tomlFile);
-        return Construct(toml, rootClassName, options);
+        return Generate(toml, rootClassName, options);
     }
 
     /// <summary>
-    /// 从toml表格中构造
+    /// 从toml表格中生成
     /// </summary>
     /// <param name="rootClassName">基类名称</param>
     /// <param name="table">表格</param>
     /// <param name="options">设置</param>
-    /// <returns>构造的数据</returns>
-    public static string Construct(
+    /// <returns>生成的数据</returns>
+    public static string Generate(
         TomlTable table,
         string rootClassName,
         TomlAsClassesOptions? options = null
@@ -104,6 +103,7 @@ public partial class TomlAsClasses
     private static void InitializeData()
     {
         s_keyWordSeparators = s_options.KeyWordSeparators.ToArray();
+
         sr_arrayTypeNames.Add(
             s_options.TomlFloatNameConvert,
             string.Format(s_options.ListFormat, s_options.TomlFloatNameConvert)
@@ -132,13 +132,10 @@ public partial class TomlAsClasses
     /// <param name="parentClassName">父类名称</param>
     /// <param name="table">表格</param>
     /// <exception cref="TomlException">toml中使用的Csharp的关键字</exception>
-    private static void ParseTable(
-        string className,
-        string? parentClassName,
-        TomlTable table
-    )
+    private static void ParseTable(string className, string? parentClassName, TomlTable table)
     {
-        var isAnonymousClass = parentClassName is not null && string.IsNullOrWhiteSpace(parentClassName);
+        var isAnonymousClass =
+            parentClassName is not null && string.IsNullOrWhiteSpace(parentClassName);
         var tomlClass = GetTomlClass(className, parentClassName, table);
         var index = 0;
         foreach (var kv in table)
@@ -155,30 +152,45 @@ public partial class TomlAsClasses
                 throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
             // 解析表格的值
             ParseTableValue(tomlClass, name, node);
-            if (isAnonymousClass)
-                continue;
-            ChackOptions(ref index, name, node, tomlClass);
+            ChackOptions(isAnonymousClass, name, kv.Key, ref index, node, tomlClass);
         }
     }
 
     /// <summary>
     /// 检查设置
     /// </summary>
-    /// <param name="index">标识</param>
-    /// <param name="tomlClass">Toml类</param>
+    /// <param name="isAnonymousClass">是匿名函数</param>
     /// <param name="name">名称</param>
+    /// <param name="originalName">原始名称</param>
+    /// <param name="index">标识</param>
     /// <param name="node">Toml节点</param>
-    private static void ChackOptions(ref int index, string name, TomlNode node, TomlClass tomlClass)
+    /// <param name="tomlClass">Toml类</param>
+    private static void ChackOptions(
+        bool isAnonymousClass,
+        string name,
+        string originalName,
+        ref int index,
+        TomlNode node,
+        TomlClass tomlClass
+    )
     {
-        if (s_options.AddComment)
-            tomlClass.Values[name].Comment = node.Comment;
         if (s_options.PropertyAttributes is not null)
             foreach (var attribute in s_options.PropertyAttributes)
                 tomlClass.Values[name].Attributes.Add(attribute);
         if (s_options.AddTomlRequiredAttribute)
             tomlClass.Values[name].Attributes.Add(s_options.TomlRequiredAttribute);
         if (s_options.AddTomlPropertyOrderAttribute)
-            tomlClass.Values[name].Attributes.Add(string.Format(s_options.TomlPropertyOrderAttributeFormat, index++));
+            tomlClass.Values[name].Attributes.Add(
+                string.Format(s_options.TomlPropertyOrderAttributeFormat, index++)
+            );
+        if (s_options.AddTomlPropertyNameAttribute)
+            tomlClass.Values[name].Attributes.Add(
+                string.Format(s_options.TomlPropertyNameAttributeFormat, originalName)
+            );
+        if (isAnonymousClass)
+            return;
+        if (s_options.AddComment)
+            tomlClass.Values[name].Comment = node.Comment;
     }
 
     /// <summary>
@@ -371,10 +383,7 @@ public partial class TomlAsClasses
     private static string ParseTableInArrayValue(string name, TomlArray array)
     {
         // 获取匿名类名称
-        var anonymousClassName = string.Format(
-            s_options.AnonymousClassNameFormat,
-            name
-        );
+        var anonymousClassName = string.Format(s_options.AnonymousClassNameFormat, name);
         foreach (var item in array)
         {
             var table = item.AsTomlTable;

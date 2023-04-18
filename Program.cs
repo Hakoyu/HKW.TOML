@@ -11,6 +11,7 @@ using HKW.TOML.TomlAsClasses;
 using HKWToml.Tests;
 using HKWToml.Tests.TomlAsClassesCases;
 using HKWToml.Tests.TomlDeserializerCases;
+using HKWToml.Tests.TomlSerializerCases;
 
 namespace HKWToml;
 internal class HKWToml
@@ -19,8 +20,10 @@ internal class HKWToml
     {
 #if DEBUG
         var table = TOML.Parse(TomlExample.Example0);
-        TomlAsClassesCases.CreateClassExample();
-        TomlDeserializerCases.DeserializeClassExample();
+        //TomlAsClassesCases.CreateClassExample();
+        //TomlDeserializerCases.DeserializeClassExample();
+        //TomlSerializeClassCases.DeserializeClassExample();
+
         //Console.WriteLine(table.ToTomlString());
         //try
         //{

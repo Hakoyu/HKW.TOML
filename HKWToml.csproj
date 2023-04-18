@@ -24,7 +24,6 @@
 
   <ItemGroup>
     <Folder Include="Tests\TomlParseCases\" />
-    <Folder Include="Tests\TomlSerializerCases\" />
   </ItemGroup>
 
 </Project>

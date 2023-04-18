@@ -75,6 +75,18 @@ public class TomlAsClassesOptions
     public string TomlPropertyOrderAttributeFormat { get; set; } = "TomlPropertyOrder({0})";
 
     /// <summary>
+    /// 所有属性添加 <see cref="TomlPropertyNameAttribute"/>
+    /// <para>默认为 <see langword="false"/></para>
+    /// </summary>
+    public bool AddTomlPropertyNameAttribute { get; set; } = false;
+
+    /// <summary>
+    /// 特性 <see cref="TomlPropertyNameAttribute"/> 格式化文本
+    /// <para>默认为 "<see langword="TomlPropertyName(&quot;{0}&quot;)"/>"</para>
+    /// </summary>
+    public string TomlPropertyNameAttributeFormat { get; set; } = "TomlPropertyName(\"{0}\")";
+
+    /// <summary>
     /// 所有属性添加 <see cref="TomlRequiredAttribute"/>
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>

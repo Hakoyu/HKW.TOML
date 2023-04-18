@@ -6,15 +6,19 @@ using System.Text;
 using System.Threading.Tasks;
 using HKW.TOML;
 using HKW.TOML.TomlDeserializer;
+using HKW.TOML.TomlSerializer;
 
-namespace HKWToml.Tests.TomlDeserializerCases;
-internal class TomlDeserializerCases
+namespace HKWToml.Tests.TomlSerializerCases;
+
+internal partial class TomlSerializeClassCases
 {
     public static void DeserializeClassExample()
     {
         var table = TOML.Parse(TomlExample.Example0);
         var example = TomlDeserializer.Deserialize<ClassExample>(table);
-        Console.WriteLine(example);
+        var serializeTable = TomlSerializer.Serialize(example);
+        Console.WriteLine(serializeTable.ToTomlString());
     }
 }
+
 #endif

@@ -1233,7 +1233,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 
         var collapsedItems = CollectCollapsedItems();
 
-        if (collapsedItems.Count == 0)
+        if (collapsedItems.Count is 0)
             return;
 
         var hasRealValues = !collapsedItems.All(
@@ -1259,7 +1259,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
             tw.WriteLine();
         }
 
-        var namePrefix = tomlFile == null ? "" : $"{tomlFile}.";
+        var namePrefix = tomlFile is null ? string.Empty : $"{tomlFile}.";
         var first = true;
 
         foreach (var collapsedItem in collapsedItems)
@@ -1674,7 +1674,7 @@ public class TOMLParser : IDisposable
         ref StringBuilder latestComment
     )
     {
-        if (keyParts.Count == 0)
+        if (keyParts.Count is 0)
         {
             // We have array table
             if (c is TomlSyntax.TABLE_START_SYMBOL)
@@ -1690,7 +1690,7 @@ public class TOMLParser : IDisposable
                 return false;
             }
 
-            if (keyParts.Count == 0)
+            if (keyParts.Count is 0)
             {
                 AddError("Table name is emtpy.");
                 isArrayTable = false;
@@ -1742,7 +1742,7 @@ public class TOMLParser : IDisposable
             return true;
         }
 
-        if (keyParts.Count != 0)
+        if (keyParts.Count is not 0)
         {
             AddError($"Unexpected character \"{c}\"");
             keyParts.Clear();
@@ -2649,7 +2649,7 @@ public class TOMLParser : IDisposable
 
     private TomlTable CreateTable(TomlNode root, IList<string> path, bool arrayTable)
     {
-        if (path.Count == 0)
+        if (path.Count is 0)
             return null!;
         var latestNode = root;
         for (var index = 0; index < path.Count; index++)
@@ -3357,7 +3357,7 @@ internal static class StringUtils
         if (string.IsNullOrWhiteSpace(txt))
             return txt;
         var stringBuilder = new StringBuilder(txt.Length);
-        for (var i = 0; i < txt.Length; )
+        for (var i = 0; i < txt.Length;)
         {
             var num = txt.IndexOf('\\', i);
             var next = num + 1;

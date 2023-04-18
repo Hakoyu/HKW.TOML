@@ -1,7 +1,7 @@
-﻿
+﻿#if DEBUG
+
 namespace HKWToml.Tests;
 
-#if DEBUG
 internal class TomlExample
 {
     public static string Example0 { get; set; } = @"
