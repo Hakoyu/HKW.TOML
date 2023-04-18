@@ -19,24 +19,10 @@ internal class HKWToml
     public static void Main(string[] args)
     {
 #if DEBUG
-        var table = TOML.Parse(TomlExample.Example0);
+        //var table = TOML.Parse(TomlExample.Example0);
         //TomlAsClassesCases.CreateClassExample();
         //TomlDeserializerCases.DeserializeClassExample();
         //TomlSerializeClassCases.DeserializeClassExample();
-
-        //Console.WriteLine(table.ToTomlString());
-        //try
-        //{
-        //    //var test = TomlDeserializer.DeserializeFromFile<Test>(file, new() { CheckConsistency = true });
-        //    var test = TomlDeserializer.DeserializeFromFile<Test>(file);
-        //}
-        //catch (Exception ex)
-        //{
-        //    Console.WriteLine(ex.ToString());
-        //}
-        //TomlSerializer.SerializeToFile(test, outFile);
-        //var test1 = TomlDeserializer.Deserialize<Test1>(table["database"]["temp_targets"].AsTomlTable);
-        //Console.WriteLine(TomlSerializer.Serialize(test).ToTomlString());
 #endif
     }
 }
