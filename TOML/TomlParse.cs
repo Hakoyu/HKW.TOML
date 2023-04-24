@@ -14,95 +14,6 @@ using System.Text.RegularExpressions;
 
 namespace HKW.TOML;
 
-#region TOML TypeCode
-
-/// <summary>
-/// Toml类型代码
-/// </summary>
-[Flags]
-public enum TomlTypeCode
-{
-    /// <summary>
-    /// 空
-    /// </summary>
-    None = 0,
-
-    /// <summary>
-    /// 整型
-    /// </summary>
-    Integer = 1,
-
-    /// <summary>
-    /// 浮点型
-    /// </summary>
-    Float = 2,
-
-    /// <summary>
-    /// 字符串
-    /// </summary>
-    String = 4,
-
-    /// <summary>
-    /// 布尔类型
-    /// </summary>
-    Boolean = 8,
-
-    /// <summary>
-    /// 日期时间
-    /// </summary>
-    DateTime = 16,
-
-    /// <summary>
-    /// 地区日期时间
-    /// </summary>
-    DateTimeLocal = 32,
-
-    /// <summary>
-    /// 日期时间偏移量
-    /// </summary>
-    DateTimeOffset = 64,
-
-    /// <summary>
-    /// 数组
-    /// </summary>
-    Array = 128,
-
-    /// <summary>
-    /// 表格
-    /// </summary>
-    Table = 256,
-}
-
-/// <summary>
-/// Toml类
-/// </summary>
-public class TomlType
-{
-    /// <summary>
-    /// 获取Toml类型代码
-    /// </summary>
-    /// <param name="node">Toml节点</param>
-    /// <returns>Toml类型代码</returns>
-    public static TomlTypeCode GetTypeCode(TomlNode node)
-    {
-        return node switch
-        {
-            TomlBoolean => TomlTypeCode.Boolean,
-            TomlString => TomlTypeCode.String,
-            TomlInteger => TomlTypeCode.Integer,
-            TomlFloat => TomlTypeCode.Float,
-            TomlDateTimeOffset => TomlTypeCode.DateTimeOffset,
-            TomlDateTimeLocal => TomlTypeCode.DateTime,
-            TomlDateTime => TomlTypeCode.DateTime,
-            TomlArray => TomlTypeCode.Array,
-            TomlTable => TomlTypeCode.Table,
-            _ => TomlTypeCode.None,
-        };
-    }
-}
-
-#endregion
-
 #region TOML Nodes
 
 /// <summary>
@@ -1198,6 +1109,19 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     }
 
     /// <summary>
+    /// 异步保存至
+    /// </summary>
+    /// <param name="tomlFile">Toml文件</param>
+    public async Task SaveToFileAsync(string tomlFile)
+    {
+        await Task.Run(() =>
+        {
+            using var sw = new StreamWriter(tomlFile);
+            WriteTo(sw, null!, false);
+        });
+    }
+
+    /// <summary>
     /// 转换为Toml格式文本
     /// </summary>
     /// <returns></returns>
@@ -1211,6 +1135,25 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         ms.Position = 0;
         using var rw = new StreamReader(ms);
         return rw.ReadToEnd();
+    }
+
+    /// <summary>
+    /// 异步转换为Toml格式文本
+    /// </summary>
+    /// <returns></returns>
+    public async Task<string> ToTomlStringAsync()
+    {
+        return await Task.Run(() =>
+        {
+            using var ms = new MemoryStream();
+            using (var sw = new StreamWriter(ms, leaveOpen: true))
+            {
+                WriteTo(sw, null!, false);
+            }
+            ms.Position = 0;
+            using var rw = new StreamReader(ms);
+            return rw.ReadToEnd();
+        });
     }
 
     /// <inheritdoc/>
@@ -2803,6 +2746,36 @@ public static class TOML
         using var reader = File.OpenText(tomlFile);
         using var parser = new TOMLParser(reader) { ForceASCII = ForceASCII };
         return parser.Parse();
+    }
+
+    /// <summary>
+    /// 从文本读取器异步解析
+    /// </summary>
+    /// <param name="reader">读取器</param>
+    /// <returns>解析完成的Toml表格</returns>
+    public static async Task<TomlTable> ParseAsync(TextReader reader)
+    {
+        return await Task.Run(() => Parse(reader));
+    }
+
+    /// <summary>
+    /// 从字符串异步解析
+    /// </summary>
+    /// <param name="tomlData">Toml数据</param>
+    /// <returns>解析完成的Toml表格</returns>
+    public static async Task<TomlTable> ParseAsync(string tomlData)
+    {
+        return await Task.Run(() => Parse(tomlData));
+    }
+
+    /// <summary>
+    /// 从文件异步解析
+    /// </summary>
+    /// <param name="tomlFile">Toml文件</param>
+    /// <returns>解析完成的Toml表格</returns>
+    public static async Task<TomlTable> ParseFromFileAsync(string tomlFile)
+    {
+        return await Task.Run(() => ParseFromFile(tomlFile));
     }
 }
 
