@@ -43,6 +43,7 @@ public class TomlDeserializer
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="options">反序列化设置</param>
     /// <exception cref="ConsistencyException">一致性异常</exception>
+    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
     /// <returns>完成反序列化的对象</returns>
     public static T DeserializeFromFile<T>(string tomlFile, TomlDeserializerOptions? options = null)
         where T : class, new()
@@ -57,6 +58,7 @@ public class TomlDeserializer
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="options">反序列化设置</param>
     /// <exception cref="ConsistencyException">一致性异常</exception>
+    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
     /// <returns>完成反序列化的对象</returns>
     public static async Task<T> DeserializeFromFileAsync<T>(
         string tomlFile,
@@ -74,14 +76,13 @@ public class TomlDeserializer
     /// <param name="table">Toml表格</param>
     /// <param name="options">反序列化设置</param>
     /// <exception cref="ConsistencyException">一致性异常</exception>
+    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
     /// <returns>完成反序列化的对象</returns>
     public static T Deserialize<T>(TomlTable table, TomlDeserializerOptions? options = null)
         where T : class, new()
     {
         var t = new T();
-        s_options = options ?? new();
-        PreviewDeserializeTable(t, t.GetType(), table);
-        s_options = null!;
+        PreviewDeserialize(t, t.GetType(), table, options);
         return t;
     }
 
@@ -92,6 +93,7 @@ public class TomlDeserializer
     /// <param name="table">Toml表格</param>
     /// <param name="options">反序列化设置</param>
     /// <exception cref="ConsistencyException">一致性异常</exception>
+    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
     /// <returns>完成反序列化的对象</returns>
     public static async Task<T> DeserializeAsync<T>(
         TomlTable table,
@@ -100,13 +102,82 @@ public class TomlDeserializer
         where T : class, new()
     {
         var t = new T();
-        s_options = options ?? new();
         await Task.Run(() =>
         {
-            PreviewDeserializeTable(t, t.GetType(), table);
+            PreviewDeserialize(t, t.GetType(), table, options);
         });
-        s_options = null!;
         return t;
+    }
+
+    /// <summary>
+    /// 从Toml文件反序列化至静态类
+    /// </summary>
+    /// <param name="tomlFile">Toml文件</param>
+    /// <param name="staticClass">静态类类型</param>
+    /// <param name="options">反序列化设置</param>
+    /// <exception cref="ConsistencyException">一致性异常</exception>
+    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
+    public static void DeserializeStaticFromFile(
+        string tomlFile,
+        Type staticClass,
+        TomlDeserializerOptions? options = null
+    )
+    {
+        DeserializeStatic(TOML.ParseFromFile(tomlFile), staticClass, options);
+    }
+
+    /// <summary>
+    /// 从Toml文件异步反序列化至静态类
+    /// </summary>
+    /// <param name="tomlFile">Toml文件</param>
+    /// <param name="staticClass">静态类类型</param>
+    /// <param name="options">反序列化设置</param>
+    /// <exception cref="ConsistencyException">一致性异常</exception>
+    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
+    public static async Task DeserializeStaticFromFileAsync(
+        string tomlFile,
+        Type staticClass,
+        TomlDeserializerOptions? options = null
+    )
+    {
+        await DeserializeStaticeAsync(TOML.ParseFromFile(tomlFile), staticClass, options);
+    }
+
+    /// <summary>
+    /// 从Toml表格反序列化至静态类
+    /// </summary>
+    /// <param name="table">Toml表格</param>
+    /// <param name="staticClass">静态类类型</param>
+    /// <param name="options">反序列化设置</param>
+    /// <exception cref="ConsistencyException">一致性异常</exception>
+    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
+    public static void DeserializeStatic(
+        TomlTable table,
+        Type staticClass,
+        TomlDeserializerOptions? options = null
+    )
+    {
+        PreviewDeserialize(staticClass, staticClass, table, options);
+    }
+
+    /// <summary>
+    /// 从Toml表格异步反序列化至静态类
+    /// </summary>
+    /// <param name="table">Toml表格</param>
+    /// <param name="staticClass">静态类类型</param>
+    /// <param name="options">反序列化设置</param>
+    /// <exception cref="ConsistencyException">一致性异常</exception>
+    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
+    public static async Task DeserializeStaticeAsync(
+        TomlTable table,
+        Type staticClass,
+        TomlDeserializerOptions? options = null
+    )
+    {
+        await Task.Run(() =>
+        {
+            PreviewDeserialize(staticClass, staticClass, table, options);
+        });
     }
 
     /// <summary>
@@ -115,9 +186,16 @@ public class TomlDeserializer
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
     /// <param name="table">Toml表格</param>
+    /// <param name="options">反序列化设置</param>
     /// <exception cref="ConsistencyException">一致性异常</exception>
-    private static void PreviewDeserializeTable(object target, Type type, TomlTable table)
+    private static void PreviewDeserialize(
+        object target,
+        Type type,
+        TomlTable table,
+        TomlDeserializerOptions? options
+    )
     {
+        s_options = options ?? new();
         s_keyWordSeparators = s_options.KeyWordSeparators.ToArray();
         DeserializeTable(target, type, table, string.Empty);
 
@@ -140,6 +218,7 @@ public class TomlDeserializer
         sr_missingProperties.Clear();
         sr_missingTomlNodes.Clear();
         sr_missingPequiredProperties.Clear();
+        s_options = null!;
     }
 
     /// <summary>

@@ -250,11 +250,11 @@ public class TomlAsClassesOptions
     /// 属性格式化文本
     /// <para>默认为 "<see langword="{0}public {1} {2} {{ get; set; }}"/>"</para>
     /// </summary>
-    public string ValueFormat { get; set; } = "{0}public {1} {2} {{ get; set; }}";
+    public string PropertyFormat { get; set; } = "{0}public {1} {2} {{ get; set; }}";
 
     /// <summary>
     /// 类格式化文本
-    /// <para>默认为 "<see langword="public class {0} \n{{\n{1}}}\n"/>"</para>
+    /// <para>默认为 "<see langword="{0}public class {1} \n{{\n{2}}}\n"/>"</para>
     /// </summary>
     public string ClassFormat { get; set; } = "{0}public class {1} \n{{\n{2}}}\n";
 

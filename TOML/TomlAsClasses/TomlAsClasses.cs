@@ -123,6 +123,24 @@ public partial class TomlAsClasses
 
         if (s_options.AddITomlClassCommentInterface)
             s_options.MultipleInheritance.Add(s_options.ITomlClassCommentInterface);
+
+        // 统一特性的格式
+        if (s_options.ClassAttributes.Any())
+            s_options.ClassAttributes = s_options.ClassAttributes.Select(s => RemoveSurroundedSquareBrackets(s)).ToHashSet();
+        if (s_options.PropertyAttributes.Any())
+            s_options.PropertyAttributes = s_options.PropertyAttributes.Select(s => RemoveSurroundedSquareBrackets(s)).ToHashSet();
+    }
+
+    /// <summary>
+    /// 删除首尾的方括号
+    /// </summary>
+    /// <param name="s">字符串</param>
+    /// <returns>去除掉首尾的方括号的字符串</returns>
+    private static string RemoveSurroundedSquareBrackets(string s)
+    {
+        if (s[0] is '[' && s[^1] is ']')
+            return s[1..^2];
+        return s;
     }
 
     /// <summary>

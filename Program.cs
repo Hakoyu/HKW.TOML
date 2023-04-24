@@ -21,10 +21,9 @@ internal class HKWToml
     public static void Main(string[] args)
     {
 #if DEBUG
-        //var table = TOML.Parse(TomlExample.Example0);
-        //TomlAsClassesCases.CreateClassExample();
-        //TomlDeserializerCases.DeserializeClassExample();
-        //TomlSerializeClassCases.DeserializeClassExample();
+        TomlAsClassesCases.CreateClassExample();
+        TomlDeserializerCases.DeserializeClassExample();
+        TomlSerializeClassCases.DeserializeClassExample();
 #endif
     }
 }

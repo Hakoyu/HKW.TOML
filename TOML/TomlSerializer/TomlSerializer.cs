@@ -20,12 +20,12 @@ public class TomlSerializer
     /// <summary>
     /// 序列化至Toml文件
     /// </summary>
+    /// <param name="tomlFile">Toml文件</param>
     /// <param name="source">源</param>
     /// <param name="options">序列化设置</param>
-    /// <param name="tomlFile">Toml文件</param>
     public static void SerializeToFile(
-        object source,
         string tomlFile,
+        object source,
         TomlSerializerOptions? options = null
     )
     {
@@ -35,12 +35,12 @@ public class TomlSerializer
     /// <summary>
     /// 异步序列化至Toml文件
     /// </summary>
+    /// <param name="tomlFile">Toml文件</param>
     /// <param name="source">源</param>
     /// <param name="options">序列化设置</param>
-    /// <param name="tomlFile">Toml文件</param>
     public static async Task SerializeToFileAsync(
-        object source,
         string tomlFile,
+        object source,
         TomlSerializerOptions? options = null
     )
     {
@@ -48,21 +48,18 @@ public class TomlSerializer
     }
 
     /// <summary>
-    /// 序列化至Toml表格数据
+    /// 序列化至Toml表格
     /// </summary>
     /// <param name="source">源</param>
     /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
     public static TomlTable Serialize(object source, TomlSerializerOptions? options = null)
     {
-        s_options = options ?? new();
-        var table = CreateTomlTable(source);
-        s_options = null!;
-        return table;
+        return PreviewSerialize(source, options);
     }
 
     /// <summary>
-    /// 异步序列化至Toml表格数据
+    /// 异步序列化至Toml表格
     /// </summary>
     /// <param name="source">源</param>
     /// <param name="options">序列化设置</param>
@@ -72,11 +69,69 @@ public class TomlSerializer
         TomlSerializerOptions? options = null
     )
     {
-        s_options = options ?? new();
-        var table = await Task.Run(() =>
+        return await Task.Run(() =>
         {
-            return CreateTomlTable(source);
+            return PreviewSerialize(source, options);
         });
+    }
+
+    /// <summary>
+    /// 序列化静态类至Toml文件
+    /// </summary>
+    /// <param name="options">序列化设置</param>
+    /// <param name="staticClassType">静态类类型</param>
+    /// <param name="tomlFile">Toml文件</param>
+    public static void SerializeStaticToFile(string tomlFile, Type staticClassType, TomlSerializerOptions? options = null)
+    {
+        SerializeToFile(tomlFile, staticClassType, options);
+    }
+
+    /// <summary>
+    /// 异步序列化静态类至Toml文件
+    /// </summary>
+    /// <param name="options">序列化设置</param>
+    /// <param name="staticClassType">静态类类型</param>
+    /// <param name="tomlFile">Toml文件</param>
+    public static async Task SerializeStaticToFileAsync(string tomlFile, Type staticClassType, TomlSerializerOptions? options = null)
+    {
+        await SerializeToFileAsync(tomlFile, staticClassType, options);
+    }
+
+    /// <summary>
+    /// 序列化静态类至Toml表格
+    /// </summary>
+    /// <param name="staticClassType">静态类类型</param>
+    /// <param name="options">序列化设置</param>
+    /// <returns>Toml表格数据</returns>
+    public static TomlTable SerializeStatic(Type staticClassType, TomlSerializerOptions? options = null)
+    {
+        return Serialize(staticClassType, options);
+    }
+
+    /// <summary>
+    /// 异步序列化静态类至Toml表格
+    /// </summary>
+    /// <param name="staticClassType">静态类类型</param>
+    /// <param name="options">序列化设置</param>
+    /// <returns>Toml表格数据</returns>
+    public static async Task<TomlTable> SerializeStaticAsync(
+        Type staticClassType,
+        TomlSerializerOptions? options = null
+    )
+    {
+        return await SerializeAsync(staticClassType, options);
+    }
+
+    /// <summary>
+    /// 预览序列化
+    /// </summary>
+    /// <param name="source">源</param>
+    /// <param name="options">设置</param>
+    /// <returns>Toml表格</returns>
+    private static TomlTable PreviewSerialize(object source, TomlSerializerOptions? options = null)
+    {
+        s_options = options ?? new();
+        var table = CreateTomlTable(source);
         s_options = null!;
         return table;
     }
@@ -90,7 +145,7 @@ public class TomlSerializer
     {
         var table = new TomlTable();
         // 获取所有属性
-        var properties = GetGetProperties(source);
+        var properties = GetProperties(source);
         var iTomlClass = source as ITomlClassComment;
         // 设置注释
         if (iTomlClass is not null)
@@ -98,7 +153,7 @@ public class TomlSerializer
         foreach (var propertyInfo in properties)
         {
             // 检测是否有隐藏特性
-            if (System.Attribute.IsDefined(propertyInfo, typeof(TomlIgnoreAttribute)))
+            if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnoreAttribute)))
                 continue;
             // 跳过ITomlClass生成的接口
             if (
@@ -144,9 +199,13 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源</param>
     /// <returns>经过排序后的属性</returns>
-    private static IEnumerable<PropertyInfo> GetGetProperties(object source)
+    private static IEnumerable<PropertyInfo> GetProperties(object source)
     {
-        var properties = source.GetType().GetProperties();
+        PropertyInfo[] properties;
+        if (source is Type type)
+            properties = type.GetProperties();
+        else
+            properties = source.GetType().GetProperties();
         // 使用自定义比较器排序
         if (s_options.PropertiesOrderComparer is not null)
             Array.Sort(properties, s_options.PropertiesOrderComparer);

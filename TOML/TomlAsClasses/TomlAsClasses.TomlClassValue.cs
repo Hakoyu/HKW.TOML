@@ -59,7 +59,7 @@ public partial class TomlAsClasses
         /// <returns>字符串</returns>
         public override string ToString()
         {
-            var valueData = string.Format(s_options.ValueFormat, s_options.Indent, TypeName, Name);
+            var valueData = string.Format(s_options.PropertyFormat, s_options.Indent, TypeName, Name);
             return GetComment(Comment) + GetAttribute(Attributes) + valueData;
         }
 
