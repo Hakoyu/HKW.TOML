@@ -3,6 +3,7 @@ using System.Reflection;
 using HKW.TOML.TomlAttribute;
 using HKW.TOML.TomlInterface;
 using HKW.TOML.TomlException;
+using System.Linq;
 
 namespace HKW.TOML.TomlDeserializer;
 
@@ -11,6 +12,9 @@ namespace HKW.TOML.TomlDeserializer;
 /// </summary>
 public class TomlDeserializer
 {
+    private const string c_propertyGetMethodStartsWith = "get_";
+    private const string c_propertySetMethodStartsWith = "set_";
+
     /// <summary>
     /// 设置
     /// </summary>
@@ -222,7 +226,7 @@ public class TomlDeserializer
     }
 
     /// <summary>
-    /// 反序列化Toml表格并检查一致性
+    /// 反序列化Toml表格
     /// </summary>
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
@@ -235,6 +239,8 @@ public class TomlDeserializer
         string tableName
     )
     {
+        GetMethods(type, out var methodOnDeserializing, out var methodOnDeserialized);
+        RunMethodOnDeserializing(target, methodOnDeserializing);
         // 设置注释
         var iTomlClass = target as ITomlClassComment;
         if (iTomlClass is not null)
@@ -247,7 +253,7 @@ public class TomlDeserializer
 
         foreach (var kv in table)
         {
-            var name = ToPascal(kv.Key);
+            var name = Utils.ToPascal(kv.Key, s_keyWordSeparators, s_options.RemoveKeyWordSeparator);
             var node = kv.Value;
             if (type.GetProperty(name) is not PropertyInfo propertyInfo)
                 continue;
@@ -275,8 +281,116 @@ public class TomlDeserializer
         AddMissingValue(type.FullName!, tableName, missingProperties, missingTomlNodes);
         // 添加缺失的必要属性信息
         AddMissingRequiredValue(type.FullName!, missingPequiredProperties);
+
+        RunMethodOnDeserialized(target, methodOnDeserialized);
     }
 
+    #region RunMethod
+    /// <summary>
+    /// 获取方法
+    /// </summary>
+    /// <param name="type">类型</param>
+    /// <param name="methodOnDeserializing">运行于反序列化之前的方法</param>
+    /// <param name="methodOnDeserialized">运行于反序列化之后的方法</param>
+    private static void GetMethods(
+        Type type,
+        out IEnumerable<(MethodInfo method, object[]? values)> methodOnDeserializing,
+        out IEnumerable<(MethodInfo method, object[]? values)> methodOnDeserialized
+    )
+    {
+        List<(MethodInfo method, object[]? values)> tempMethodOnDeserializing = new();
+        List<(MethodInfo method, object[]? values)> tempMethodOnDeserialized = new();
+        foreach (
+            var method in type.GetRuntimeMethods()
+                .Where(
+                    m =>
+                        (
+                            m.Name.StartsWith(c_propertyGetMethodStartsWith)
+                            || m.Name.StartsWith(c_propertySetMethodStartsWith)
+                        )
+                            is false
+                )
+        )
+        {
+            if (
+                method.GetCustomAttribute(typeof(RunOnTomlDeserializingAttribute))
+                is RunOnTomlDeserializingAttribute runOnTomlDeserializingAttribute
+            )
+            {
+                tempMethodOnDeserializing.Add((method, runOnTomlDeserializingAttribute.Values));
+            }
+            else if (
+                method.GetCustomAttribute(typeof(RunOnTomlDeserializedAttribute))
+                is RunOnTomlDeserializedAttribute runOnTomlDeserializedAttribute
+            )
+            {
+                tempMethodOnDeserialized.Add((method, runOnTomlDeserializedAttribute.Values));
+            }
+        }
+        methodOnDeserializing = tempMethodOnDeserializing
+            .OrderBy(mv => GetMethodOrder(mv.method))
+            .ThenBy(mv => mv.method.Name);
+        methodOnDeserialized = tempMethodOnDeserialized
+            .OrderBy(mv => GetMethodOrder(mv.method))
+            .ThenBy(mv => mv.method.Name);
+    }
+
+    /// <summary>
+    /// 获取方法的顺序
+    /// </summary>
+    /// <param name="method">方法</param>
+    /// <returns>顺序</returns>
+    private static int GetMethodOrder(MethodInfo method)
+    {
+        if (
+            method.GetCustomAttribute(typeof(RunOnTomlDeserializedOrderAttribute))
+            is RunOnTomlDeserializedOrderAttribute runOnTomlDeserializedOrderAttribute
+        )
+            return runOnTomlDeserializedOrderAttribute.Value;
+        return int.MaxValue;
+    }
+
+    /// <summary>
+    /// 运行反序列化之前的方法
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="methodOnDeserializing">运行于反序列化之前的方法</param>
+    private static void RunMethodOnDeserializing(
+        object target,
+        IEnumerable<(MethodInfo method, object[]? values)> methodOnDeserializing
+    )
+    {
+        foreach (var (method, values) in methodOnDeserializing)
+        {
+            method.Invoke(target, values);
+        }
+    }
+
+    /// <summary>
+    /// 运行反序列化之后的方法
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="methodOnDeserialized">运行于反序列化之后的方法</param>
+    private static void RunMethodOnDeserialized(
+        object target,
+        IEnumerable<(MethodInfo method, object[]? values)> methodOnDeserialized
+    )
+    {
+        foreach (var (method, values) in methodOnDeserialized)
+        {
+            method.Invoke(target, values);
+        }
+    }
+
+    #endregion
+    #region CheckConsistency
+    /// <summary>
+    /// 尝试检查一致性
+    /// </summary>
+    /// <param name="type">类</param>
+    /// <param name="table">Toml表格</param>
+    /// <param name="missingProperties">缺失的属性</param>
+    /// <param name="missingTomlNodes">缺失的Toml节点</param>
     private static void TryCheckConsistency(
         Type type,
         TomlTable table,
@@ -294,6 +408,13 @@ public class TomlDeserializer
         missingTomlNodes = table.Keys.ToHashSet();
     }
 
+    /// <summary>
+    /// 检查一致性
+    /// </summary>
+    /// <param name="propertyName">属性名</param>
+    /// <param name="keyName">键名</param>
+    /// <param name="missingProperties">缺失的属性</param>
+    /// <param name="missingTomlNodes">缺失的Toml节点</param>
     private static void CheckConsistency(
         string propertyName,
         string keyName,
@@ -332,7 +453,6 @@ public class TomlDeserializer
         foreach (var nodeName in missingTomlNodes)
             sr_missingTomlNodes.Add($"{tableName}.{nodeName}");
     }
-
     /// <summary>
     /// 添加缺失的必要属性信息
     /// </summary>
@@ -348,7 +468,7 @@ public class TomlDeserializer
     }
 
     /// <summary>
-    /// 检查TomlName特性并检查一致性
+    /// 检查TomlName特性
     /// </summary>
     /// <param name="iTomlClass">Toml类接口</param>
     /// <param name="target">目标</param>
@@ -390,9 +510,9 @@ public class TomlDeserializer
             missingPequiredProperties.Remove(propertyInfo.Name);
         }
     }
-
+    #endregion
     /// <summary>
-    /// 反序列化Toml表格的值并检查一致性
+    /// 反序列化Toml表格的值
     /// </summary>
     /// <param name="target">目标</param>
     /// <param name="nodeKeyName">Toml节点键名</param>
@@ -550,27 +670,4 @@ public class TomlDeserializer
             _ => node,
         };
     }
-
-    /// <summary>
-    /// 将字符串转换为帕斯卡格式
-    /// </summary>
-    /// <param name="str">字符串</param>
-    /// <returns>帕斯卡格式字符串</returns>
-    private static string ToPascal(string str)
-    {
-        if (string.IsNullOrWhiteSpace(str) || s_options.RemoveKeyWordSeparator is false)
-            return str;
-        // 使用分隔符拆分单词
-        var strs = str.Split(s_keyWordSeparators, StringSplitOptions.RemoveEmptyEntries);
-        // 将单词首字母大写
-        var newStrs = strs.Select(s => FirstLetterToUpper(s));
-        return string.Join("", newStrs);
-    }
-
-    /// <summary>
-    /// 将字符串首字母大写
-    /// </summary>
-    /// <param name="str">字符串</param>
-    /// <returns>第一个为大写的字符串</returns>
-    private static string FirstLetterToUpper(string str) => $"{char.ToUpper(str[0])}{str[1..]}";
 }

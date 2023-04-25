@@ -163,7 +163,7 @@ public partial class TomlAsClasses
             if (s_options.KeyNameConverterFunc is not null)
                 name = s_options.KeyNameConverterFunc(name);
             else if (s_options.KeyNameToPascal)
-                name = ToPascal(name);
+                name = Utils.ToPascal(name, s_keyWordSeparators, s_options.RemoveKeyWordSeparators);
 
             // 检测关键词
             if (s_csharpKeywords.Contains(name))
@@ -409,30 +409,6 @@ public partial class TomlAsClasses
         }
         return anonymousClassName;
     }
-
-    /// <summary>
-    /// 将字符串转换为帕斯卡格式
-    /// </summary>
-    /// <param name="str">字符串</param>
-    /// <returns>帕斯卡格式字符串</returns>
-    private static string ToPascal(string str)
-    {
-        if (string.IsNullOrWhiteSpace(str) || s_options.RemoveKeyWordSeparators is false)
-            return str;
-        // 使用分隔符拆分单词
-        var strs = str.Split(s_keyWordSeparators, StringSplitOptions.RemoveEmptyEntries);
-        // 将单词首字母大写
-        var newStrs = strs.Select(s => FirstLetterToUpper(s));
-        // 是否保留分隔符
-        return string.Join("", newStrs);
-    }
-
-    /// <summary>
-    /// 将字符串首字母大写
-    /// </summary>
-    /// <param name="str">字符串</param>
-    /// <returns>第一个为大写的字符串</returns>
-    private static string FirstLetterToUpper(string str) => $"{char.ToUpper(str[0])}{str[1..]}";
 
     /// <summary>
     /// csharp关键字集合

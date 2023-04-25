@@ -81,7 +81,11 @@ public class TomlSerializer
     /// <param name="options">序列化设置</param>
     /// <param name="staticClassType">静态类类型</param>
     /// <param name="tomlFile">Toml文件</param>
-    public static void SerializeStaticToFile(string tomlFile, Type staticClassType, TomlSerializerOptions? options = null)
+    public static void SerializeStaticToFile(
+        string tomlFile,
+        Type staticClassType,
+        TomlSerializerOptions? options = null
+    )
     {
         SerializeToFile(tomlFile, staticClassType, options);
     }
@@ -92,7 +96,11 @@ public class TomlSerializer
     /// <param name="options">序列化设置</param>
     /// <param name="staticClassType">静态类类型</param>
     /// <param name="tomlFile">Toml文件</param>
-    public static async Task SerializeStaticToFileAsync(string tomlFile, Type staticClassType, TomlSerializerOptions? options = null)
+    public static async Task SerializeStaticToFileAsync(
+        string tomlFile,
+        Type staticClassType,
+        TomlSerializerOptions? options = null
+    )
     {
         await SerializeToFileAsync(tomlFile, staticClassType, options);
     }
@@ -103,7 +111,10 @@ public class TomlSerializer
     /// <param name="staticClassType">静态类类型</param>
     /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
-    public static TomlTable SerializeStatic(Type staticClassType, TomlSerializerOptions? options = null)
+    public static TomlTable SerializeStatic(
+        Type staticClassType,
+        TomlSerializerOptions? options = null
+    )
     {
         return Serialize(staticClassType, options);
     }
@@ -208,35 +219,46 @@ public class TomlSerializer
             properties = source.GetType().GetProperties();
         // 使用自定义比较器排序
         if (s_options.PropertiesOrderComparer is not null)
+        {
             Array.Sort(properties, s_options.PropertiesOrderComparer);
-        // 判断是否倒序
-        if (s_options.PropertiesReverseOrder)
-            Array.Reverse(properties);
-
-        return CheckTomlParameterOrder(properties);
+            // 判断是否倒序
+            if (s_options.PropertiesReverseOrder)
+                Array.Reverse(properties);
+            return properties;
+        }
+        return CheckTomlParameterOrder(properties, s_options.PropertiesReverseOrder);
     }
 
     /// <summary>
     /// 检查Toml参数顺序属性并修改顺序
     /// </summary>
     /// <param name="properties">属性</param>
+    /// <param name="descending">倒序</param>
     /// <returns>修改顺序后的属性</returns>
     private static IEnumerable<PropertyInfo> CheckTomlParameterOrder(
-        IEnumerable<PropertyInfo> properties
+        IEnumerable<PropertyInfo> properties,
+        bool descending
     )
     {
-        var newProperties = new List<PropertyInfo>();
-        foreach (PropertyInfo property in properties)
-        {
-            if (
-                property.GetCustomAttribute<TomlPropertyOrderAttribute>()
-                is TomlPropertyOrderAttribute parameterOrder
-            )
-                newProperties.Insert(parameterOrder.Value, property);
-            else
-                newProperties.Add(property);
-        }
-        return newProperties;
+        if (descending is false)
+            return properties.OrderBy(p => GetPropertyOrder(p)).ThenBy(p => p.Name);
+        else
+            return properties.OrderByDescending(p => GetPropertyOrder(p)).ThenBy(p => p.Name);
+    }
+
+    /// <summary>
+    /// 获取属性的顺序
+    /// </summary>
+    /// <param name="property">属性信息</param>
+    /// <returns>属性的顺序</returns>
+    private static int GetPropertyOrder(PropertyInfo property)
+    {
+        if (
+            property.GetCustomAttribute<TomlPropertyOrderAttribute>()
+            is TomlPropertyOrderAttribute parameterOrder
+        )
+            return parameterOrder.Value;
+        return int.MaxValue;
     }
 
     /// <summary>
@@ -289,30 +311,21 @@ public class TomlSerializer
             // 浮点型
             TypeCode.Single
                 => new TomlFloat((double)Convert.ChangeType(source, TypeCode.Double)),
-            TypeCode.Double
-                => new TomlFloat((double)Convert.ChangeType(source, TypeCode.Double)),
+            TypeCode.Double => new TomlFloat((double)Convert.ChangeType(source, TypeCode.Double)),
 
             // 整型
             TypeCode.SByte
                 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.Byte
-                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.Int16
-                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.UInt16
-                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.Int32
-                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.UInt32
-                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.Int64
-                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.UInt64
-                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
+            TypeCode.Byte => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
+            TypeCode.Int16 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
+            TypeCode.UInt16 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
+            TypeCode.Int32 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
+            TypeCode.UInt32 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
+            TypeCode.Int64 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
+            TypeCode.UInt64 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
 
             TypeCode.DateTime => new TomlDateTimeLocal((DateTime)source),
-            TypeCode.Object when source is DateTimeOffset offset
-                => new TomlDateTimeOffset(offset),
+            TypeCode.Object when source is DateTimeOffset offset => new TomlDateTimeOffset(offset),
 
             TypeCode.Object when source is TomlNode node => node,
             TypeCode.Object when source is IEnumerable list => CreateTomlArray(list),
