@@ -320,56 +320,56 @@ public abstract class TomlNode : IEnumerable
     /// 隐式转换 string -> TomlString
     /// </summary>
     /// <param name="value">字符串</param>
-    public static implicit operator TomlNode(string value) => new TomlString { Value = value };
+    public static implicit operator TomlNode(string value) => new TomlString(value);
 
     /// <summary>
     /// 隐式转换 bool -> TomlBoolean
     /// </summary>
     /// <param name="value">布尔类型</param>
 
-    public static implicit operator TomlNode(bool value) => new TomlBoolean { Value = value };
+    public static implicit operator TomlNode(bool value) => new TomlBoolean(value);
 
     /// <summary>
     /// 隐式转换 int -> TomlInteger
     /// </summary>
     /// <param name="value">整型</param>
 
-    public static implicit operator TomlNode(int value) => new TomlInteger { Value = value };
+    public static implicit operator TomlNode(int value) => new TomlInteger(value);
 
     /// <summary>
     /// 隐式转换 long -> TomlInteger
     /// </summary>
     /// <param name="value">64位整型</param>
 
-    public static implicit operator TomlNode(long value) => new TomlInteger { Value = value };
+    public static implicit operator TomlNode(long value) => new TomlInteger(value);
 
     /// <summary>
     /// 隐式转换 float -> TomlFloat
     /// </summary>
     /// <param name="value">浮点型</param>
 
-    public static implicit operator TomlNode(float value) => new TomlFloat { Value = value };
+    public static implicit operator TomlNode(float value) => new TomlFloat(value);
 
     /// <summary>
     /// 隐式转换 double -> TomlFloat
     /// </summary>
     /// <param name="value">双精度浮点</param>
 
-    public static implicit operator TomlNode(double value) => new TomlFloat { Value = value };
+    public static implicit operator TomlNode(double value) => new TomlFloat(value);
 
     /// <summary>
     /// 隐式转换 DateTime -> TomlDateTimeLocal
     /// </summary>
     /// <param name="value">日期时间</param>
     public static implicit operator TomlNode(DateTime value) =>
-        new TomlDateTimeLocal { Value = value };
+        new TomlDateTimeLocal(value);
 
     /// <summary>
     /// 隐式转换 DateTimeOffset -> TomlDateTimeOffset
     /// </summary>
     /// <param name="value">日期时间偏移量</param>
     public static implicit operator TomlNode(DateTimeOffset value) =>
-        new TomlDateTimeOffset { Value = value };
+        new TomlDateTimeOffset(value);
 
     /// <summary>
     /// 隐式转换 TomlNode[] -> TomlArray
@@ -377,9 +377,16 @@ public abstract class TomlNode : IEnumerable
     /// <param name="nodes">TomlNode数组</param>
     public static implicit operator TomlNode(TomlNode[] nodes)
     {
-        var result = new TomlArray();
-        result.AddRange(nodes);
-        return result;
+        return new TomlArray(nodes);
+    }
+
+    /// <summary>
+    /// 隐式转换 List&lt;TomlNode&gt; -> TomlArray
+    /// </summary>
+    /// <param name="nodes">TomlNode数组</param>
+    public static implicit operator TomlNode(List<TomlNode> nodes)
+    {
+        return new TomlArray(nodes);
     }
 
     #endregion
@@ -524,6 +531,12 @@ public class TomlString : TomlNode
         }
         return $"{quotes}{result}{quotes}";
     }
+
+    /// <inheritdoc/>
+    public TomlString(string value)
+    {
+        Value = value;
+    }
 }
 
 /// <summary>
@@ -586,6 +599,12 @@ public class TomlInteger : TomlNode
         IntegerBase != Base.Decimal
             ? $"0{TomlSyntax.BaseIdentifiers[(int)IntegerBase]}{Convert.ToString(Value, (int)IntegerBase)}"
             : Value.ToString(CultureInfo.InvariantCulture);
+
+    /// <inheritdoc/>
+    public TomlInteger(long value)
+    {
+        Value = value;
+    }
 }
 
 /// <summary>
@@ -623,6 +642,12 @@ public class TomlFloat : TomlNode, IFormattable
             var v when double.IsNegativeInfinity(v) => TomlSyntax.NEG_INF_VALUE,
             var v => v.ToString("G", CultureInfo.InvariantCulture).ToLowerInvariant()
         };
+
+    /// <inheritdoc/>
+    public TomlFloat(double value)
+    {
+        Value = value;
+    }
 }
 
 /// <summary>
@@ -646,6 +671,12 @@ public class TomlBoolean : TomlNode
 
     /// <inheritdoc/>
     public override string ToInlineToml() => Value ? TomlSyntax.TRUE_VALUE : TomlSyntax.FALSE_VALUE;
+
+    /// <inheritdoc/>
+    public TomlBoolean(bool value)
+    {
+        Value = value;
+    }
 }
 
 /// <summary>
@@ -707,6 +738,12 @@ public class TomlDateTimeOffset : TomlDateTime
     /// <inheritdoc/>
     protected override string ToInlineTomlInternal() =>
         Value.ToString(TomlSyntax.RFC3339Formats[SecondsPrecision]);
+
+    /// <inheritdoc/>
+    public TomlDateTimeOffset(DateTimeOffset value)
+    {
+        Value = value;
+    }
 }
 
 /// <summary>
@@ -768,6 +805,12 @@ public class TomlDateTimeLocal : TomlDateTime
                 => Value.ToString(TomlSyntax.RFC3339LocalTimeFormats[SecondsPrecision]),
             var _ => Value.ToString(TomlSyntax.RFC3339LocalDateTimeFormats[SecondsPrecision])
         };
+
+    /// <inheritdoc/>
+    public TomlDateTimeLocal(DateTime dateTime)
+    {
+        Value = dateTime;
+    }
 }
 
 /// <summary>
@@ -917,6 +960,13 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
             // Don't write section since it's already written here
             tbl.WriteTo(tw, name, false);
         }
+    }
+    /// <inheritdoc/>
+    public TomlArray() { }
+    /// <inheritdoc/>
+    public TomlArray(IEnumerable<TomlNode> nodes)
+    {
+        RawArray.AddRange(nodes);
     }
 }
 
@@ -1858,9 +1908,8 @@ public class TOMLParser : IDisposable
                 if (value is null)
                     return null!;
 
-                return new TomlString
+                return new TomlString(value)
                 {
-                    Value = value,
                     IsMultiline = isMultiline,
                     PreferLiteral = c is TomlSyntax.LITERAL_STRING_SYMBOL
                 };
@@ -2033,12 +2082,13 @@ public class TOMLParser : IDisposable
                     CultureInfo.InvariantCulture
                 ),
             var v when TomlSyntax.IsIntegerWithBase(v, out var numberBase)
-                => new TomlInteger
-                {
-                    Value = Convert.ToInt64(
+                => new TomlInteger(
+                    Convert.ToInt64(
                         value[2..].RemoveAll(TomlSyntax.INT_NUMBER_SEPARATOR),
                         numberBase
-                    ),
+                    )
+                )
+                {
                     IntegerBase = (TomlInteger.Base)numberBase
                 },
             var _ => null!
@@ -2058,7 +2108,10 @@ public class TOMLParser : IDisposable
                 out var precision
             )
         )
-            return new TomlDateTimeLocal { Value = dateTimeResult, SecondsPrecision = precision };
+            return new TomlDateTimeLocal(dateTimeResult)
+            {
+                SecondsPrecision = precision
+            };
 
         if (
             DateTime.TryParseExact(
@@ -2069,9 +2122,8 @@ public class TOMLParser : IDisposable
                 out dateTimeResult
             )
         )
-            return new TomlDateTimeLocal
+            return new TomlDateTimeLocal(dateTimeResult)
             {
-                Value = dateTimeResult,
                 Style = TomlDateTimeLocal.DateTimeStyle.Date
             };
 
@@ -2085,9 +2137,8 @@ public class TOMLParser : IDisposable
                 out precision
             )
         )
-            return new TomlDateTimeLocal
+            return new TomlDateTimeLocal(dateTimeResult)
             {
-                Value = dateTimeResult,
                 Style = TomlDateTimeLocal.DateTimeStyle.Time,
                 SecondsPrecision = precision
             };
@@ -2102,9 +2153,8 @@ public class TOMLParser : IDisposable
                 out precision
             )
         )
-            return new TomlDateTimeOffset
+            return new TomlDateTimeOffset(dateTimeOffsetResult)
             {
-                Value = dateTimeOffsetResult,
                 SecondsPrecision = precision
             };
 

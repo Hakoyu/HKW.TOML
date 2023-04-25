@@ -262,7 +262,7 @@ public class TomlSerializer
     /// </summary>
     /// <param name="list">列表</param>
     /// <returns>Toml数组</returns>
-    private static TomlArray CreateTomlArray(IList list)
+    private static TomlArray CreateTomlArray(IEnumerable list)
     {
         var array = new TomlArray();
         foreach (var item in list)
@@ -281,41 +281,41 @@ public class TomlSerializer
         type ??= source.GetType();
         return Type.GetTypeCode(type) switch
         {
-            TypeCode.Boolean => new TomlBoolean { Value = (bool)source },
+            TypeCode.Boolean => new TomlBoolean((bool)source),
 
-            TypeCode.Char => new TomlString { Value = source.ToString()! },
-            TypeCode.String => new TomlString { Value = (string)source },
+            TypeCode.Char => new TomlString(source.ToString()!),
+            TypeCode.String => new TomlString((string)source),
 
             // 浮点型
             TypeCode.Single
-                => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
+                => new TomlFloat((double)Convert.ChangeType(source, TypeCode.Double)),
             TypeCode.Double
-                => new TomlFloat { Value = (double)Convert.ChangeType(source, TypeCode.Double) },
+                => new TomlFloat((double)Convert.ChangeType(source, TypeCode.Double)),
 
             // 整型
             TypeCode.SByte
-                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
             TypeCode.Byte
-                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
             TypeCode.Int16
-                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
             TypeCode.UInt16
-                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
             TypeCode.Int32
-                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
             TypeCode.UInt32
-                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
             TypeCode.Int64
-                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
             TypeCode.UInt64
-                => new TomlInteger { Value = (long)Convert.ChangeType(source, TypeCode.Int64) },
+                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
 
-            TypeCode.DateTime => new TomlDateTimeLocal { Value = (DateTime)source },
+            TypeCode.DateTime => new TomlDateTimeLocal((DateTime)source),
             TypeCode.Object when source is DateTimeOffset offset
-                => new TomlDateTimeOffset { Value = offset },
+                => new TomlDateTimeOffset(offset),
 
             TypeCode.Object when source is TomlNode node => node,
-            TypeCode.Object when source is IList list => CreateTomlArray(list),
+            TypeCode.Object when source is IEnumerable list => CreateTomlArray(list),
             TypeCode.Object when type.IsClass => CreateTomlTable(source),
             _
                 => throw new NotSupportedException(

@@ -21,10 +21,10 @@ internal class HKWToml
     public static async Task Main(string[] args)
     {
 #if DEBUG
-        //Console.WriteLine(await (await TOML.ParseAsync(TomlExample.Example0)).ToTomlStringAsync());
-        //TomlAsClassesCases.CreateClassExample();
-        //TomlDeserializerCases.DeserializeClassExample();
-        //TomlSerializeClassCases.DeserializeClassExample();
+        Console.WriteLine(await (await TOML.ParseAsync(TomlExample.Example0)).ToTomlStringAsync());
+        TomlAsClassesCases.CreateClassExample();
+        TomlDeserializerCases.DeserializeClassExample();
+        TomlSerializeClassCases.DeserializeClassExample();
 #endif
     }
 }
