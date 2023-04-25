@@ -1183,8 +1183,8 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
             WriteTo(sw, null!, false);
         }
         ms.Position = 0;
-        using var rw = new StreamReader(ms);
-        return rw.ReadToEnd();
+        using var sr = new StreamReader(ms);
+        return sr.ReadToEnd();
     }
 
     /// <summary>
@@ -1201,8 +1201,8 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
                 WriteTo(sw, null!, false);
             }
             ms.Position = 0;
-            using var rw = new StreamReader(ms);
-            return rw.ReadToEnd();
+            using var sr = new StreamReader(ms);
+            return sr.ReadToEnd();
         });
     }
 
