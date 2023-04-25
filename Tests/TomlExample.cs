@@ -2,7 +2,8 @@
 
 internal class TomlExample
 {
-    public static string Example0 { get; set; } = @"
+    public static string ExampleFile { get; set; } = "..\\..\\..\\Tests\\Example.toml";
+    public static string ExampleData { get; set; } = @"
 # This is an example TOML document which shows most of its features.
 
 # Simple key/value with a string.

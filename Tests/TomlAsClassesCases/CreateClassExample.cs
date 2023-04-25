@@ -9,11 +9,11 @@ using HKW.TOML.TomlAsClasses;
 
 namespace HKWToml.Tests.TomlAsClassesCases;
 
-internal partial class TomlAsClassesCases
+internal static partial class TomlAsClassesCases
 {
     public static void CreateClassExample()
     {
-        var table = TOML.Parse(TomlExample.Example0);
+        var table = TOML.Parse(TomlExample.ExampleData);
         var classString = TomlAsClasses.Generate(table, "ClassExample", new()
         {
             AddComment = true,

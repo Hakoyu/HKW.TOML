@@ -15,113 +15,31 @@ HKWToml 是使用 C# 编写的
 
 ## 如何使用
 
-### TOML 文件
+TOML [测试文件](https://github.com/Hakoyu/HKWToml/blob/master/Tests/Example.toml)
 
-```toml
-# This is a TOML document
-
-# title
-# tttttttttttttttt
-title = "TOML Example"
-# int1
-int1 = 123456789
-# long1
-long1 = 1234567890000
-# noop
-noop = [{ a = 1, b = 2 }, { b = 2, c = 3 }]
-
-[owner]
-# name
-name = "Tom Preston-Werner"
-date = 2022-07-23
-dob = 1979-05-27T07:32:00-08:00
-
-[database]
-enabled = true
-points = [[1, 2, 3], [4, 5.5, 6], [7, 8, 99999999999999]]
-ports = [8000, 8001, 8002]
-data = [["delta", "phi"], [3.14]]
-temp_targets = { cpu = 79.5, apu = 72.0 }
-
-[servers]
-
-# aaa
-[servers.alpha]
-ip = "10.0.0.1"
-role = "frontend"
-
-# bbb
-[servers.beta]
-ip = "10.0.0.2"
-role = "backend"
-```
-
-### 解析 Toml 文件
+### [解析 Toml 文件]()
 
 ```csharp
-using HKW.TOML
-string file = "test.toml";
-// 从文件中读取
-TomlTable table = TOML.Parse(file);
-// 从流中读取
-// using(StreamReader reader = File.OpenText("configuration.toml"))
-// {
-//     TomlTable table = TOML.Parse(reader);
-// }
+TomlTable table = TOML.Parse(TomlExample.ExampleData);
+//TomlTable table = TOML.ParseFromFile(TomlExample.ExampleFile);
 
-// 获取数据
-Console.WriteLine(table["title"]);
-Console.WriteLine(table["owner"]["name"]);
-// 获取注释
-Console.WriteLine(table.Comment);
-// 遍历所有数据
-foreach(var keyValue in table)
-    Console.WriteLine($"Name = {keyValue.Key}, Value = {keyValue.Value}");
+string title = table["title"].AsString;
+string titleComment = table["title"].Comment;
+List<int> numbers = table["integers"].AsList.Select(node => node.AsInt32).ToList();
 ```
 
 ### 创建 TomlTable
 
 ```csharp
-using HKW.TOML
-string file = "test.toml";
-TomlTable toml = new TomlTable
-{
-    ["title"] = "TOML Example",
-    // You can also insert comments before a node with a special property
-    ["value-with-comment"] = new TomlString
+TomlTable table =
+    new()
     {
-        Value = "Some value",
-        Comment = "This is just some value with a comment"
-    },
-    // You don't need to specify a type for tables or arrays -- Tommy will figure that out for you
-    ["owner"] =
-    {
-        ["name"] = "Tom Preston-Werner",
-        ["dob"] = DateTime.Now
-    },
-    ["array-table"] = new TomlArray
-    {
-        // This is marks the array as a TOML array table
-        IsTableArray = true,
-        [0] =
+        new TomlString("TOML example \\U0001F60A")
         {
-            ["value"] = 10
+            Comment = "Simple key/value with a string."
         },
-        [1] =
-        {
-            ["value"] = 20
-        }
-    },
-    ["inline-table"] = new TomlTable
-    {
-        IsInline = true,
-        ["foo"] = "bar",
-        ["bar"] = "baz",
-        // Implicit cast from TomlNode[] to TomlArray
-        ["array"] = new TomlNode[] { 1, 2, 3 }
-    }
-};
-toml.SaveTo(file);
+        new TomlArray() { 42, 0x42, 042, 0b0110 }
+    };
 ```
 
 ### 从 TOML 文件 生成 C# 的类
