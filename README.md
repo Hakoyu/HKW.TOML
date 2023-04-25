@@ -9,13 +9,15 @@ HKWToml 是使用 C# 编写的
 
 ## 特征
 
-- 完全实现 TOML1.0.0 规范
+- 完全实现 TOML 1.0.0 规范
 - 对解析和保存注释的基本支持
-- 支持.NET 3.5+，Mono，.NET Core！
+- 支持.NET 6+，Mono，.NET Core！
 
 ## 如何使用
 
-TOML [测试文件](https://github.com/Hakoyu/HKWToml/blob/master/Tests/Example.toml)
+[测试文件](https://github.com/Hakoyu/HKWToml/blob/master/Tests/Example.toml)
+[测试Toml数据](https://github.com/Hakoyu/HKWToml/blob/master/Tests/TomlExample.cs)
+[测试类](https://github.com/Hakoyu/HKWToml/blob/master/Tests/ClassExample.cs)
 
 ### [解析 Toml 文件](https://github.com/Hakoyu/HKWToml/tree/master/Tests/TomlParseCases)
 
@@ -48,7 +50,7 @@ TomlTable table =
 
 ```csharp
 TomlTable table = TOML.Parse(TomlExample.ExampleData);
-string classString = TomlAsClasses.Generate(table, "ClassExample", new());
+string classString = TomlAsClasses.Generate(table, "ClassExample");
 Console.WriteLine(classString);
 ```
 
