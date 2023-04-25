@@ -13,8 +13,8 @@ internal static partial class TomlAsClassesCases
 {
     public static void CreateClassExample()
     {
-        var table = TOML.Parse(TomlExample.ExampleData);
-        var classString = TomlAsClasses.Generate(table, "ClassExample", new()
+        TomlTable table = TOML.Parse(TomlExample.ExampleData);
+        string classString = TomlAsClasses.Generate(table, "ClassExample", new()
         {
             AddComment = true,
             AddITomlClassCommentInterface = true,

@@ -5,7 +5,7 @@ HKWToml 是使用 C# 编写的
 包含有 TOML 的读取和编写, 序列化反序列化, 生成 C# 实体类等功能  
 其中 读取器和编写器 修改至[Tommy](https://github.com/dezhidki/Tommy)  
 可以添加单独的 TomlParse.cs 文件以只使用读取器和编写器功能  
-或者从[NuGet](https://www.nuget.org/packages/HKWToml)包中获取完整功能  
+或者从[NuGet](https://www.nuget.org/packages/HKWToml)包中获取完整功能
 
 ## 特征
 
@@ -17,7 +17,7 @@ HKWToml 是使用 C# 编写的
 
 TOML [测试文件](https://github.com/Hakoyu/HKWToml/blob/master/Tests/Example.toml)
 
-### [解析 Toml 文件]()
+### [解析 Toml 文件](https://github.com/Hakoyu/HKWToml/tree/master/Tests/TomlParseCases)
 
 ```csharp
 TomlTable table = TOML.Parse(TomlExample.ExampleData);
@@ -42,33 +42,31 @@ TomlTable table =
     };
 ```
 
-### 从 TOML 文件 生成 C# 的类
+### [从 TOML 文件 生成 C# 的类](https://github.com/Hakoyu/HKWToml/tree/master/Tests/TomlAsClassesCases)
 
 生成相关设置请查看[TomlAsClassesOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlAsClasses/TomlAsClassesOptions.cs)
 
 ```csharp
-using HKW.TOML
-string file = "test.toml";
-string classString = TomlAsClasses.ConstructFromFile(file, "Test");
+TomlTable table = TOML.Parse(TomlExample.ExampleData);
+string classString = TomlAsClasses.Generate(table, "ClassExample", new());
 Console.WriteLine(classString);
 ```
 
-### TOML 反序列化
+### [TOML 反序列化](https://github.com/Hakoyu/HKWToml/tree/master/Tests/TomlDeserializerCases)
 
 反序列化相关设置请查看[TomlDeserializerOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlDeserializer/TomlDeserializerOptions.cs)
 
 ```csharp
-using HKW.TOML
-string file = "test.toml";
-Test test = TomlDeserializer.DeserializeFromFile<Test>(file);
+TomlTable table = TOML.Parse(TomlExample.ExampleData);
+ClassExample example = TomlDeserializer.Deserialize<ClassExample>(table);
 ```
 
-### TOML 序列化
+### [TOML 序列化](https://github.com/Hakoyu/HKWToml/tree/master/Tests/TomlSerializerCases)
 
 序列化相关设置请查看[TomlSerializerOptions](https://github.com/Hakoyu/HKWToml/blob/master/TOML/TomlSerializer/TomlSerializerOptions.cs)
 
 ```csharp
-using HKW.TOML
-string newFile = "newTest.toml";
-TomlSerializer.SerializeToFile(test, newFile);
+TomlTable table = TOML.Parse(TomlExample.ExampleData);
+ClassExample example = TomlDeserializer.Deserialize<ClassExample>(table);
+TomlTable serializeTable = TomlSerializer.Serialize(example);
 ```

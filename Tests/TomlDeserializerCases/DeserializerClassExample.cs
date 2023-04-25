@@ -12,8 +12,8 @@ internal static partial class TomlDeserializerCases
 {
     public static void DeserializeClassExample()
     {
-        var table = TOML.Parse(TomlExample.ExampleData);
-        var example = TomlDeserializer.Deserialize<ClassExample>(table);
+        TomlTable table = TOML.Parse(TomlExample.ExampleData);
+        ClassExample example = TomlDeserializer.Deserialize<ClassExample>(table);
         Console.WriteLine(example);
     }
 }
