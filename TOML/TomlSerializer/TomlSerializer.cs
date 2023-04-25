@@ -2,6 +2,7 @@
 using System.Reflection;
 using HKW.TOML.TomlAttribute;
 using HKW.TOML.TomlInterface;
+using HKWToml.Utils;
 
 namespace HKW.TOML.TomlSerializer;
 
@@ -154,6 +155,12 @@ public class TomlSerializer
     /// <returns>Toml表格</returns>
     private static TomlTable CreateTomlTable(object source)
     {
+        if (source is not Type type)
+            type = source.GetType();
+        RunMethodOnSerializingWithClass(source, type);
+        GetMethods(type, out var methodOnSerializing, out var methodOnSerialized);
+        RunMethodOnSerializing(source, methodOnSerializing);
+
         var table = new TomlTable();
         // 获取所有属性
         var properties = GetProperties(source);
@@ -186,8 +193,111 @@ public class TomlSerializer
             // 设置注释
             node.Comment = SetCommentToNode(iTomlClass, propertyInfo.Name)!;
         }
+
+        RunMethodOnSerialized(source, methodOnSerialized);
+        RunMethodOnSerializedWithClass(source, type);
         return table;
     }
+
+    #region RunMethod
+    /// <summary>
+    /// 获取方法
+    /// </summary>
+    /// <param name="type">类型</param>
+    /// <param name="methodOnSerializing">运行于序列化之前的方法</param>
+    /// <param name="methodOnSerialized">运行于序列化之后的方法</param>
+    private static void GetMethods(
+        Type type,
+        out IEnumerable<MethodAndParameters> methodOnSerializing,
+        out IEnumerable<MethodAndParameters> methodOnSerialized
+    )
+    {
+        List<MethodAndParameters> tempMethodOnSerializing = new();
+        List<MethodAndParameters> tempMethodOnSerialized = new();
+        foreach (var method in Utils.GetMethodInfosWithOutProperty(type))
+        {
+            if (
+                method.GetCustomAttribute(typeof(RunOnTomlSerializingAttribute))
+                is RunOnTomlSerializingAttribute runOnTomlSerializingAttribute
+            )
+            {
+                tempMethodOnSerializing.Add(new(method, runOnTomlSerializingAttribute.Parameters));
+            }
+            else if (
+                method.GetCustomAttribute(typeof(RunOnTomlSerializedAttribute))
+                is RunOnTomlSerializedAttribute runOnTomlSerializedAttribute
+            )
+            {
+                tempMethodOnSerialized.Add(new(method, runOnTomlSerializedAttribute.Parameters));
+            }
+        }
+        methodOnSerializing = tempMethodOnSerializing;
+        methodOnSerialized = tempMethodOnSerialized;
+    }
+
+    /// <summary>
+    /// 运行序列化之前的方法
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="methodOnSerializing">运行于序列化之前的方法</param>
+    private static void RunMethodOnSerializing(
+        object target,
+        IEnumerable<MethodAndParameters> methodOnSerializing
+    )
+    {
+        foreach (var mp in methodOnSerializing)
+        {
+            mp.Method.Invoke(target, mp.Parameters);
+        }
+    }
+
+    /// <summary>
+    /// 运行序列化之后的方法
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="methodOnSerialized">运行于序列化之后的方法</param>
+    private static void RunMethodOnSerialized(
+        object target,
+        IEnumerable<MethodAndParameters> methodOnSerialized
+    )
+    {
+        foreach (var mp in methodOnSerialized)
+        {
+            mp.Method.Invoke(target, mp.Parameters);
+        }
+    }
+
+    /// <summary>
+    /// 运行反序列化时,类附加的方法
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="type">类型</param>
+    private static void RunMethodOnSerializingWithClass(object target, Type type)
+    {
+        if (
+                type.GetCustomAttribute(typeof(RunOnTomlSerializingAttribute))
+                is not RunOnTomlSerializingAttribute runOnTomlSerializing
+            )
+            return;
+        runOnTomlSerializing.Method?.Invoke(target, runOnTomlSerializing.Parameters);
+    }
+
+    /// <summary>
+    /// 运行反序列化后,类附加的方法
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="type">类型</param>
+    private static void RunMethodOnSerializedWithClass(object target, Type type)
+    {
+        if (
+                type.GetCustomAttribute(typeof(RunOnTomlSerializedAttribute))
+                is not RunOnTomlSerializedAttribute runOnTomlSerialized
+            )
+            return;
+        runOnTomlSerialized.Method?.Invoke(target, runOnTomlSerialized.Parameters);
+    }
+
+    #endregion
 
     /// <summary>
     /// 检查Toml值转换特性

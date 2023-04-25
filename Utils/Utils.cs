@@ -1,13 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKW.TOML;
+namespace HKWToml.Utils;
 
 internal static class Utils
 {
+    public const string c_propertyGetMethodStartsWith = "get_";
+    public const string c_propertySetMethodStartsWith = "set_";
+
+    /// <summary>
+    /// 获取类的所有方法(排除属性生成的get,set方法)
+    /// </summary>
+    /// <param name="type">类型</param>
+    /// <param name="flags">标识</param>
+    /// <returns>所有方法</returns>
+    public static IEnumerable<MethodInfo> GetMethodInfosWithOutProperty(
+        Type type,
+        BindingFlags flags = BindingFlags.Default
+    )
+    {
+        return type.GetMethods(flags)
+            .Where(
+                m =>
+                    (
+                        m.Name.StartsWith(c_propertyGetMethodStartsWith)
+                        || m.Name.StartsWith(c_propertySetMethodStartsWith)
+                    )
+                        is false
+            );
+    }
 
     /// <summary>
     /// 将字符串转换为帕斯卡格式

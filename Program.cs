@@ -15,6 +15,7 @@ using HKWToml.Tests.TomlDeserializerCases;
 using HKWToml.Tests.TomlSerializerCases;
 using HKWToml.Tests.TomlParseCases;
 using HKWToml.Tests;
+using HKWToml.Utils;
 #endif
 
 namespace HKWToml;
@@ -24,8 +25,8 @@ internal class HKWToml
     public static async Task Main(string[] args)
     {
 #if DEBUG
-        //var table = TOML.Parse(TomlExample.ExampleData);
-        //var test = TomlDeserializer.Deserialize<ClassExample1>(table);
+        var table = TOML.Parse(TomlExample.ExampleData);
+        var example1 = TomlDeserializer.Deserialize<ClassExample1>(table);
         //TomlParseCases.ParseExampleFromFile();
         //TomlAsClassesCases.CreateClassExample();
         //TomlDeserializerCases.DeserializeClassExample();
@@ -33,10 +34,14 @@ internal class HKWToml
 #endif
     }
 #if DEBUG
+    public static void Test1()
+    {
+        Console.WriteLine(114514);
+    }
     /// <summary>
     /// This is an example TOML document which shows most of its features.
     /// </summary>
-
+    [RunOnTomlDeserializing(typeof(HKWToml), nameof(Test1))]
     public class ClassExample1 : ITomlClassComment
     {
         /// <inheritdoc/>
@@ -76,14 +81,12 @@ internal class HKWToml
         public List<string> Duration { get; set; }
 
         [RunOnTomlDeserialized]
-        [RunOnTomlDeserializedOrder(1)]
         public void Noop()
         {
             Title = "114514";
         }
 
         [RunOnTomlDeserialized]
-        [RunOnTomlDeserializedOrder(0)]
         public void Noop1()
         {
             Title = "1919810";
