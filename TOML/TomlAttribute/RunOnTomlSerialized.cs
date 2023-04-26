@@ -37,12 +37,12 @@ public class RunOnTomlSerializedAttribute : Attribute
     /// 运行于序列化后的方法
     /// </summary>
     /// <param name="type">目标类</param>
-    /// <param name="methodName">方法名称</param>
+    /// <param name="staticMethodName">静态方法名称</param>
     /// <param name="parameters">参数</param>
-    public RunOnTomlSerializedAttribute(Type type, string methodName, params object[] parameters)
+    public RunOnTomlSerializedAttribute(Type type, string staticMethodName, params object[] parameters)
     {
-        if (type.GetMethod(methodName, BindingFlags.Static) is not MethodInfo method)
-            throw new Exception($"Not found static method {methodName} in {type.FullName}");
+        if (type.GetMethod(staticMethodName, BindingFlags.Static) is not MethodInfo method)
+            throw new Exception($"Not found static method {staticMethodName} in {type.FullName}");
         Method = method;
         Parameters = parameters;
     }

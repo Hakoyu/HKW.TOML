@@ -250,25 +250,7 @@ public class TomlDeserializer
         // 设置一致性信息
         TryCheckConsistency(type, table, out var missingProperties, out var missingTomlNodes);
 
-        foreach (var kv in table)
-        {
-            var name = Utils.ToPascal(
-                kv.Key,
-                s_keyWordSeparators,
-                s_options.RemoveKeyWordSeparator
-            );
-            var node = kv.Value;
-            if (type.GetProperty(name) is not PropertyInfo propertyInfo)
-                continue;
-            // 检测是否包含隐藏特性
-            if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnoreAttribute)))
-                continue;
-            // 删除存在的内容
-            CheckConsistency(propertyInfo.Name, kv.Key, missingProperties, missingTomlNodes);
-            // 设置注释
-            iTomlClass?.ValueComments.TryAdd(name, node.Comment ?? string.Empty);
-            DeserializeTableValue(target, kv.Key, node, propertyInfo);
-        }
+        IterationTable(target, type, table, iTomlClass, missingProperties, missingTomlNodes);
 
         var missingRequiredProperties = new HashSet<string>();
         // 检查TomlName特性
@@ -286,8 +268,31 @@ public class TomlDeserializer
         // 添加缺失的必要属性信息
         AddMissingRequiredValue(type.FullName!, missingRequiredProperties);
 
-        RunMethodOnDeserialized(target, methodOnDeserialized);
         RunMethodOnDeserializedWithClass(target, type);
+        RunMethodOnDeserialized(target, methodOnDeserialized);
+
+        static void IterationTable(object target, Type type, TomlTable table, ITomlClassComment? iTomlClass, HashSet<string>? missingProperties, HashSet<string>? missingTomlNodes)
+        {
+            foreach (var kv in table)
+            {
+                var name = Utils.ToPascal(
+                    kv.Key,
+                    s_keyWordSeparators,
+                    s_options.RemoveKeyWordSeparator
+                );
+                var node = kv.Value;
+                if (type.GetProperty(name) is not PropertyInfo propertyInfo)
+                    continue;
+                // 检测是否包含隐藏特性
+                if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnoreAttribute)))
+                    continue;
+                // 删除存在的内容
+                CheckConsistency(propertyInfo.Name, kv.Key, missingProperties, missingTomlNodes);
+                // 设置注释
+                iTomlClass?.ValueComments.TryAdd(name, node.Comment ?? string.Empty);
+                DeserializeTableValue(target, kv.Key, node, propertyInfo);
+            }
+        }
     }
 
     #region RunMethod

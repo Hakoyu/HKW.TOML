@@ -168,35 +168,41 @@ public class TomlSerializer
         // 设置注释
         if (iTomlClass is not null)
             table.Comment = iTomlClass.ClassComment;
-        foreach (var propertyInfo in properties)
-        {
-            // 检测是否有隐藏特性
-            if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnoreAttribute)))
-                continue;
-            // 跳过ITomlClass生成的接口
-            if (
-                iTomlClass is not null
-                && (
-                    propertyInfo.Name == nameof(ITomlClassComment.ClassComment)
-                    || propertyInfo.Name == nameof(ITomlClassComment.ValueComments)
-                )
-            )
-                continue;
-            // 获取属性的值
-            if (propertyInfo.GetValue(source) is not object value)
-                continue;
-            // 获取名称
-            var name = GetTomlKeyName(propertyInfo) ?? propertyInfo.Name;
-            // 创建Toml节点
-            var node = CheckTomlConverter(value, propertyInfo) ?? CreateTomlNode(value);
-            table.TryAdd(name, node);
-            // 设置注释
-            node.Comment = SetCommentToNode(iTomlClass, propertyInfo.Name)!;
-        }
 
-        RunMethodOnSerialized(source, methodOnSerialized);
+        IterationProperties(source, table, properties, iTomlClass);
+
         RunMethodOnSerializedWithClass(source, type);
+        RunMethodOnSerialized(source, methodOnSerialized);
         return table;
+
+        static void IterationProperties(object source, TomlTable table, IEnumerable<PropertyInfo> properties, ITomlClassComment? iTomlClass)
+        {
+            foreach (var propertyInfo in properties)
+            {
+                // 检测是否有隐藏特性
+                if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnoreAttribute)))
+                    continue;
+                // 跳过ITomlClass生成的接口
+                if (
+                    iTomlClass is not null
+                    && (
+                        propertyInfo.Name == nameof(ITomlClassComment.ClassComment)
+                        || propertyInfo.Name == nameof(ITomlClassComment.ValueComments)
+                    )
+                )
+                    continue;
+                // 获取属性的值
+                if (propertyInfo.GetValue(source) is not object value)
+                    continue;
+                // 获取名称
+                var name = GetTomlKeyName(propertyInfo) ?? propertyInfo.Name;
+                // 创建Toml节点
+                var node = CheckTomlConverter(value, propertyInfo) ?? CreateTomlNode(value);
+                table.TryAdd(name, node);
+                // 设置注释
+                node.Comment = SetCommentToNode(iTomlClass, propertyInfo.Name)!;
+            }
+        }
     }
 
     #region RunMethod

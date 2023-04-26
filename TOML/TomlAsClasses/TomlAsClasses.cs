@@ -167,7 +167,7 @@ public partial class TomlAsClasses
                 name = Utils.ToPascal(name, s_keyWordSeparators, s_options.RemoveKeyWordSeparators);
 
             // 检测关键词
-            if (s_csharpKeywords.Contains(name))
+            if (Utils.CsharpKeywords.Contains(name))
                 throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
             // 解析表格的值
             ParseTableValue(tomlClass, name, node);
@@ -227,7 +227,7 @@ public partial class TomlAsClasses
     )
     {
         // 检测关键字
-        if (s_csharpKeywords.Contains(className))
+        if (Utils.CsharpKeywords.Contains(className))
             throw new Exception($"Used CsharpKeywords \"{className}\"");
         // 获取已存在的类
         if (sr_tomlClasses.TryGetValue(className, out var tomlClass) is false)
@@ -315,8 +315,8 @@ public partial class TomlAsClasses
     /// <summary>
     /// 合并类型标识
     /// </summary>
-    /// <param name="tomlTypeCode"></param>
-    /// <returns></returns>
+    /// <param name="tomlTypeCode">Toml类代码</param>
+    /// <returns>合并后的Toml类代码</returns>
     private static TomlTypeCode MergeTomlTypeCode(TomlTypeCode tomlTypeCode)
     {
         // 如果同时存在int和float类型,则会被转换成float
@@ -332,9 +332,9 @@ public partial class TomlAsClasses
     /// <summary>
     /// 解析数组的值(用于多维数组)
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="array"></param>
-    /// <returns></returns>
+    /// <param name="name">名称</param>
+    /// <param name="array">数组</param>
+    /// <returns>数组类名</returns>
     private static string ParseArrayValue(string name, TomlArray array)
     {
         var typeNames = new HashSet<string>();
@@ -410,89 +410,4 @@ public partial class TomlAsClasses
         }
         return anonymousClassName;
     }
-
-    /// <summary>
-    /// csharp关键字集合
-    /// </summary>
-    private static readonly HashSet<string> s_csharpKeywords =
-        new()
-        {
-            "abstract",
-            "as",
-            "base",
-            "bool",
-            "break",
-            "byte",
-            "case",
-            "catch",
-            "char",
-            "checked",
-            "class",
-            "const",
-            "continue",
-            "decimal",
-            "default",
-            "delegate",
-            "do",
-            "double",
-            "else",
-            "enum",
-            "event",
-            "explicit",
-            "extern",
-            "false",
-            "finally",
-            "fixed",
-            "float",
-            "for",
-            "foreach",
-            "goto",
-            "if",
-            "implicit",
-            "in",
-            "int",
-            "interface",
-            "internal",
-            "is",
-            "lock",
-            "long",
-            "namespace",
-            "new",
-            "null",
-            "object",
-            "operator",
-            "out",
-            "override",
-            "params",
-            "private",
-            "protected",
-            "public",
-            "readonly",
-            "ref",
-            "return",
-            "sbyte",
-            "sealed",
-            "short",
-            "sizeof",
-            "stackalloc",
-            "static",
-            "string",
-            "struct",
-            "switch",
-            "this",
-            "throw",
-            "true",
-            "try",
-            "typeof",
-            "uint",
-            "ulong",
-            "unchecked",
-            "unsafe",
-            "ushort",
-            "using",
-            "virtual",
-            "void",
-            "volatile",
-            "while"
-        };
 }
