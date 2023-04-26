@@ -34,14 +34,7 @@ internal class HKWToml
 #endif
     }
 #if DEBUG
-    public static void Test1()
-    {
-        Console.WriteLine(114514);
-    }
-    /// <summary>
-    /// This is an example TOML document which shows most of its features.
-    /// </summary>
-    [RunOnTomlDeserializing(typeof(HKWToml), nameof(Test1))]
+
     public class ClassExample1 : ITomlClassComment
     {
         /// <inheritdoc/>
@@ -81,27 +74,15 @@ internal class HKWToml
         public List<string> Duration { get; set; }
 
         [RunOnTomlDeserialized]
-        public void Noop()
+        internal void Noop()
         {
             Title = "114514";
         }
 
         [RunOnTomlDeserialized]
-        public void Noop1()
+        internal static void Noop1()
         {
-            Title = "1919810";
-        }
-
-        [RunOnTomlDeserialized]
-        public void Noop2()
-        {
-            Title = "2";
-        }
-
-        [RunOnTomlDeserialized]
-        public void Noop3()
-        {
-            Title = "3";
+            Console.WriteLine(114514);
         }
     }
 #endif

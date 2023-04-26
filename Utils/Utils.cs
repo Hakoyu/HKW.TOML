@@ -18,12 +18,9 @@ internal static class Utils
     /// <param name="type">类型</param>
     /// <param name="flags">标识</param>
     /// <returns>所有方法</returns>
-    public static IEnumerable<MethodInfo> GetMethodInfosWithOutProperty(
-        Type type,
-        BindingFlags flags = BindingFlags.Default
-    )
+    public static IEnumerable<MethodInfo> GetMethodInfosWithOutProperty(Type type)
     {
-        return type.GetMethods(flags)
+        return type.GetRuntimeMethods()
             .Where(
                 m =>
                     (
@@ -58,7 +55,6 @@ internal static class Utils
     /// <param name="str">字符串</param>
     /// <returns>第一个为大写的字符串</returns>
     public static string FirstLetterToUpper(string str) => $"{char.ToUpper(str[0])}{str[1..]}";
-
 
     /// <summary>
     /// csharp关键字集合
