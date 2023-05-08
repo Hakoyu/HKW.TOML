@@ -1,4 +1,4 @@
-﻿namespace HKW.TOML.TomlAttribute;
+﻿namespace HKW.TOML.Attributes;
 
 /// <summary>
 /// Toml忽略值

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HKW.TOML;
 
-namespace HKWToml.Tests.TomlParseCases;
+namespace HKWToml.Tests.ParseCases;
 
 internal static partial class TomlParseCases
 {

@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Reflection;
-using HKW.TOML.TomlAttribute;
-using HKW.TOML.TomlInterface;
+using HKW.TOML.Attributes;
+using HKW.TOML.Interfaces;
 using HKWToml.Utils;
 
-namespace HKW.TOML.TomlSerializer;
+namespace HKW.TOML.Serializer;
 
 /// <summary>
 /// Toml序列化
@@ -220,7 +220,7 @@ public class TomlSerializer
     {
         List<MethodAndParameters> tempMethodOnSerializing = new();
         List<MethodAndParameters> tempMethodOnSerialized = new();
-        foreach (var method in Utils.GetMethodInfosWithOutProperty(type))
+        foreach (var method in Utils.GetMethodsWithOutProperty(type))
         {
             if (
                 method.GetCustomAttribute(typeof(RunOnTomlSerializingAttribute))

@@ -2,7 +2,7 @@
 using System.Text;
 using HKWToml.Utils;
 
-namespace HKW.TOML.TomlAsClasses;
+namespace HKW.TOML.AsClasses;
 
 /// <summary>
 /// Toml转换为类
@@ -150,7 +150,7 @@ public partial class TomlAsClasses
     /// <param name="className">类名称</param>
     /// <param name="parentClassName">父类名称</param>
     /// <param name="table">表格</param>
-    /// <exception cref="TomlException">toml中使用的Csharp的关键字</exception>
+    /// <exception cref="Exceptions">toml中使用的Csharp的关键字</exception>
     private static void ParseTable(string className, string? parentClassName, TomlTable table)
     {
         var isAnonymousClass =

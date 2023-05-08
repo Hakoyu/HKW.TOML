@@ -1001,7 +1001,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     /// <summary>
     /// 原始值
     /// </summary>
-    public Dictionary<string, TomlNode> RawTable { get; private set; } = new();
+    public Dictionary<string, TomlNode> RawTable { get; private set; } = new(new TomlTableComparer());
 
     /// <inheritdoc/>
     public override TomlNode this[string key]
@@ -1311,6 +1311,38 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     /// <inheritdoc/>
     public bool Remove(KeyValuePair<string, TomlNode> item) =>
         ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Remove(item);
+
+    /// <summary>
+    /// 键忽视大小写
+    /// </summary>
+    public bool KeyIgnoreCase
+    {
+        get
+        {
+            return ((TomlTableComparer)RawTable.Comparer).IgnoreCase;
+        }
+        set
+        {
+            ((TomlTableComparer)RawTable.Comparer).IgnoreCase = value;
+        }
+    }
+    internal class TomlTableComparer : IEqualityComparer<string>
+    {
+
+        public bool IgnoreCase { get; set; } = false;
+        public bool Equals(string? x, string? y)
+        {
+            if (IgnoreCase)
+                return StringComparer.OrdinalIgnoreCase.Equals(x, y);
+            else
+                return EqualityComparer<string>.Default.Equals(x, y);
+        }
+
+        public int GetHashCode([DisallowNull] string obj)
+        {
+            return StringComparer.OrdinalIgnoreCase.GetHashCode();
+        }
+    }
 }
 
 internal class TomlLazy : TomlNode

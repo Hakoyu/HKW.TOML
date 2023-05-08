@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HKW.TOML;
-using HKW.TOML.TomlDeserializer;
-using HKW.TOML.TomlSerializer;
+using HKW.TOML.Deserializer;
+using HKW.TOML.Serializer;
 
-namespace HKWToml.Tests.TomlSerializerCases;
+namespace HKWToml.Tests.SerializerCases;
 
 internal static partial class TomlSerializeClassCases
 {

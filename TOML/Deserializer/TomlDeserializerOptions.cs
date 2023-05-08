@@ -1,9 +1,9 @@
-﻿namespace HKW.TOML.TomlDeserializer;
+﻿namespace HKW.TOML.Deserializer;
 
 /// <summary>
 /// Toml反序列化设置
 /// </summary>
-public class TomlDeserializerOptions
+public class DeserializerOptions
 {
     /// <summary>
     /// 删除键的单词分隔符 如 "_"
@@ -19,7 +19,7 @@ public class TomlDeserializerOptions
 
     /// <summary>
     /// 检查一致性
-    /// <para>默认为 <see langword="false"/></para>
+    /// <para>默认为 <see langword="true"/></para>
     /// </summary>
-    public bool CheckConsistency { get; set; } = false;
+    public bool PropertyNameCaseInsensitive { get; set; } = true;
 }

@@ -1,4 +1,4 @@
-﻿namespace HKW.TOML.TomlAttribute;
+﻿namespace HKW.TOML.Attributes;
 
 /// <summary>
 /// Toml参数顺序

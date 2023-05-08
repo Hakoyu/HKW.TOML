@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKW.TOML.TomlException;
+namespace HKW.TOML.Exceptions;
 
 /// <summary>
 /// 缺失必要属性异常

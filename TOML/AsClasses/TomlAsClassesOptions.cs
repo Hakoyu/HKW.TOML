@@ -1,8 +1,8 @@
 ﻿
-using HKW.TOML.TomlInterface;
-using HKW.TOML.TomlAttribute;
+using HKW.TOML.Interfaces;
+using HKW.TOML.Attributes;
 
-namespace HKW.TOML.TomlAsClasses;
+namespace HKW.TOML.AsClasses;
 
 /// <summary>
 /// Toml转换为类设置

@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HKW.TOML;
-using HKW.TOML.TomlAttribute;
-using HKW.TOML.TomlInterface;
+using HKW.TOML.Attributes;
+using HKW.TOML.Interfaces;
 
 namespace HKWToml.Tests;
 

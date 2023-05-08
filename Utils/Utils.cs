@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using HKW.TOML;
 
 namespace HKWToml.Utils;
 
@@ -16,9 +17,8 @@ internal static class Utils
     /// 获取类的所有方法(排除属性生成的get,set方法)
     /// </summary>
     /// <param name="type">类型</param>
-    /// <param name="flags">标识</param>
     /// <returns>所有方法</returns>
-    public static IEnumerable<MethodInfo> GetMethodInfosWithOutProperty(Type type)
+    public static IEnumerable<MethodInfo> GetMethodsWithOutProperty(Type type)
     {
         return type.GetRuntimeMethods()
             .Where(

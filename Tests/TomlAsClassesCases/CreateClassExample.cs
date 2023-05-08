@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HKW.TOML;
-using HKW.TOML.TomlAsClasses;
+using HKW.TOML.AsClasses;
 
-namespace HKWToml.Tests.TomlAsClassesCases;
+namespace HKWToml.Tests.AsClassesCases;
 
 internal static partial class TomlAsClassesCases
 {

@@ -1,4 +1,4 @@
-﻿namespace HKW.TOML.TomlInterface;
+﻿namespace HKW.TOML.Interfaces;
 
 /// <summary>
 /// Toml类接口

@@ -5,13 +5,13 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKW.TOML.TomlAttribute;
+namespace HKW.TOML.Attributes;
 
 /// <summary>
-/// 运行于序列化后
+/// 运行于反序列化后
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-public class RunOnTomlSerializedAttribute : Attribute
+public class RunOnTomlDeserializedAttribute : Attribute
 {
     /// <summary>
     /// 方法
@@ -24,22 +24,22 @@ public class RunOnTomlSerializedAttribute : Attribute
     public object[]? Parameters { get; }
 
     /// <inheritdoc/>
-    public RunOnTomlSerializedAttribute() { }
+    public RunOnTomlDeserializedAttribute() { }
 
     /// <inheritdoc/>
     /// <param name="parameters">参数</param>
-    public RunOnTomlSerializedAttribute(params object[] parameters)
+    public RunOnTomlDeserializedAttribute(params object[] parameters)
     {
         Parameters = parameters;
     }
 
     /// <summary>
-    /// 运行于序列化后的方法
+    /// 运行于反序列化后的方法
     /// </summary>
     /// <param name="type">目标类</param>
     /// <param name="staticMethodName">静态方法名称</param>
     /// <param name="parameters">参数</param>
-    public RunOnTomlSerializedAttribute(Type type, string staticMethodName, params object[] parameters)
+    public RunOnTomlDeserializedAttribute(Type type, string staticMethodName, params object[] parameters)
     {
         if (type.GetMethod(staticMethodName, BindingFlags.Static) is not MethodInfo method)
             throw new Exception($"Not found static method {staticMethodName} in {type.FullName}");

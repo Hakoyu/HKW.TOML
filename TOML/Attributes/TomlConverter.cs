@@ -4,11 +4,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using HKW.TOML.TomlDeserializer;
-using HKW.TOML.TomlInterface;
-using HKW.TOML.TomlSerializer;
+using HKW.TOML.Deserializer;
+using HKW.TOML.Interfaces;
+using HKW.TOML.Serializer;
 
-namespace HKW.TOML.TomlAttribute;
+namespace HKW.TOML.Attributes;
 
 /// <summary>
 /// Toml值转换
@@ -22,7 +22,7 @@ public class TomlConverterAttribute : Attribute
 
     /// <inheritdoc/>
     /// <param name="tomlConverter">Toml值转换类</param>
-    /// <exception cref="TomlException">Unimplemented interface <see cref="ITomlConverter{Object}"/></exception>
+    /// <exception cref="Exceptions">Unimplemented interface <see cref="ITomlConverter{Object}"/></exception>
     public TomlConverterAttribute(Type tomlConverter)
     {
         if (
@@ -35,7 +35,7 @@ public class TomlConverterAttribute : Attribute
     }
 
     /// <summary>
-    /// 从Toml节点读取值 用于 <see cref="TomlDeserializer.TomlDeserializer"/>
+    /// 从Toml节点读取值 用于 <see cref="Deserializer.TomlDeserializer"/>
     /// </summary>
     /// <param name="node">Toml节点</param>
     /// <returns>转换后的值</returns>
@@ -45,7 +45,7 @@ public class TomlConverterAttribute : Attribute
     }
 
     /// <summary>
-    /// 从值转换成Toml节点 用于 <see cref="TomlSerializer.TomlSerializer"/>
+    /// 从值转换成Toml节点 用于 <see cref="Serializer.TomlSerializer"/>
     /// </summary>
     /// <param name="value">值</param>
     /// <returns>转换后的Toml节点</returns>

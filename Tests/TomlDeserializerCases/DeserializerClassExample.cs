@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HKW.TOML;
-using HKW.TOML.TomlDeserializer;
+using HKW.TOML.Deserializer;
 
-namespace HKWToml.Tests.TomlDeserializerCases;
+namespace HKWToml.Tests.DeserializerCases;
 internal static partial class TomlDeserializerCases
 {
     public static void DeserializeClassExample()

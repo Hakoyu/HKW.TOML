@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 
-namespace HKW.TOML.TomlAsClasses;
+namespace HKW.TOML.AsClasses;
 
 public partial class TomlAsClasses
 {
