@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace HKW.TOML.AsClasses;
@@ -59,7 +62,12 @@ public partial class TomlAsClasses
         /// <returns>字符串</returns>
         public override string ToString()
         {
-            var valueData = string.Format(s_options.PropertyFormat, s_options.Indent, TypeName, Name);
+            var valueData = string.Format(
+                s_options.PropertyFormat,
+                s_options.Indent,
+                TypeName,
+                Name
+            );
             return GetComment(Comment) + GetAttribute(Attributes) + valueData;
         }
 
@@ -79,14 +87,14 @@ public partial class TomlAsClasses
             if (comments.Length is 1)
                 return string.Format(s_options.CommentFormat, s_options.Indent, comments[0]);
             var multiLineComment =
-               comments[0]
-               + "\n"
-               + string.Join(
-                   "\n",
-                   comments[1..].Select(
-                       s => string.Format(s_options.CommentParaFormat, s_options.Indent, s)
-                   )
-               );
+                comments[0]
+                + "\n"
+                + string.Join(
+                    "\n",
+                    comments[1..].Select(
+                        s => string.Format(s_options.CommentParaFormat, s_options.Indent, s)
+                    )
+                );
             return string.Format(s_options.CommentFormat, s_options.Indent, multiLineComment);
         }
 
@@ -99,7 +107,9 @@ public partial class TomlAsClasses
         {
             var sb = new StringBuilder();
             foreach (var attribute in attributes)
-                sb.AppendLine(string.Format(s_options.AttributeFormat, s_options.Indent, attribute));
+                sb.AppendLine(
+                    string.Format(s_options.AttributeFormat, s_options.Indent, attribute)
+                );
             return sb.ToString();
         }
     }

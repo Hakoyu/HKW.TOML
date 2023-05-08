@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HKW.TOML;
 
-namespace HKWToml.Utils;
+namespace HKWTOML.Utils;
 
 internal static class Utils
 {

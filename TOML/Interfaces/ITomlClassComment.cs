@@ -1,4 +1,6 @@
-﻿namespace HKW.TOML.Interfaces;
+﻿using System.Collections.Generic;
+
+namespace HKW.TOML.Interfaces;
 
 /// <summary>
 /// Toml类接口

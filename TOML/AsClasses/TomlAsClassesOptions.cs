@@ -1,6 +1,7 @@
-﻿
-using HKW.TOML.Interfaces;
+﻿using HKW.TOML.Interfaces;
 using HKW.TOML.Attributes;
+using System;
+using System.Collections.Generic;
 
 namespace HKW.TOML.AsClasses;
 

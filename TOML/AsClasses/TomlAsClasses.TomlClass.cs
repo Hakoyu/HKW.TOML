@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace HKW.TOML.AsClasses;
@@ -57,7 +60,8 @@ public partial class TomlAsClasses
             Name = name;
             FullName = name + parentName;
             ParentName = parentName ?? string.Empty;
-            IsAnonymous = parentName is not null && string.IsNullOrWhiteSpace(parentName); ;
+            IsAnonymous = parentName is not null && string.IsNullOrWhiteSpace(parentName);
+            ;
         }
 
         /// <summary>
@@ -72,17 +76,30 @@ public partial class TomlAsClasses
             // 为匿名函数时,不设置注释,特性,继承
             if (IsAnonymous is false)
             {
-                if (GetComment(Comment) is string comment && string.IsNullOrWhiteSpace(comment) is false)
+                if (
+                    GetComment(Comment) is string comment
+                    && string.IsNullOrWhiteSpace(comment) is false
+                )
                     sb.AppendLine(comment);
-                if (GetAttribute(s_options.ClassAttributes) is string attribute && string.IsNullOrWhiteSpace(attribute) is false)
+                if (
+                    GetAttribute(s_options.ClassAttributes) is string attribute
+                    && string.IsNullOrWhiteSpace(attribute) is false
+                )
                     sb.AppendLine(attribute);
                 classname += GetInheritance(s_options.MultipleInheritance);
                 // 添加ITomlClass接口中的值
                 if (s_options.AddITomlClassCommentInterface)
-                    iTomlClassCommentValue = string.Format(s_options.ITomlClassInterfaceValueFormat, s_options.Indent) + "\n";
+                    iTomlClassCommentValue =
+                        string.Format(s_options.ITomlClassInterfaceValueFormat, s_options.Indent)
+                        + "\n";
             }
 
-            return string.Format(s_options.ClassFormat, sb.ToString(), classname, iTomlClassCommentValue + GetValues(Values.Values));
+            return string.Format(
+                s_options.ClassFormat,
+                sb.ToString(),
+                classname,
+                iTomlClassCommentValue + GetValues(Values.Values)
+            );
         }
 
         /// <summary>
@@ -101,14 +118,14 @@ public partial class TomlAsClasses
             if (comments.Length is 1)
                 return string.Format(s_options.CommentFormat, string.Empty, comments[0]);
             var multiLineComment =
-               comments[0]
-               + "\n"
-               + string.Join(
-                   "\n",
-                   comments[1..].Select(
-                       s => string.Format(s_options.CommentParaFormat, string.Empty, s)
-                   )
-               );
+                comments[0]
+                + "\n"
+                + string.Join(
+                    "\n",
+                    comments[1..].Select(
+                        s => string.Format(s_options.CommentParaFormat, string.Empty, s)
+                    )
+                );
             return string.Format(s_options.CommentFormat, string.Empty, multiLineComment);
         }
 

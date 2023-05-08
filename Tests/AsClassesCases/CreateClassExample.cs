@@ -7,22 +7,26 @@ using System.Threading.Tasks;
 using HKW.TOML;
 using HKW.TOML.AsClasses;
 
-namespace HKWToml.Tests.AsClassesCases;
+namespace HKWTOML.Tests.AsClassesCases;
 
 internal static partial class TomlAsClassesCases
 {
     public static void CreateClassExample()
     {
         TomlTable table = TOML.Parse(TomlExample.ExampleData);
-        string classString = TomlAsClasses.Generate(table, "ClassExample", new()
-        {
-            AddComment = true,
-            AddITomlClassCommentInterface = true,
-            AddTomlPropertyOrderAttribute = true,
-            AddTomlPropertyNameAttribute = true,
-            RemoveKeyWordSeparators = true,
-            KeyWordSeparators = new() { '-' },
-        });
+        string classString = TomlAsClasses.Generate(
+            table,
+            "ClassExample",
+            new()
+            {
+                AddComment = true,
+                AddITomlClassCommentInterface = true,
+                AddTomlPropertyOrderAttribute = true,
+                AddTomlPropertyNameAttribute = true,
+                RemoveKeyWordSeparators = true,
+                KeyWordSeparators = new() { '-' },
+            }
+        );
         Console.WriteLine(classString);
     }
 }

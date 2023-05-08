@@ -6,13 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using HKW.TOML;
 
-namespace HKWToml.Tests.ParseCases;
+namespace HKWTOML.Tests.ParseCases;
 
 internal static partial class TomlParseCases
 {
-    public static void ParseExample()
+    public static void ParseExampleFromFile()
     {
-        TomlTable table = TOML.Parse(TomlExample.ExampleData);
+        TomlTable table = TOML.ParseFromFile(TomlExample.ExampleFile);
         Console.WriteLine(table.ToTomlString());
     }
 }

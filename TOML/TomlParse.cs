@@ -6,11 +6,16 @@
 
 #endregion
 
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace HKW.TOML;
 
@@ -361,15 +366,13 @@ public abstract class TomlNode : IEnumerable
     /// 隐式转换 DateTime -> TomlDateTimeLocal
     /// </summary>
     /// <param name="value">日期时间</param>
-    public static implicit operator TomlNode(DateTime value) =>
-        new TomlDateTimeLocal(value);
+    public static implicit operator TomlNode(DateTime value) => new TomlDateTimeLocal(value);
 
     /// <summary>
     /// 隐式转换 DateTimeOffset -> TomlDateTimeOffset
     /// </summary>
     /// <param name="value">日期时间偏移量</param>
-    public static implicit operator TomlNode(DateTimeOffset value) =>
-        new TomlDateTimeOffset(value);
+    public static implicit operator TomlNode(DateTimeOffset value) => new TomlDateTimeOffset(value);
 
     /// <summary>
     /// 隐式转换 TomlNode[] -> TomlArray
@@ -961,8 +964,10 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
             tbl.WriteTo(tw, name, false);
         }
     }
+
     /// <inheritdoc/>
     public TomlArray() { }
+
     /// <inheritdoc/>
     public TomlArray(IEnumerable<TomlNode> nodes)
     {
@@ -1001,7 +1006,8 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     /// <summary>
     /// 原始值
     /// </summary>
-    public Dictionary<string, TomlNode> RawTable { get; private set; } = new(new TomlTableComparer());
+    public Dictionary<string, TomlNode> RawTable { get; private set; } =
+        new(new TomlTableComparer());
 
     /// <inheritdoc/>
     public override TomlNode this[string key]
@@ -1317,19 +1323,14 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     /// </summary>
     public bool KeyIgnoreCase
     {
-        get
-        {
-            return ((TomlTableComparer)RawTable.Comparer).IgnoreCase;
-        }
-        set
-        {
-            ((TomlTableComparer)RawTable.Comparer).IgnoreCase = value;
-        }
+        get { return ((TomlTableComparer)RawTable.Comparer).IgnoreCase; }
+        set { ((TomlTableComparer)RawTable.Comparer).IgnoreCase = value; }
     }
+
     internal class TomlTableComparer : IEqualityComparer<string>
     {
-
         public bool IgnoreCase { get; set; } = false;
+
         public bool Equals(string? x, string? y)
         {
             if (IgnoreCase)
@@ -2140,10 +2141,7 @@ public class TOMLParser : IDisposable
                 out var precision
             )
         )
-            return new TomlDateTimeLocal(dateTimeResult)
-            {
-                SecondsPrecision = precision
-            };
+            return new TomlDateTimeLocal(dateTimeResult) { SecondsPrecision = precision };
 
         if (
             DateTime.TryParseExact(
@@ -2185,10 +2183,7 @@ public class TOMLParser : IDisposable
                 out precision
             )
         )
-            return new TomlDateTimeOffset(dateTimeOffsetResult)
-            {
-                SecondsPrecision = precision
-            };
+            return new TomlDateTimeOffset(dateTimeOffsetResult) { SecondsPrecision = precision };
 
         AddError($"Value \"{value}\" is not a valid TOML value!");
         return null!;
@@ -3412,7 +3407,7 @@ internal static class StringUtils
         if (string.IsNullOrWhiteSpace(txt))
             return txt;
         var stringBuilder = new StringBuilder(txt.Length);
-        for (var i = 0; i < txt.Length;)
+        for (var i = 0; i < txt.Length; )
         {
             var num = txt.IndexOf('\\', i);
             var next = num + 1;

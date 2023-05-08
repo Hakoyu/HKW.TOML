@@ -35,7 +35,7 @@ public class TomlConverterAttribute : Attribute
     }
 
     /// <summary>
-    /// 从Toml节点读取值 用于 <see cref="Deserializer.TomlDeserializer"/>
+    /// 从Toml节点读取值 用于 <see cref="TomlDeserializer"/>
     /// </summary>
     /// <param name="node">Toml节点</param>
     /// <returns>转换后的值</returns>
@@ -45,7 +45,7 @@ public class TomlConverterAttribute : Attribute
     }
 
     /// <summary>
-    /// 从值转换成Toml节点 用于 <see cref="Serializer.TomlSerializer"/>
+    /// 从值转换成Toml节点 用于 <see cref="TomlSerializer"/>
     /// </summary>
     /// <param name="value">值</param>
     /// <returns>转换后的Toml节点</returns>

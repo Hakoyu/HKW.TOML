@@ -1,8 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using HKW.TOML.Attributes;
 using HKW.TOML.Interfaces;
-using HKWToml.Utils;
+using HKWTOML.Utils;
 
 namespace HKW.TOML.Serializer;
 
@@ -175,7 +179,12 @@ public class TomlSerializer
         RunMethodOnSerialized(source, methodOnSerialized);
         return table;
 
-        static void IterationProperties(object source, TomlTable table, IEnumerable<PropertyInfo> properties, ITomlClassComment? iTomlClass)
+        static void IterationProperties(
+            object source,
+            TomlTable table,
+            IEnumerable<PropertyInfo> properties,
+            ITomlClassComment? iTomlClass
+        )
         {
             foreach (var propertyInfo in properties)
             {
@@ -281,9 +290,9 @@ public class TomlSerializer
     private static void RunMethodOnSerializingWithClass(object target, Type type)
     {
         if (
-                type.GetCustomAttribute(typeof(RunOnTomlSerializingAttribute))
-                is not RunOnTomlSerializingAttribute runOnTomlSerializing
-            )
+            type.GetCustomAttribute(typeof(RunOnTomlSerializingAttribute))
+            is not RunOnTomlSerializingAttribute runOnTomlSerializing
+        )
             return;
         runOnTomlSerializing.Method?.Invoke(target, runOnTomlSerializing.Parameters);
     }
@@ -296,9 +305,9 @@ public class TomlSerializer
     private static void RunMethodOnSerializedWithClass(object target, Type type)
     {
         if (
-                type.GetCustomAttribute(typeof(RunOnTomlSerializedAttribute))
-                is not RunOnTomlSerializedAttribute runOnTomlSerialized
-            )
+            type.GetCustomAttribute(typeof(RunOnTomlSerializedAttribute))
+            is not RunOnTomlSerializedAttribute runOnTomlSerialized
+        )
             return;
         runOnTomlSerialized.Method?.Invoke(target, runOnTomlSerialized.Parameters);
     }

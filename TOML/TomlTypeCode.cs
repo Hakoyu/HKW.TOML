@@ -7,6 +7,8 @@
 #endregion
 
 
+using System;
+
 namespace HKW.TOML;
 
 /// <summary>

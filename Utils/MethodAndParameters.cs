@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKWToml.Utils;
+namespace HKWTOML.Utils;
 
 /// <summary>
 /// 方法和参数
@@ -16,6 +16,7 @@ internal class MethodAndParameters
     /// 方法信息
     /// </summary>
     public MethodInfo Method { get; set; }
+
     /// <summary>
     /// 参数
     /// </summary>

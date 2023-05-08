@@ -1,5 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-#if DEBUG
+﻿#if DEBUG
 using System.Reflection;
 using System.Diagnostics;
 using HKW.TOML;
@@ -9,16 +8,18 @@ using HKW.TOML.Attributes;
 using HKW.TOML.Interfaces;
 using HKW.TOML.Exceptions;
 using HKW.TOML.AsClasses;
-using HKWToml.Tests;
-using HKWToml.Tests.AsClassesCases;
-using HKWToml.Tests.DeserializerCases;
-using HKWToml.Tests.SerializerCases;
-using HKWToml.Tests.ParseCases;
-using HKWToml.Utils;
+using HKWTOML.Tests;
+using HKWTOML.Tests.AsClassesCases;
+using HKWTOML.Tests.DeserializerCases;
+using HKWTOML.Tests.SerializerCases;
+using HKWTOML.Tests.ParseCases;
+using HKWTOML.Utils;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 #endif
 
-namespace HKWToml;
+namespace HKWTOML;
 
 internal class HKWToml
 {
@@ -30,10 +31,10 @@ internal class HKWToml
             table,
             new() { PropertyNameCaseInsensitive = false }
         );
-        //ParseCases.ParseExampleFromFile();
-        //AsClassesCases.CreateClassExample();
-        //DeserializerCases.DeserializeClassExample();
-        //TomlSerializeClassCases.DeserializeClassExample();
+        TomlParseCases.ParseExampleFromFile();
+        TomlAsClassesCases.CreateClassExample();
+        TomlDeserializerCases.DeserializeClassExample();
+        TomlSerializeClassCases.DeserializeClassExample();
 #endif
     }
 #if DEBUG

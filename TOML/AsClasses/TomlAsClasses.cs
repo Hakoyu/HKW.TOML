@@ -1,6 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.IO;
+using System.Linq;
 using System.Text;
-using HKWToml.Utils;
+using HKWTOML.Utils;
 
 namespace HKW.TOML.AsClasses;
 
@@ -127,9 +131,13 @@ public partial class TomlAsClasses
 
         // 统一特性的格式
         if (s_options.ClassAttributes.Any())
-            s_options.ClassAttributes = s_options.ClassAttributes.Select(s => RemoveSurroundedSquareBrackets(s)).ToHashSet();
+            s_options.ClassAttributes = s_options.ClassAttributes
+                .Select(s => RemoveSurroundedSquareBrackets(s))
+                .ToHashSet();
         if (s_options.PropertyAttributes.Any())
-            s_options.PropertyAttributes = s_options.PropertyAttributes.Select(s => RemoveSurroundedSquareBrackets(s)).ToHashSet();
+            s_options.PropertyAttributes = s_options.PropertyAttributes
+                .Select(s => RemoveSurroundedSquareBrackets(s))
+                .ToHashSet();
     }
 
     /// <summary>
