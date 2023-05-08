@@ -24,11 +24,6 @@ public class TomlDeserializer
     private static readonly HashSet<string> sr_missingPequiredProperties = new();
 
     /// <summary>
-    /// 所有单词分隔符
-    /// </summary>
-    private static char[] s_keyWordSeparators = null!;
-
-    /// <summary>
     /// 从Toml文件反序列化
     /// </summary>
     /// <typeparam name="T">targetType</typeparam>
@@ -179,7 +174,6 @@ public class TomlDeserializer
     )
     {
         s_options = options ?? new();
-        s_keyWordSeparators = s_options.KeyWordSeparators.ToArray();
         DeserializeTable(target, type, table);
 
         if (sr_missingPequiredProperties.Any())
@@ -200,11 +194,7 @@ public class TomlDeserializer
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
     /// <param name="table">Toml表格</param>
-    private static void DeserializeTable(
-        object target,
-        Type type,
-        TomlTable table
-    )
+    private static void DeserializeTable(object target, Type type, TomlTable table)
     {
         // 设置忽略大小写
         var originalKeyIgnoreCase = table.KeyIgnoreCase;
@@ -237,7 +227,12 @@ public class TomlDeserializer
         table.KeyIgnoreCase = originalKeyIgnoreCase;
     }
 
-    private static bool DeserializeProperty(object target, PropertyInfo propertyInfo, TomlTable table, ITomlClassComment? iTomlClassComment)
+    private static bool DeserializeProperty(
+        object target,
+        PropertyInfo propertyInfo,
+        TomlTable table,
+        ITomlClassComment? iTomlClassComment
+    )
     {
         // 检测是否为隐藏属性
         if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnoreAttribute)))
@@ -259,7 +254,7 @@ public class TomlDeserializer
             return isRequired;
         // 设置注释
         iTomlClassComment?.ValueComments.TryAdd(name, node.Comment ?? string.Empty);
-        DeserializeTableValue(target, name, node, propertyInfo);
+        DeserializeTableValue(target, node, propertyInfo);
         return false;
     }
 
@@ -351,9 +346,9 @@ public class TomlDeserializer
     private static void RunMethodOnDeserializingWithClass(object target, Type type)
     {
         if (
-                type.GetCustomAttribute(typeof(RunOnTomlDeserializingAttribute))
-                is not RunOnTomlDeserializingAttribute runOnTomlDeserializing
-            )
+            type.GetCustomAttribute(typeof(RunOnTomlDeserializingAttribute))
+            is not RunOnTomlDeserializingAttribute runOnTomlDeserializing
+        )
             return;
         runOnTomlDeserializing.Method?.Invoke(target, runOnTomlDeserializing.Parameters);
     }
@@ -366,9 +361,9 @@ public class TomlDeserializer
     private static void RunMethodOnDeserializedWithClass(object target, Type type)
     {
         if (
-                type.GetCustomAttribute(typeof(RunOnTomlDeserializedAttribute))
-                is not RunOnTomlDeserializedAttribute runOnTomlDeserialized
-            )
+            type.GetCustomAttribute(typeof(RunOnTomlDeserializedAttribute))
+            is not RunOnTomlDeserializedAttribute runOnTomlDeserialized
+        )
             return;
         runOnTomlDeserialized.Method?.Invoke(target, runOnTomlDeserialized.Parameters);
     }
@@ -393,12 +388,10 @@ public class TomlDeserializer
     /// 反序列化Toml表格的值
     /// </summary>
     /// <param name="target">目标</param>
-    /// <param name="nodeKeyName">Toml节点键名</param>
     /// <param name="node">值</param>
     /// <param name="propertyInfo">属性信息</param>
     private static void DeserializeTableValue(
         object target,
-        string nodeKeyName,
         TomlNode node,
         PropertyInfo propertyInfo
     )
