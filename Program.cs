@@ -16,8 +16,8 @@ using HKWTOML.Tests.ParseCases;
 using HKWTOML.Utils;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 #endif
+using System.Threading.Tasks;
 
 namespace HKWTOML;
 
