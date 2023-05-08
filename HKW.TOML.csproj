@@ -10,10 +10,10 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/Hakoyu/HKWToml</RepositoryUrl>
+    <RepositoryUrl>https://github.com/Hakoyu/HKW.TOML</RepositoryUrl>
     <Authors>HKW</Authors>
     <Company>HKW</Company>
-    <Description>HKWToml is TOML reader, writer, deserializer, serializer and generate classes for C#.</Description>
+    <Description>HKW.TOML is TOML reader, writer, deserializer, serializer and generate classes for C#.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
