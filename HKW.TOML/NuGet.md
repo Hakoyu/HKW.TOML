@@ -1,0 +1,1 @@
+dotnet nuget push bin\Release\HKW.TOML.1.1.7.nupkg --api-key oy2lgnmigbk4lh3dbfgql6ia3eejmz2utfgmol2cmvfasi --source https://api.nuget.org/v3/index.json

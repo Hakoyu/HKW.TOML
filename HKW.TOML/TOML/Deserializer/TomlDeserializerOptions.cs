@@ -20,7 +20,7 @@ public class DeserializerOptions
     public HashSet<char> KeyWordSeparators { get; set; } = new() { '_' };
 
     /// <summary>
-    /// 检查一致性
+    /// 属性名称忽略大小写
     /// <para>默认为 <see langword="true"/></para>
     /// </summary>
     public bool PropertyNameCaseInsensitive { get; set; } = true;

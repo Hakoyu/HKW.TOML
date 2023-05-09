@@ -529,14 +529,14 @@ public class TomlDeserializer
 
             // 整型
             TypeCode.SByte
-                => Convert.ChangeType(node.AsDouble, TypeCode.SByte),
-            TypeCode.Byte => Convert.ChangeType(node.AsDouble, TypeCode.Byte),
-            TypeCode.Int16 => Convert.ChangeType(node.AsDouble, TypeCode.Int16),
-            TypeCode.UInt16 => Convert.ChangeType(node.AsDouble, TypeCode.UInt16),
-            TypeCode.Int32 => Convert.ChangeType(node.AsDouble, TypeCode.Int32),
-            TypeCode.UInt32 => Convert.ChangeType(node.AsDouble, TypeCode.UInt32),
-            TypeCode.Int64 => Convert.ChangeType(node.AsDouble, TypeCode.Int64),
-            TypeCode.UInt64 => Convert.ChangeType(node.AsDouble, TypeCode.UInt64),
+                => Convert.ChangeType(node.AsInt64, TypeCode.SByte),
+            TypeCode.Byte => Convert.ChangeType(node.AsInt64, TypeCode.Byte),
+            TypeCode.Int16 => Convert.ChangeType(node.AsInt64, TypeCode.Int16),
+            TypeCode.UInt16 => Convert.ChangeType(node.AsInt64, TypeCode.UInt16),
+            TypeCode.Int32 => Convert.ChangeType(node.AsInt64, TypeCode.Int32),
+            TypeCode.UInt32 => Convert.ChangeType(node.AsInt64, TypeCode.UInt32),
+            TypeCode.Int64 => Convert.ChangeType(node.AsInt64, TypeCode.Int64),
+            TypeCode.UInt64 => Convert.ChangeType(node.AsInt64, TypeCode.UInt64),
 
             TypeCode.DateTime => node.AsDateTime,
             TypeCode.Object when node.IsTomlDateTimeOffset => node.AsDateTimeOffset,

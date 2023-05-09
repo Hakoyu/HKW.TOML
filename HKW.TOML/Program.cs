@@ -31,10 +31,10 @@ internal class HKWToml
             table,
             new() { PropertyNameCaseInsensitive = false }
         );
-        TomlParseCases.ParseExampleFromFile();
-        TomlAsClassesCases.CreateClassExample();
-        TomlDeserializerCases.DeserializeClassExample();
-        TomlSerializeClassCases.DeserializeClassExample();
+        //TomlParseCases.ParseExampleFromFile();
+        //TomlAsClassesCases.CreateClassExample();
+        //TomlDeserializerCases.DeserializeClassExample();
+        //TomlSerializeClassCases.DeserializeClassExample();
 #endif
     }
 #if DEBUG
