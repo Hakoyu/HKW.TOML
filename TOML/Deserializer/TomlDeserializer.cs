@@ -288,7 +288,7 @@ public class TomlDeserializer
     {
         List<MethodAndParameters> tempMethodOnDeserializing = new();
         List<MethodAndParameters> tempMethodOnDeserialized = new();
-        foreach (var method in Utils.GetMethodsWithOutProperty(type))
+        foreach (var method in TOMLUtils.GetRuntimeMethodsNotContainProperty(type))
         {
             if (
                 method.GetCustomAttribute(typeof(RunOnTomlDeserializingAttribute))

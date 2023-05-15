@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using HKWTOML.Utils;
+using HKW.Utils.Extensions;
 
 namespace HKW.TOML.AsClasses;
 
@@ -28,7 +29,7 @@ public partial class TomlAsClasses
     /// <summary>
     /// 所有单词分隔符
     /// </summary>
-    private static char[] s_keyWordSeparators = null!;
+    private static char s_keyWordSeparator = ' ';
 
     /// <summary>
     /// 设置
@@ -107,7 +108,7 @@ public partial class TomlAsClasses
     /// </summary>
     private static void InitializeData()
     {
-        s_keyWordSeparators = s_options.KeyWordSeparators.ToArray();
+        s_keyWordSeparator = s_options.KeyWordSeparator;
 
         sr_arrayTypeNames.Add(
             s_options.TomlFloatNameConvert,
@@ -172,10 +173,10 @@ public partial class TomlAsClasses
             if (s_options.KeyNameConverterFunc is not null)
                 name = s_options.KeyNameConverterFunc(name);
             else if (s_options.KeyNameToPascal)
-                name = Utils.ToPascal(name, s_keyWordSeparators, s_options.RemoveKeyWordSeparators);
+                name = name.ToPascal(s_keyWordSeparator, s_options.RemoveKeyWordSeparator);
 
             // 检测关键词
-            if (Utils.CsharpKeywords.Contains(name))
+            if (TOMLUtils.CsharpKeywords.Contains(name))
                 throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
             // 解析表格的值
             ParseTableValue(tomlClass, name, node);
@@ -235,7 +236,7 @@ public partial class TomlAsClasses
     )
     {
         // 检测关键字
-        if (Utils.CsharpKeywords.Contains(className))
+        if (TOMLUtils.CsharpKeywords.Contains(className))
             throw new Exception($"Used CsharpKeywords \"{className}\"");
         // 获取已存在的类
         if (sr_tomlClasses.TryGetValue(className, out var tomlClass) is false)

@@ -229,7 +229,7 @@ public class TomlSerializer
     {
         List<MethodAndParameters> tempMethodOnSerializing = new();
         List<MethodAndParameters> tempMethodOnSerialized = new();
-        foreach (var method in Utils.GetMethodsWithOutProperty(type))
+        foreach (var method in TOMLUtils.GetRuntimeMethodsNotContainProperty(type))
         {
             if (
                 method.GetCustomAttribute(typeof(RunOnTomlSerializingAttribute))

@@ -39,4 +39,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="HKW.Utils" Version="*" />
+  </ItemGroup>
+
 </Project>
