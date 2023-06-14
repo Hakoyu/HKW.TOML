@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HKW.TOML", "HKW.TOML.csproj", "{173EEC8C-4584-48C2-959A-085D636B7E1B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HKW.TOML", "HKW.TOML\HKW.TOML.csproj", "{173EEC8C-4584-48C2-959A-085D636B7E1B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HKW.TOML.Tests", "HKW.TOML.Tests\HKW.TOML.Tests.csproj", "{FDC31974-C710-4ABA-B167-2CF3237305F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{173EEC8C-4584-48C2-959A-085D636B7E1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{173EEC8C-4584-48C2-959A-085D636B7E1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{173EEC8C-4584-48C2-959A-085D636B7E1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDC31974-C710-4ABA-B167-2CF3237305F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDC31974-C710-4ABA-B167-2CF3237305F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDC31974-C710-4ABA-B167-2CF3237305F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDC31974-C710-4ABA-B167-2CF3237305F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
