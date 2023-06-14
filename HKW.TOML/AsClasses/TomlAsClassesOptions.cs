@@ -33,9 +33,18 @@ public class TomlAsClassesOptions
 
     /// <summary>
     /// 注释格式化文本
-    /// <para>默认为 "<see langword="{0}/// &lt;summary&gt;\n{0}/// {1}\n{0}/// &lt;/summary&gt;\n"/>"</para>
+    /// <para>默认为
+    /// <![CDATA[
+    /// {0}/// <summary>
+    /// {0}/// {1}
+    /// {0}/// </summary>
+    /// ]]>
+    /// </para>
     /// </summary>
-    public string CommentFormat { get; set; } = "{0}/// <summary>\n{0}/// {1}\n{0}/// </summary>\n";
+    public string CommentFormat { get; set; } =
+        @"{0}/// <summary>
+{0}/// {1}
+{0}/// </summary>";
 
     /// <summary>
     /// 多行注释格式化文本
@@ -166,12 +175,17 @@ public class TomlAsClassesOptions
     /// {0}public string ClassComment { get; set; } = string.Empty;
     /// {0}/// <inheritdoc/>
     /// {0}public Dictionary<string, string> ValueComments { get; set; } = new();
+    ///
     /// ]]>
     /// </para>
     /// </summary>
     public string ITomlClassInterfaceValueFormat { get; set; } =
-        "{0}/// <inheritdoc/>\n{0}public string ClassComment {{ get; set; }} = string.Empty;\n"
-        + "{0}/// <inheritdoc/>\n{0}public Dictionary<string, string> ValueComments {{ get; set; }} = new();\n";
+        @"{0}/// <inheritdoc/>
+{0}public string ClassComment {{ get; set; }} = string.Empty;
+{0}/// <inheritdoc/>
+{0}public Dictionary<string, string> ValueComments {{ get; set; }} = new();
+
+";
 
     #endregion Inheritance
 
@@ -249,15 +263,28 @@ public class TomlAsClassesOptions
 
     /// <summary>
     /// 属性格式化文本
-    /// <para>默认为 "<see langword="{0}public {1} {2} {{ get; set; }}"/>"</para>
+    /// <para>默认为 "<see langword="{0}public {1} {2} {{ get; set; }}"/>"
+    /// </para>
     /// </summary>
     public string PropertyFormat { get; set; } = "{0}public {1} {2} {{ get; set; }}";
 
     /// <summary>
     /// 类格式化文本
-    /// <para>默认为 "<see langword="{0}public class {1} \n{{\n{2}}}\n"/>"</para>
+    /// <para>默认为
+    /// <![CDATA[
+    /// {0}public class {1}
+    /// {{
+    /// {2}
+    /// }}
+    /// ]]>
+    /// </para>
     /// </summary>
-    public string ClassFormat { get; set; } = "{0}public class {1} \n{{\n{2}}}\n";
+    public string ClassFormat { get; set; } =
+        @"{0}public class {1}
+{{
+{2}
+}}
+";
 
     #endregion Format
 

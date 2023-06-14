@@ -68,7 +68,7 @@ public partial class TomlAsClasses
                 TypeName,
                 Name
             );
-            return GetComment(Comment) + GetAttribute(Attributes) + valueData;
+            return GetComment(Comment) + Environment.NewLine + GetAttribute(Attributes) + valueData;
         }
 
         /// <summary>
@@ -88,9 +88,9 @@ public partial class TomlAsClasses
                 return string.Format(s_options.CommentFormat, s_options.Indent, comments[0]);
             var multiLineComment =
                 comments[0]
-                + "\n"
+                + Environment.NewLine
                 + string.Join(
-                    "\n",
+                    Environment.NewLine,
                     comments[1..].Select(
                         s => string.Format(s_options.CommentParaFormat, s_options.Indent, s)
                     )

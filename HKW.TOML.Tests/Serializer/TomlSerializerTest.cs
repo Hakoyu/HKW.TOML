@@ -1,24 +1,23 @@
-﻿#if DEBUG
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HKW.TOML;
-using HKW.TOML.Deserializer;
-using HKW.TOML.Serializer;
+using HKW.HKWTOML;
+using HKW.HKWTOML.Deserializer;
+using HKW.HKWTOML.Serializer;
 
-namespace HKWTOML.Tests.SerializerCases;
+namespace HKW.HKWTOML.Tests.Serializer;
 
-internal static partial class TomlSerializeClassCases
+[TestClass]
+public class TomlSerializerTest
 {
-    public static void DeserializeClassExample()
+    [TestMethod]
+    public void Deserialize()
     {
         TomlTable table = TOML.Parse(TomlExample.ExampleData);
         ClassExample example = TomlDeserializer.Deserialize<ClassExample>(table);
         TomlTable serializeTable = TomlSerializer.Serialize(example);
-        Console.WriteLine(serializeTable.ToTomlString());
+        //Console.WriteLine(serializeTable.ToTomlString());
     }
 }
-
-#endif

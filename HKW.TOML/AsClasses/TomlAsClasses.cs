@@ -27,11 +27,6 @@ public partial class TomlAsClasses
     private static readonly Dictionary<string, string> sr_arrayTypeNames = new();
 
     /// <summary>
-    /// 所有单词分隔符
-    /// </summary>
-    private static char s_keyWordSeparator = ' ';
-
-    /// <summary>
     /// 设置
     /// </summary>
     private static TomlAsClassesOptions s_options = new();
@@ -108,8 +103,6 @@ public partial class TomlAsClasses
     /// </summary>
     private static void InitializeData()
     {
-        s_keyWordSeparator = s_options.KeyWordSeparator;
-
         sr_arrayTypeNames.Add(
             s_options.TomlFloatNameConvert,
             string.Format(s_options.ListFormat, s_options.TomlFloatNameConvert)
@@ -173,7 +166,7 @@ public partial class TomlAsClasses
             if (s_options.KeyNameConverterFunc is not null)
                 name = s_options.KeyNameConverterFunc(name);
             else if (s_options.KeyNameToPascal)
-                name = name.ToPascal(s_keyWordSeparator, s_options.RemoveKeyWordSeparator);
+                name = name.ToPascal(s_options.KeyWordSeparator, s_options.RemoveKeyWordSeparator);
 
             // 检测关键词
             if (TOMLUtils.CsharpKeywords.Contains(name))

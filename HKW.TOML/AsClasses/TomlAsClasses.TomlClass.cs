@@ -91,7 +91,7 @@ public partial class TomlAsClasses
                 if (s_options.AddITomlClassCommentInterface)
                     iTomlClassCommentValue =
                         string.Format(s_options.ITomlClassInterfaceValueFormat, s_options.Indent)
-                        + "\n";
+                        + Environment.NewLine;
             }
 
             return string.Format(
@@ -119,9 +119,9 @@ public partial class TomlAsClasses
                 return string.Format(s_options.CommentFormat, string.Empty, comments[0]);
             var multiLineComment =
                 comments[0]
-                + "\n"
+                + Environment.NewLine
                 + string.Join(
-                    "\n",
+                    Environment.NewLine,
                     comments[1..].Select(
                         s => string.Format(s_options.CommentParaFormat, string.Empty, s)
                     )
@@ -163,8 +163,7 @@ public partial class TomlAsClasses
         private static string GetValues(IEnumerable<TomlClassValue> values)
         {
             var sb = new StringBuilder();
-            foreach (var item in values)
-                sb.AppendLine(item.ToString());
+            sb.AppendJoin(Environment.NewLine + Environment.NewLine, values);
             return sb.ToString();
         }
     }

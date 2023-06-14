@@ -1,14 +1,13 @@
-﻿#if DEBUG
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HKW.TOML;
-using HKW.TOML.Attributes;
-using HKW.TOML.Interfaces;
+using HKW.HKWTOML;
+using HKW.HKWTOML.Attributes;
+using HKW.HKWTOML.Interfaces;
 
-namespace HKWTOML.Tests;
+using HKW.HKWTOML.Tests;
 
 /// <summary>
 /// This is an example TOML document which shows most of its features.
@@ -194,5 +193,3 @@ public class UndecodedClass : ITomlClassComment
     [TomlPropertyName("key")]
     public string Key { get; set; }
 }
-
-#endif
