@@ -6,7 +6,7 @@ namespace HKW.HKWTOML.Attributes;
 /// Toml参数顺序
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class TomlPropertyOrderAttribute : Attribute
+public class TOMLPropertyOrderAttribute : Attribute
 {
     /// <summary>
     /// 顺序
@@ -14,5 +14,5 @@ public class TomlPropertyOrderAttribute : Attribute
     public int Value { get; }
 
     /// <inheritdoc/>
-    public TomlPropertyOrderAttribute(int order) => Value = order;
+    public TOMLPropertyOrderAttribute(int order) => Value = order;
 }

@@ -7,4 +7,4 @@ namespace HKW.HKWTOML.Attributes;
 /// <para>在序列化和反序列化时忽略的值</para>
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class TomlIgnoreAttribute : Attribute { }
+public class TOMLIgnoreAttribute : Attribute { }

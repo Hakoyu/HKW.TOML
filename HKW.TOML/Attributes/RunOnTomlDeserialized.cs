@@ -11,7 +11,7 @@ namespace HKW.HKWTOML.Attributes;
 /// 运行于反序列化后
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-public class RunOnTomlDeserializedAttribute : Attribute
+public class RunOnTOMLDeserializedAttribute : Attribute
 {
     /// <summary>
     /// 方法
@@ -24,11 +24,11 @@ public class RunOnTomlDeserializedAttribute : Attribute
     public object[]? Parameters { get; }
 
     /// <inheritdoc/>
-    public RunOnTomlDeserializedAttribute() { }
+    public RunOnTOMLDeserializedAttribute() { }
 
     /// <inheritdoc/>
     /// <param name="parameters">参数</param>
-    public RunOnTomlDeserializedAttribute(params object[] parameters)
+    public RunOnTOMLDeserializedAttribute(params object[] parameters)
     {
         Parameters = parameters;
     }
@@ -39,7 +39,7 @@ public class RunOnTomlDeserializedAttribute : Attribute
     /// <param name="type">目标类</param>
     /// <param name="staticMethodName">静态方法名称</param>
     /// <param name="parameters">参数</param>
-    public RunOnTomlDeserializedAttribute(
+    public RunOnTOMLDeserializedAttribute(
         Type type,
         string staticMethodName,
         params object[] parameters

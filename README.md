@@ -15,11 +15,11 @@ HKW.TOML 是使用 C# 编写的
 
 ## 如何使用
 
-[测试文件](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/Tests/Example.toml)  
-[测试 Toml 数据](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/Tests/TomlExample.cs)  
-[测试类](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/Tests/ClassExample.cs)
+[测试文件](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/Example.toml)  
+[测试 Toml 数据](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/TomlExample.cs)  
+[测试类](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/ClassExample.cs)
 
-### [解析 Toml 文件](https://github.com/Hakoyu/HKW.TOML/tree/master/HKW.TOML/Tests/ParseCases)
+### [解析 Toml 文件](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/Parse/TomlParseTest.cs)
 
 ```csharp
 TomlTable table = TOML.Parse(TomlExample.ExampleData);
@@ -44,9 +44,9 @@ TomlTable table =
     };
 ```
 
-### [从 TOML 文件 生成 C# 的类](https://github.com/Hakoyu/HKW.TOML/tree/master/HKW.TOML/Tests/AsClassesCases)
+### [从 TOML 文件 生成 C# 的类](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/AsClasses/TomlAsClassesTest.cs)
 
-生成相关设置请查看[TomlAsClassesOptions](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/TOML/TomlAsClasses/TomlAsClassesOptions.cs)
+生成相关设置请查看[TomlAsClassesOptions](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/AsClasses/TOMLAsClassesOptions.cs)
 
 ```csharp
 TomlTable table = TOML.Parse(TomlExample.ExampleData);
@@ -54,18 +54,18 @@ string classString = TomlAsClasses.Generate(table, "ClassExample");
 Console.WriteLine(classString);
 ```
 
-### [TOML 反序列化](https://github.com/Hakoyu/HKW.TOML/tree/master/HKW.TOML/Tests/DeserializerCases)
+### [TOML 反序列化](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/Deserializer/TomlDeserializerTest.cs)
 
-反序列化相关设置请查看[TomlDeserializerOptions](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/TOML/Deserializer/TomlDeserializerOptions.cs)
+反序列化相关设置请查看[TomlDeserializerOptions](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/Deserializer/TOMLDeserializerOptions.cs)
 
 ```csharp
 TomlTable table = TOML.Parse(TomlExample.ExampleData);
 ClassExample example = TomlDeserializer.Deserialize<ClassExample>(table);
 ```
 
-### [TOML 序列化](https://github.com/Hakoyu/HKW.TOML/tree/master/HKW.TOML/Tests/SerializerCases)
+### [TOML 序列化](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/Serializer/TomlSerializerTest.cs)
 
-序列化相关设置请查看[TomlSerializerOptions](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/TOML/Serializer/TomlSerializerOptions.cs)
+序列化相关设置请查看[TomlSerializerOptions](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/Serializer/TOMLSerializerOptions.cs)
 
 ```csharp
 TomlTable table = TOML.Parse(TomlExample.ExampleData);

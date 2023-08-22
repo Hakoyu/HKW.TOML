@@ -10,4 +10,4 @@ namespace HKW.HKWTOML.Attributes;
 /// 必要属性
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class TomlRequiredAttribute : Attribute { }
+public class TOMLRequiredAttribute : Attribute { }

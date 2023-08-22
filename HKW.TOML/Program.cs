@@ -12,7 +12,6 @@ using HKWTOML.Utils;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 #endif
-using System.Threading.Tasks;
 
 namespace HKWTOML;
 
@@ -21,6 +20,9 @@ internal class HKWToml
     public static async Task Main(string[] args)
     {
 #if DEBUG
+        var toml = TOML.Parse("TestEnum = \"Value1\"\nTestEnums = [\"Value1\",\"Value2\"]");
+        var test = TOMLDeserializer.Deserialize<TestClass>(toml);
+        Console.WriteLine(TOMLSerializer.Serialize(test).ToTomlString());
         //var table = TOML.Parse(TomlExample.ExampleData);
         //var example1 = TomlDeserializer.Deserialize<ClassExample1>(
         //    table,
@@ -34,7 +36,21 @@ internal class HKWToml
     }
 #if DEBUG
 
-    public class ClassExample1 : ITomlClassComment
+    public class TestClass
+    {
+        public TestEnum TestEnum { get; set; }
+
+        public List<TestEnum> TestEnums { get; set; } = new();
+    }
+
+    public enum TestEnum
+    {
+        Value1,
+        Value2,
+        Value3,
+    }
+
+    public class ClassExample1 : ITOMLClassComment
     {
         /// <inheritdoc/>
         public string ClassComment { get; set; } = string.Empty;
@@ -45,36 +61,36 @@ internal class HKWToml
         /// <summary>
         /// Simple key/value with a string.
         /// </summary>
-        [TomlPropertyOrder(0)]
+        [TOMLPropertyOrder(0)]
         public string Title { get; set; }
 
-        [TomlPropertyOrder(1)]
-        [TomlPropertyName("desc")]
+        [TOMLPropertyOrder(1)]
+        [TOMLPropertyName("desc")]
         public string Desc { get; set; }
 
         /// <summary>
         /// Array with integers and floats in the various allowed formats.
         /// </summary>
-        [TomlPropertyOrder(2)]
-        [TomlPropertyName("integers")]
+        [TOMLPropertyOrder(2)]
+        [TOMLPropertyName("integers")]
         public List<int> Integers { get; set; }
 
-        [TomlPropertyOrder(3)]
-        [TomlPropertyName("floats")]
+        [TOMLPropertyOrder(3)]
+        [TOMLPropertyName("floats")]
         public List<double> Floats { get; set; }
 
         /// <summary>
         /// Array with supported datetime formats.
         /// </summary>
-        [TomlPropertyOrder(4)]
-        [TomlPropertyName("times")]
+        [TOMLPropertyOrder(4)]
+        [TOMLPropertyName("times")]
         public List<TomlNode> Times { get; set; }
 
         /// <summary>
         /// Durations.
         /// </summary>
-        [TomlPropertyOrder(5)]
-        [TomlPropertyName("duration")]
+        [TOMLPropertyOrder(5)]
+        [TOMLPropertyName("duration")]
         public List<string> Duration { get; set; }
     }
 #endif

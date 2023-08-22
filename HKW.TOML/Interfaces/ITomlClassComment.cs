@@ -5,7 +5,7 @@ namespace HKW.HKWTOML.Interfaces;
 /// <summary>
 /// Toml类接口
 /// </summary>
-public interface ITomlClassComment
+public interface ITOMLClassComment
 {
     /// <summary>
     /// 类注释

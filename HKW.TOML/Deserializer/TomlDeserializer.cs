@@ -14,18 +14,26 @@ namespace HKW.HKWTOML.Deserializer;
 /// <summary>
 /// Toml反序列化
 /// </summary>
-public class TomlDeserializer
+public class TOMLDeserializer
 {
     /// <summary>
     /// 设置
     /// </summary>
-    private static DeserializerOptions s_options = null!;
+    private readonly TOMLDeserializerOptions r_options = null!;
 
     /// <summary>
     /// 缺失的必要属性
     /// </summary>
-    private static readonly HashSet<string> sr_missingPequiredProperties = new();
+    private readonly HashSet<string> r_missingPequiredProperties = new();
 
+    /// <inheritdoc/>
+    /// <param name="options">设置</param>
+    private TOMLDeserializer(TOMLDeserializerOptions? options)
+    {
+        r_options = options ?? new();
+    }
+
+    #region Deserialize
     /// <summary>
     /// 从Toml文件反序列化
     /// </summary>
@@ -34,7 +42,7 @@ public class TomlDeserializer
     /// <param name="options">反序列化设置</param>
     /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
     /// <returns>完成反序列化的对象</returns>
-    public static T DeserializeFromFile<T>(string tomlFile, DeserializerOptions? options = null)
+    public static T DeserializeFromFile<T>(string tomlFile, TOMLDeserializerOptions? options = null)
         where T : class, new()
     {
         return Deserialize<T>(TOML.ParseFromFile(tomlFile), options);
@@ -50,7 +58,7 @@ public class TomlDeserializer
     /// <returns>完成反序列化的对象</returns>
     public static async Task<T> DeserializeFromFileAsync<T>(
         string tomlFile,
-        DeserializerOptions? options = null
+        TOMLDeserializerOptions? options = null
     )
         where T : class, new()
     {
@@ -65,12 +73,13 @@ public class TomlDeserializer
     /// <param name="options">反序列化设置</param>
     /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
     /// <returns>完成反序列化的对象</returns>
-    public static T Deserialize<T>(TomlTable table, DeserializerOptions? options = null)
+    public static T Deserialize<T>(TomlTable table, TOMLDeserializerOptions? options = null)
         where T : class, new()
     {
-        var t = new T();
-        PreviewDeserialize(t, t.GetType(), table, options);
-        return t;
+        var target = new T();
+        var deserializer = new TOMLDeserializer(options);
+        deserializer.Deserialize(target, typeof(T), table);
+        return target;
     }
 
     /// <summary>
@@ -83,16 +92,18 @@ public class TomlDeserializer
     /// <returns>完成反序列化的对象</returns>
     public static async Task<T> DeserializeAsync<T>(
         TomlTable table,
-        DeserializerOptions? options = null
+        TOMLDeserializerOptions? options = null
     )
         where T : class, new()
     {
-        var t = new T();
+        var target = new T();
         await Task.Run(() =>
         {
-            PreviewDeserialize(t, t.GetType(), table, options);
+            var target = new T();
+            var deserializer = new TOMLDeserializer(options);
+            deserializer.Deserialize(target, typeof(T), table);
         });
-        return t;
+        return target;
     }
 
     /// <summary>
@@ -105,7 +116,7 @@ public class TomlDeserializer
     public static void DeserializeStaticFromFile(
         string tomlFile,
         Type staticClass,
-        DeserializerOptions? options = null
+        TOMLDeserializerOptions? options = null
     )
     {
         DeserializeStatic(TOML.ParseFromFile(tomlFile), staticClass, options);
@@ -121,7 +132,7 @@ public class TomlDeserializer
     public static async Task DeserializeStaticFromFileAsync(
         string tomlFile,
         Type staticClass,
-        DeserializerOptions? options = null
+        TOMLDeserializerOptions? options = null
     )
     {
         await DeserializeStaticeAsync(TOML.ParseFromFile(tomlFile), staticClass, options);
@@ -137,10 +148,11 @@ public class TomlDeserializer
     public static void DeserializeStatic(
         TomlTable table,
         Type staticClass,
-        DeserializerOptions? options = null
+        TOMLDeserializerOptions? options = null
     )
     {
-        PreviewDeserialize(staticClass, staticClass, table, options);
+        var deserializer = new TOMLDeserializer(options);
+        deserializer.Deserialize(staticClass, staticClass, table);
     }
 
     /// <summary>
@@ -153,42 +165,72 @@ public class TomlDeserializer
     public static async Task DeserializeStaticeAsync(
         TomlTable table,
         Type staticClass,
-        DeserializerOptions? options = null
+        TOMLDeserializerOptions? options = null
     )
     {
         await Task.Run(() =>
         {
-            PreviewDeserialize(staticClass, staticClass, table, options);
+            var deserializer = new TOMLDeserializer(options);
+            deserializer.Deserialize(staticClass, staticClass, table);
         });
     }
-
+    #endregion
+    #region Deserialize Value
     /// <summary>
     /// 预处理
     /// </summary>
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
     /// <param name="table">Toml表格</param>
-    /// <param name="options">反序列化设置</param>
-    private static void PreviewDeserialize(
-        object target,
-        Type type,
-        TomlTable table,
-        DeserializerOptions? options
-    )
+    private void Deserialize(object target, Type type, TomlTable table)
     {
-        s_options = options ?? new();
         DeserializeTable(target, type, table);
-
-        if (sr_missingPequiredProperties.Any())
+        if (r_missingPequiredProperties.Any())
         {
             throw new MissingRequiredException(
                 "Deserialize error: missing required properties exception",
-                sr_missingPequiredProperties.OrderBy(s => s)
+                r_missingPequiredProperties.OrderBy(s => s)
             );
         }
+    }
 
-        sr_missingPequiredProperties.Clear();
-        s_options = null!;
+    /// <summary>
+    /// 反序列化属性
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="propertyInfo">属性信息</param>
+    /// <param name="table">Toml表格</param>
+    /// <param name="iTomlClassComment">Toml注释接口</param>
+    /// <returns>解析成功为 <see langword="true"/> 失败为 <see langword="false"/></returns>
+    private bool DeserializeProperty(
+        object target,
+        PropertyInfo propertyInfo,
+        TomlTable table,
+        ITOMLClassComment? iTomlClassComment
+    )
+    {
+        // 检测是否为隐藏属性
+        if (Attribute.IsDefined(propertyInfo, typeof(TOMLIgnoreAttribute)))
+            return false;
+        // 跳过ITomlClassComment生成的接口
+        if (iTomlClassComment is not null)
+        {
+            if (propertyInfo.Name == nameof(ITOMLClassComment.ClassComment))
+                return false;
+            else if (propertyInfo.Name == nameof(ITOMLClassComment.ValueComments))
+                return false;
+        }
+        var isRequired = false;
+        // 检测是否为必要属性
+        if (Attribute.IsDefined(propertyInfo, typeof(TOMLRequiredAttribute)))
+            isRequired = true;
+        var name = GetPropertyName(propertyInfo);
+        if (table.TryGetValue(name, out var node) is false)
+            return isRequired;
+        // 设置注释
+        iTomlClassComment?.ValueComments.TryAdd(name, node.Comment ?? string.Empty);
+        DeserializeTableValue(target, node, propertyInfo);
+        return false;
     }
 
     /// <summary>
@@ -197,17 +239,17 @@ public class TomlDeserializer
     /// <param name="target">目标</param>
     /// <param name="type">目标类型</param>
     /// <param name="table">Toml表格</param>
-    private static void DeserializeTable(object target, Type type, TomlTable table)
+    private void DeserializeTable(object target, Type type, TomlTable table)
     {
         // 设置忽略大小写
         var originalKeyIgnoreCase = table.KeyIgnoreCase;
-        table.KeyIgnoreCase = s_options.PropertyNameCaseInsensitive;
+        table.KeyIgnoreCase = r_options.PropertyNameCaseInsensitive;
         // 运行反序列化前的方法
         RunMethodOnDeserializingWithClass(target, type);
         GetMethods(type, out var methodOnDeserializing, out var methodOnDeserialized);
         RunMethodOnDeserializing(target, methodOnDeserializing);
         // 设置注释
-        var iTomlClass = target as ITomlClassComment;
+        var iTomlClass = target as ITOMLClassComment;
         if (iTomlClass is not null)
         {
             iTomlClass.ClassComment = table.Comment ?? string.Empty;
@@ -230,48 +272,209 @@ public class TomlDeserializer
         table.KeyIgnoreCase = originalKeyIgnoreCase;
     }
 
-    private static bool DeserializeProperty(
-        object target,
-        PropertyInfo propertyInfo,
-        TomlTable table,
-        ITomlClassComment? iTomlClassComment
-    )
+    /// <summary>
+    /// 反序列化Toml表格的值
+    /// </summary>
+    /// <param name="target">目标</param>
+    /// <param name="node">值</param>
+    /// <param name="propertyInfo">属性信息</param>
+    private void DeserializeTableValue(object target, TomlNode node, PropertyInfo propertyInfo)
     {
-        // 检测是否为隐藏属性
-        if (Attribute.IsDefined(propertyInfo, typeof(TomlIgnoreAttribute)))
-            return false;
-        // 跳过ITomlClassComment生成的接口
-        if (iTomlClassComment is not null)
+        var propertyType = propertyInfo.PropertyType;
+
+        // 检测TomlConverter
+        if (
+            propertyInfo.GetCustomAttribute(typeof(TOMLConverterAttribute))
+            is TOMLConverterAttribute tomlConverter
+        )
         {
-            if (propertyInfo.Name == nameof(ITomlClassComment.ClassComment))
-                return false;
-            else if (propertyInfo.Name == nameof(ITomlClassComment.ValueComments))
-                return false;
+            propertyInfo.SetValue(target, tomlConverter.Read(node));
+            return;
         }
-        var isRequired = false;
-        // 检测是否为必要属性
-        if (Attribute.IsDefined(propertyInfo, typeof(TomlRequiredAttribute)))
-            isRequired = true;
-        var name = GetPropertyName(propertyInfo);
-        if (table.TryGetValue(name, out var node) is false)
-            return isRequired;
-        // 设置注释
-        iTomlClassComment?.ValueComments.TryAdd(name, node.Comment ?? string.Empty);
-        DeserializeTableValue(target, node, propertyInfo);
-        return false;
+
+        if (node.IsTomlTable)
+        {
+            // 如果值是Toml表格,则创建一个新的对象
+            if (
+                propertyType.Assembly.CreateInstance(propertyType.FullName!)
+                is not object nestedTarget
+            )
+                return;
+            propertyInfo.SetValue(target, nestedTarget);
+            // 递归Toml表格
+            DeserializeTable(nestedTarget, propertyType, node.AsTomlTable);
+        }
+        else if (node.IsTomlArray)
+        {
+            // 如果是Toml数组,则检测是否为IList类型
+            if (
+                propertyType.Assembly.CreateInstance(propertyType.FullName!)
+                is not IList nestedTarget
+            )
+                return;
+            propertyInfo.SetValue(target, nestedTarget);
+            DeserializeArray(propertyType, nestedTarget, node.AsTomlArray);
+        }
+        else if (propertyInfo.PropertyType.IsEnum)
+        {
+            // 如果属性是枚举类型
+            if (r_options.IntegerToEnum)
+            {
+                propertyInfo.SetValue(
+                    target,
+                    Enum.ToObject(propertyInfo.PropertyType, node.AsInt64)
+                );
+            }
+            else
+            {
+                propertyInfo.SetValue(
+                    target,
+                    Enum.Parse(propertyInfo.PropertyType, node.AsString, r_options.EnumIgnoreCase)
+                );
+            }
+        }
+        else
+        {
+            // 获取并设定属性值
+            var value = GetNodeVale(node, Type.GetTypeCode(propertyType));
+            propertyInfo.SetValue(target, value);
+        }
     }
 
+    /// <summary>
+    /// 反序列化Toml数组
+    /// </summary>
+    /// <param name="type">属性类型</param>
+    /// <param name="list">列表</param>
+    /// <param name="array">数组</param>
+    private void DeserializeArray(Type type, IList list, TomlArray array)
+    {
+        if (array.Any() is false)
+            return;
+        // 获取列表值的类型
+        if (type.GetGenericArguments()[0] is not Type elementType)
+            return;
+        // 如果泛型类型是枚举 则直接从字符串转换
+        if (elementType.IsEnum)
+        {
+            if (r_options.IntegerToEnum)
+            {
+                foreach (var node in array)
+                    list.Add(Enum.ToObject(elementType, node.AsInt64));
+            }
+            else
+            {
+                foreach (var node in array)
+                    list.Add(Enum.Parse(elementType, node.AsString, r_options.EnumIgnoreCase));
+            }
+            return;
+        }
+        // 如果值是Toml节点,则直接添加
+        if (elementType == typeof(TomlNode))
+        {
+            foreach (var node in array)
+                list.Add(node);
+            return;
+        }
+        // 获取类型代码
+        var typeCode = Type.GetTypeCode(elementType);
+        foreach (var node in array)
+            DeserializeArrayValue(list, node, elementType, typeCode);
+    }
+
+    /// <summary>
+    /// 反序列化Toml数组的值
+    /// </summary>
+    /// <param name="list">列表</param>
+    /// <param name="node">值</param>
+    /// <param name="elementType">列表值类型</param>
+    /// <param name="typeCode">类型代码</param>
+    private void DeserializeArrayValue(
+        IList list,
+        TomlNode node,
+        Type elementType,
+        TypeCode typeCode
+    )
+    {
+        if (node.IsTomlTable)
+        {
+            // 如果值是Toml表格,则创建一个新的对象
+            if (
+                elementType.Assembly.CreateInstance(elementType.FullName!)
+                is not object nestedTarget
+            )
+                return;
+            list.Add(nestedTarget);
+            DeserializeTable(nestedTarget, nestedTarget.GetType(), node.AsTomlTable);
+        }
+        else if (node.IsTomlArray)
+        {
+            // 如果是Toml数组,则检测是否为IList类型
+            if (
+                elementType.Assembly.CreateInstance(elementType.FullName!) is not IList nestedTarget
+            )
+                return;
+            list.Add(nestedTarget);
+            DeserializeArray(elementType, nestedTarget, node.AsTomlArray);
+        }
+        else
+        {
+            list.Add(GetNodeVale(node, typeCode));
+        }
+    }
+
+    /// <summary>
+    /// 获取属性名称
+    /// </summary>
+    /// <param name="propertyInfo">属性信息</param>
+    /// <returns>属性名称</returns>
     private static string GetPropertyName(PropertyInfo propertyInfo)
     {
         // 获取TomlKeyName
         if (
-            propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>()
-            is TomlPropertyNameAttribute keyName
+            propertyInfo.GetCustomAttribute<TOMLPropertyNameAttribute>()
+            is TOMLPropertyNameAttribute keyName
         )
             return keyName.Value;
         else
             return propertyInfo.Name;
     }
+
+    /// <summary>
+    /// 获取Toml节点的值
+    /// </summary>
+    /// <param name="node">节点</param>
+    /// <param name="typeCode">类型代码</param>
+    /// <returns>csharp原生值</returns>
+    private static object GetNodeVale(TomlNode node, TypeCode typeCode)
+    {
+        return typeCode switch
+        {
+            TypeCode.Boolean => node.AsBoolean,
+            TypeCode.String => node.AsString,
+
+            // 浮点型
+            TypeCode.Single
+                => Convert.ChangeType(node.AsDouble, TypeCode.Single),
+            TypeCode.Double => Convert.ChangeType(node.AsDouble, TypeCode.Double),
+
+            // 整型
+            TypeCode.SByte
+                => Convert.ChangeType(node.AsInt64, TypeCode.SByte),
+            TypeCode.Byte => Convert.ChangeType(node.AsInt64, TypeCode.Byte),
+            TypeCode.Int16 => Convert.ChangeType(node.AsInt64, TypeCode.Int16),
+            TypeCode.UInt16 => Convert.ChangeType(node.AsInt64, TypeCode.UInt16),
+            TypeCode.Int32 => Convert.ChangeType(node.AsInt64, TypeCode.Int32),
+            TypeCode.UInt32 => Convert.ChangeType(node.AsInt64, TypeCode.UInt32),
+            TypeCode.Int64 => Convert.ChangeType(node.AsInt64, TypeCode.Int64),
+            TypeCode.UInt64 => Convert.ChangeType(node.AsInt64, TypeCode.UInt64),
+
+            TypeCode.DateTime => node.AsDateTime,
+            TypeCode.Object when node.IsTomlDateTimeOffset => node.AsDateTimeOffset,
+            _ => node,
+        };
+    }
+    #endregion
 
     #region RunMethod
     /// <summary>
@@ -291,15 +494,15 @@ public class TomlDeserializer
         foreach (var method in TOMLUtils.GetRuntimeMethodsNotContainProperty(type))
         {
             if (
-                method.GetCustomAttribute(typeof(RunOnTomlDeserializingAttribute))
-                is RunOnTomlDeserializingAttribute runOnTomlDeserializing
+                method.GetCustomAttribute(typeof(RunOnTOMLDeserializingAttribute))
+                is RunOnTOMLDeserializingAttribute runOnTomlDeserializing
             )
             {
                 tempMethodOnDeserializing.Add(new(method, runOnTomlDeserializing.Parameters));
             }
             else if (
-                method.GetCustomAttribute(typeof(RunOnTomlDeserializedAttribute))
-                is RunOnTomlDeserializedAttribute runOnTomlDeserialized
+                method.GetCustomAttribute(typeof(RunOnTOMLDeserializedAttribute))
+                is RunOnTOMLDeserializedAttribute runOnTomlDeserialized
             )
             {
                 tempMethodOnDeserialized.Add(new(method, runOnTomlDeserialized.Parameters));
@@ -349,8 +552,8 @@ public class TomlDeserializer
     private static void RunMethodOnDeserializingWithClass(object target, Type type)
     {
         if (
-            type.GetCustomAttribute(typeof(RunOnTomlDeserializingAttribute))
-            is not RunOnTomlDeserializingAttribute runOnTomlDeserializing
+            type.GetCustomAttribute(typeof(RunOnTOMLDeserializingAttribute))
+            is not RunOnTOMLDeserializingAttribute runOnTomlDeserializing
         )
             return;
         runOnTomlDeserializing.Method?.Invoke(target, runOnTomlDeserializing.Parameters);
@@ -364,8 +567,8 @@ public class TomlDeserializer
     private static void RunMethodOnDeserializedWithClass(object target, Type type)
     {
         if (
-            type.GetCustomAttribute(typeof(RunOnTomlDeserializedAttribute))
-            is not RunOnTomlDeserializedAttribute runOnTomlDeserialized
+            type.GetCustomAttribute(typeof(RunOnTOMLDeserializedAttribute))
+            is not RunOnTOMLDeserializedAttribute runOnTomlDeserialized
         )
             return;
         runOnTomlDeserialized.Method?.Invoke(target, runOnTomlDeserialized.Parameters);
@@ -378,170 +581,13 @@ public class TomlDeserializer
     /// </summary>
     /// <param name="className">类名</param>
     /// <param name="missingPequiredProperties">缺失的必要属性</param>
-    private static void AddMissingRequiredValue(
+    private void AddMissingRequiredValue(
         string className,
         HashSet<string> missingPequiredProperties
     )
     {
         foreach (var propertyName in missingPequiredProperties)
-            sr_missingPequiredProperties.Add($"{className}.{propertyName}");
+            r_missingPequiredProperties.Add($"{className}.{propertyName}");
     }
     #endregion
-    /// <summary>
-    /// 反序列化Toml表格的值
-    /// </summary>
-    /// <param name="target">目标</param>
-    /// <param name="node">值</param>
-    /// <param name="propertyInfo">属性信息</param>
-    private static void DeserializeTableValue(
-        object target,
-        TomlNode node,
-        PropertyInfo propertyInfo
-    )
-    {
-        var propertyType = propertyInfo.PropertyType;
-
-        // 检测TomlConverter
-        if (
-            propertyInfo.GetCustomAttribute(typeof(TomlConverterAttribute))
-            is TomlConverterAttribute tomlConverter
-        )
-        {
-            propertyInfo.SetValue(target, tomlConverter.Read(node));
-            return;
-        }
-
-        if (node.IsTomlTable)
-        {
-            // 如果值是Toml表格,则创建一个新的对象
-            if (
-                propertyType.Assembly.CreateInstance(propertyType.FullName!)
-                is not object nestedTarget
-            )
-                return;
-            propertyInfo.SetValue(target, nestedTarget);
-            // 递归Toml表格
-            DeserializeTable(nestedTarget, propertyType, node.AsTomlTable);
-        }
-        else if (node.IsTomlArray)
-        {
-            // 如果是Toml数组,则检测是否为IList类型
-            if (
-                propertyType.Assembly.CreateInstance(propertyType.FullName!)
-                is not IList nestedTarget
-            )
-                return;
-            propertyInfo.SetValue(target, nestedTarget);
-            DeserializeArray(propertyType, nestedTarget, node.AsTomlArray);
-        }
-        else
-        {
-            // 获取并设定属性值
-            var value = GetNodeVale(node, Type.GetTypeCode(propertyType));
-            propertyInfo.SetValue(target, value);
-        }
-    }
-
-    /// <summary>
-    /// 反序列化Toml数组
-    /// </summary>
-    /// <param name="type">属性类型</param>
-    /// <param name="list">列表</param>
-    /// <param name="array">数组</param>
-    private static void DeserializeArray(Type type, IList list, TomlArray array)
-    {
-        if (array.Any() is false)
-            return;
-        // 获取列表值的类型
-        if (type.GetGenericArguments()[0] is not Type elementType)
-            return;
-        // 如果值是Toml节点,则直接添加
-        if (elementType == typeof(TomlNode))
-        {
-            foreach (var node in array)
-                list.Add(node);
-            return;
-        }
-        // 获取类型代码
-        var typeCode = Type.GetTypeCode(elementType);
-        foreach (var node in array)
-            DeserializeArrayValue(list, node, elementType, typeCode);
-    }
-
-    /// <summary>
-    /// 反序列化Toml数组的值
-    /// </summary>
-    /// <param name="list">列表</param>
-    /// <param name="node">值</param>
-    /// <param name="elementType">列表值类型</param>
-    /// <param name="typeCode">类型代码</param>
-    private static void DeserializeArrayValue(
-        IList list,
-        TomlNode node,
-        Type elementType,
-        TypeCode typeCode
-    )
-    {
-        if (node.IsTomlTable)
-        {
-            // 如果值是Toml表格,则创建一个新的对象
-            if (
-                elementType.Assembly.CreateInstance(elementType.FullName!)
-                is not object nestedTarget
-            )
-                return;
-            list.Add(nestedTarget);
-            DeserializeTable(nestedTarget, nestedTarget.GetType(), node.AsTomlTable);
-        }
-        else if (node.IsTomlArray)
-        {
-            // 如果是Toml数组,则检测是否为IList类型
-            if (
-                elementType.Assembly.CreateInstance(elementType.FullName!) is not IList nestedTarget
-            )
-                return;
-            list.Add(nestedTarget);
-            DeserializeArray(elementType, nestedTarget, node.AsTomlArray);
-        }
-        else
-        {
-            list.Add(GetNodeVale(node, typeCode));
-        }
-    }
-
-    /// <summary>
-    /// 获取Toml节点的值
-    /// </summary>
-    /// <param name="node">节点</param>
-    /// <param name="typeCode">类型代码</param>
-    /// <returns>csharp原生值</returns>
-    private static object GetNodeVale(TomlNode node, TypeCode typeCode)
-    {
-        return typeCode switch
-        {
-            TypeCode.Boolean => node.AsBoolean,
-            TypeCode.String => node.AsString,
-
-            // 浮点型
-            TypeCode.Single
-                => Convert.ChangeType(node.AsDouble, TypeCode.Single),
-            TypeCode.Double => Convert.ChangeType(node.AsDouble, TypeCode.Double),
-
-            // 整型
-            TypeCode.SByte
-                => Convert.ChangeType(node.AsInt64, TypeCode.SByte),
-            TypeCode.Byte => Convert.ChangeType(node.AsInt64, TypeCode.Byte),
-            TypeCode.Int16 => Convert.ChangeType(node.AsInt64, TypeCode.Int16),
-            TypeCode.UInt16 => Convert.ChangeType(node.AsInt64, TypeCode.UInt16),
-            TypeCode.Int32 => Convert.ChangeType(node.AsInt64, TypeCode.Int32),
-            TypeCode.UInt32 => Convert.ChangeType(node.AsInt64, TypeCode.UInt32),
-            TypeCode.Int64 => Convert.ChangeType(node.AsInt64, TypeCode.Int64),
-            TypeCode.UInt64 => Convert.ChangeType(node.AsInt64, TypeCode.UInt64),
-
-            TypeCode.DateTime => node.AsDateTime,
-            TypeCode.Object when node.IsTomlDateTimeOffset => node.AsDateTimeOffset,
-
-            _ => node,
-        };
-    }
 }

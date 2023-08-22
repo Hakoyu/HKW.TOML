@@ -15,7 +15,7 @@ public class TomlAsClassesTest
     public void AsClasses()
     {
         var table = TOML.Parse(TomlExample.ExampleData);
-        string classString = TomlAsClasses.Generate(
+        string classString = TOMLAsClasses.Generate(
             table,
             "ClassExample",
             new()

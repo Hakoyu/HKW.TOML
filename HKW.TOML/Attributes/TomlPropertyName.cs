@@ -7,7 +7,7 @@ namespace HKW.HKWTOML.Attributes;
 /// <para>指定Toml键的名称</para>
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class TomlPropertyNameAttribute : Attribute
+public class TOMLPropertyNameAttribute : Attribute
 {
     /// <summary>
     /// 值
@@ -15,5 +15,5 @@ public class TomlPropertyNameAttribute : Attribute
     public string Value { get; }
 
     /// <inheritdoc/>
-    public TomlPropertyNameAttribute(string name) => Value = name;
+    public TOMLPropertyNameAttribute(string name) => Value = name;
 }

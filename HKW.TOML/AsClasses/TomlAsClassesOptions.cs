@@ -8,7 +8,7 @@ namespace HKW.HKWTOML.AsClasses;
 /// <summary>
 /// Toml转换为类设置
 /// </summary>
-public class TomlAsClassesOptions
+public class TOMLAsClassesOptions
 {
     /// <summary>
     /// 合并int和float
@@ -73,25 +73,25 @@ public class TomlAsClassesOptions
     #region Attribute
 
     /// <summary>
-    /// 所有属性添加 <see cref="TomlPropertyOrderAttribute"/>
+    /// 所有属性添加 <see cref="TOMLPropertyOrderAttribute"/>
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
     public bool AddTomlPropertyOrderAttribute { get; set; } = false;
 
     /// <summary>
-    /// 特性 <see cref="TomlPropertyOrderAttribute"/> 格式化文本
+    /// 特性 <see cref="TOMLPropertyOrderAttribute"/> 格式化文本
     /// <para>默认为 "<see langword="TomlPropertyOrder({0})"/>"</para>
     /// </summary>
     public string TomlPropertyOrderAttributeFormat { get; set; } = "TomlPropertyOrder({0})";
 
     /// <summary>
-    /// 所有属性添加 <see cref="TomlPropertyNameAttribute"/>
+    /// 所有属性添加 <see cref="TOMLPropertyNameAttribute"/>
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
     public bool AddTomlPropertyNameAttribute { get; set; } = false;
 
     /// <summary>
-    /// 特性 <see cref="TomlPropertyNameAttribute"/> 格式化文本
+    /// 特性 <see cref="TOMLPropertyNameAttribute"/> 格式化文本
     /// <para>默认为 "<see langword="TomlPropertyName(&quot;{0}&quot;)"/>"</para>
     /// </summary>
     public string TomlPropertyNameAttributeFormat { get; set; } = "TomlPropertyName(\"{0}\")";
@@ -140,7 +140,7 @@ public class TomlAsClassesOptions
     /// </summary>
     public char KeyWordSeparator { get; set; } = ' ';
 
-    #endregion KeyWordSeparator++
+    #endregion KeyWordSeparator
 
     #region Inheritance
 
@@ -150,7 +150,7 @@ public class TomlAsClassesOptions
     public HashSet<string> MultipleInheritance { get; set; } = new();
 
     /// <summary>
-    /// 为所有非匿名类添加 <see cref="ITomlClassComment"/> 接口
+    /// 为所有非匿名类添加 <see cref="ITOMLClassComment"/> 接口
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
     public bool AddITomlClassCommentInterface { get; set; } = false;
@@ -159,7 +159,7 @@ public class TomlAsClassesOptions
     /// ITomlClassComment接口名称
     /// <para>默认为 <see langword="nameof(ITomlClassComment)"/></para>
     /// </summary>
-    public string ITomlClassCommentInterface { get; set; } = nameof(ITomlClassComment);
+    public string ITomlClassCommentInterface { get; set; } = nameof(ITOMLClassComment);
 
     /// <summary>
     /// 继承格式化文本
