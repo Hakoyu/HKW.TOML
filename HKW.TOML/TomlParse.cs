@@ -519,7 +519,7 @@ public class TomlString : TomlNode
         )
             PreferLiteral = false;
         var quotes = new string(
-            PreferLiteral ? TomlSyntax.LITERAL_STRING_SYMBOL : TomlSyntax.BASIC_STRING_SYMBOL,
+            PreferLiteral ? TomlSyntax.LITERAL_STRING_SYMBOL : TomlSyntax.BASI_STRING_SYMBOL,
             IsMultiline ? 3 : 1
         );
         var result = PreferLiteral ? Value : Value.Escape(IsMultiline is false);
@@ -1160,6 +1160,8 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     /// <param name="tomlFile">Toml文件</param>
     public void SaveToFile(string tomlFile)
     {
+        if (tomlFile.EndsWith(".toml") is false)
+            tomlFile += ".toml";
         using var sw = new StreamWriter(tomlFile);
         WriteTo(sw, null!, false);
     }
@@ -1172,8 +1174,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     {
         await Task.Run(() =>
         {
-            using var sw = new StreamWriter(tomlFile);
-            WriteTo(sw, null!, false);
+            SaveToFile(tomlFile);
         });
     }
 
@@ -1201,14 +1202,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     {
         return await Task.Run(() =>
         {
-            using var ms = new MemoryStream();
-            using (var sw = new StreamWriter(ms, leaveOpen: true))
-            {
-                WriteTo(sw, null!, false);
-            }
-            ms.Position = 0;
-            using var sr = new StreamReader(ms);
-            return sr.ReadToEnd();
+            return ToTomlString();
         });
     }
 
@@ -1459,7 +1453,7 @@ public class TOMLParser : IDisposable
     /// <summary>
     /// 文本写入器
     /// </summary>
-    private readonly TextReader r_reader;
+    private readonly TextReader _reader;
 
     /// <summary>
     /// 当前状态
@@ -1484,7 +1478,7 @@ public class TOMLParser : IDisposable
     /// <param name="reader">文明读取器</param>
     public TOMLParser(TextReader reader)
     {
-        r_reader = reader;
+        _reader = reader;
         _line = _column = 0;
     }
 
@@ -1494,7 +1488,7 @@ public class TOMLParser : IDisposable
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        r_reader?.Dispose();
+        _reader?.Dispose();
     }
 
     /// <summary>
@@ -1515,7 +1509,7 @@ public class TOMLParser : IDisposable
         var isFirstComment = true;
 
         int currentChar;
-        while ((currentChar = r_reader.Peek()) >= 0)
+        while ((currentChar = _reader.Peek()) >= 0)
         {
             var c = (char)currentChar;
 
@@ -1578,7 +1572,7 @@ public class TOMLParser : IDisposable
 
     private void ConsumeCharacter()
     {
-        r_reader.Read();
+        _reader.Read();
         _column++;
     }
 
@@ -1733,7 +1727,7 @@ public class TOMLParser : IDisposable
             {
                 // Consume the ending bracket so we can peek the next character
                 ConsumeChar();
-                var nextChar = r_reader.Peek();
+                var nextChar = _reader.Peek();
                 if (nextChar < 0 || (char)nextChar != TomlSyntax.TABLE_END_SYMBOL)
                 {
                     AddError($"Array table {".".Join(keyParts)} has only one closing bracket.");
@@ -1813,7 +1807,7 @@ public class TOMLParser : IDisposable
         // Skip the whole _line in hope that it was only a single faulty value (and non-multiline one at that)
         if (skipLine)
         {
-            r_reader.ReadLine();
+            _reader.ReadLine();
             AdvanceLine(1);
         }
         _currentState = ParseState.None;
@@ -1829,7 +1823,7 @@ public class TOMLParser : IDisposable
     private int ConsumeChar()
     {
         _column++;
-        return r_reader.Read();
+        return _reader.Read();
     }
 
     #region Key-Value pair parsing
@@ -1847,7 +1841,7 @@ public class TOMLParser : IDisposable
     private TomlNode ReadKeyValuePair(List<string> keyParts)
     {
         int cur;
-        while ((cur = r_reader.Peek()) >= 0)
+        while ((cur = _reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -1897,7 +1891,7 @@ public class TOMLParser : IDisposable
     private TomlNode ReadValue(bool skipNewlines = false)
     {
         int cur;
-        while ((cur = r_reader.Peek()) >= 0)
+        while ((cur = _reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -1917,7 +1911,7 @@ public class TOMLParser : IDisposable
             {
                 if (skipNewlines)
                 {
-                    r_reader.Read();
+                    _reader.Read();
                     AdvanceLine(1);
                     continue;
                 }
@@ -1979,7 +1973,7 @@ public class TOMLParser : IDisposable
         var quoted = false;
         var prevWasSpace = false;
         int cur;
-        while ((cur = r_reader.Peek()) >= 0)
+        while ((cur = _reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -2024,7 +2018,7 @@ public class TOMLParser : IDisposable
 
                 // Consume the quote character and read the key tomlFile
                 _column++;
-                buffer.Append(ReadQuotedValueSingleLine((char)r_reader.Read()));
+                buffer.Append(ReadQuotedValueSingleLine((char)_reader.Read()));
                 quoted = true;
                 continue;
             }
@@ -2065,7 +2059,7 @@ public class TOMLParser : IDisposable
     {
         var result = new StringBuilder();
         int cur;
-        while ((cur = r_reader.Peek()) >= 0)
+        while ((cur = _reader.Peek()) >= 0)
         {
             var c = (char)cur;
             if (
@@ -2106,18 +2100,18 @@ public class TOMLParser : IDisposable
             var v when TomlSyntax.IsNegInf(v) => double.NegativeInfinity,
             var v when TomlSyntax.IsInteger(v)
                 => long.Parse(
-                    value.RemoveAll(TomlSyntax.INT_NUMBER_SEPARATOR),
+                    value.RemoveAll(TomlSyntax.INT_NUMBE_SEPARATOR),
                     CultureInfo.InvariantCulture
                 ),
             var v when TomlSyntax.IsFloat(v)
                 => double.Parse(
-                    value.RemoveAll(TomlSyntax.INT_NUMBER_SEPARATOR),
+                    value.RemoveAll(TomlSyntax.INT_NUMBE_SEPARATOR),
                     CultureInfo.InvariantCulture
                 ),
             var v when TomlSyntax.IsIntegerWithBase(v, out var numberBase)
                 => new TomlInteger(
                     Convert.ToInt64(
-                        value[2..].RemoveAll(TomlSyntax.INT_NUMBER_SEPARATOR),
+                        value[2..].RemoveAll(TomlSyntax.INT_NUMBE_SEPARATOR),
                         numberBase
                     )
                 )
@@ -2207,7 +2201,7 @@ public class TOMLParser : IDisposable
         var expectValue = true;
 
         int cur;
-        while ((cur = r_reader.Peek()) >= 0)
+        while ((cur = _reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -2219,7 +2213,7 @@ public class TOMLParser : IDisposable
 
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                r_reader.ReadLine();
+                _reader.ReadLine();
                 AdvanceLine(1);
                 continue;
             }
@@ -2284,7 +2278,7 @@ public class TOMLParser : IDisposable
         var separator = false;
         var keyParts = new List<string>();
         int cur;
-        while ((cur = r_reader.Peek()) >= 0)
+        while ((cur = _reader.Peek()) >= 0)
         {
             var c = (char)cur;
 
@@ -2375,7 +2369,7 @@ public class TOMLParser : IDisposable
         int cur;
         // Consume the first quote
         ConsumeChar();
-        if ((cur = r_reader.Peek()) < 0)
+        if ((cur = _reader.Peek()) < 0)
         {
             excess = '\0';
             return AddError("Unexpected end of file!");
@@ -2389,7 +2383,7 @@ public class TOMLParser : IDisposable
 
         // Consume the second quote
         excess = (char)ConsumeChar();
-        if ((cur = r_reader.Peek()) < 0 || (char)cur != quote)
+        if ((cur = _reader.Peek()) < 0 || (char)cur != quote)
             return false;
 
         // Consume the final quote
@@ -2443,7 +2437,7 @@ public class TOMLParser : IDisposable
 
     private string ReadQuotedValueSingleLine(char quote, char initialData = '\0')
     {
-        var isNonLiteral = quote is TomlSyntax.BASIC_STRING_SYMBOL;
+        var isNonLiteral = quote is TomlSyntax.BASI_STRING_SYMBOL;
         var sb = new StringBuilder();
         var escaped = false;
 
@@ -2472,7 +2466,7 @@ public class TOMLParser : IDisposable
 
         int cur;
         var readDone = false;
-        while ((cur = r_reader.Read()) >= 0)
+        while ((cur = _reader.Read()) >= 0)
         {
             // Consume the character
             _column++;
@@ -2512,7 +2506,7 @@ public class TOMLParser : IDisposable
 
     private string ReadQuotedValueMultiLine(char quote)
     {
-        var isBasic = quote is TomlSyntax.BASIC_STRING_SYMBOL;
+        var isBasic = quote is TomlSyntax.BASI_STRING_SYMBOL;
         var sb = new StringBuilder();
         var escaped = false;
         var skipWhitespace = false;
@@ -2574,7 +2568,7 @@ public class TOMLParser : IDisposable
             // If we encounter an escape sequence...
             if (isBasic && c is TomlSyntax.ESCAPE_SYMBOL)
             {
-                var next = r_reader.Peek();
+                var next = _reader.Peek();
                 var nc = (char)next;
                 if (next >= 0)
                 {
@@ -2607,7 +2601,7 @@ public class TOMLParser : IDisposable
         // TOML actually allows to have five ending quotes like
         // """"" => "" belong to the string + """ is the actual ending
         quotesEncountered = 0;
-        while ((cur = r_reader.Peek()) >= 0)
+        while ((cur = _reader.Peek()) >= 0)
         {
             var c = (char)cur;
             if (c == quote && ++quotesEncountered < 3)
@@ -2769,7 +2763,7 @@ public class TOMLParser : IDisposable
     private string ParseComment()
     {
         ConsumeChar();
-        var commentLine = r_reader.ReadLine()?.Trim() ?? string.Empty;
+        var commentLine = _reader.ReadLine()?.Trim() ?? string.Empty;
         if (commentLine.Any(ch => TomlSyntax.MustBeEscaped(ch)))
             AddError("Comment must not contain control characters other than tab.", false);
         return commentLine;
@@ -2783,7 +2777,7 @@ public class TOMLParser : IDisposable
 /// <summary>
 /// TOML
 /// </summary>
-public static class TOML
+public static partial class TOML
 {
     /// <summary>
     /// 强制ASCII编码
@@ -2964,7 +2958,7 @@ internal static class TomlSyntax
     /// <summary>
     /// 正无效值
     /// </summary>
-    public const string POS_NAN_VALUE = "+nan";
+    public const string PO_NAN_VALUE = "+nan";
 
     /// <summary>
     /// 负无效值
@@ -2979,7 +2973,7 @@ internal static class TomlSyntax
     /// <summary>
     /// 正无穷
     /// </summary>
-    public const string POS_INF_VALUE = "+inf";
+    public const string PO_INF_VALUE = "+inf";
 
     /// <summary>
     /// 负无穷
@@ -2998,7 +2992,7 @@ internal static class TomlSyntax
     /// </summary>
     /// <param name="s">字符串</param>
     /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
-    public static bool IsPosInf(string s) => s is INF_VALUE or POS_INF_VALUE;
+    public static bool IsPosInf(string s) => s is INF_VALUE or PO_INF_VALUE;
 
     /// <summary>
     /// 是负无穷
@@ -3012,7 +3006,7 @@ internal static class TomlSyntax
     /// </summary>
     /// <param name="s">字符串</param>
     /// <returns>是为 <see langword="true"/> 否为 <see langword="false"/></returns>
-    public static bool IsNaN(string s) => s is NAN_VALUE or POS_NAN_VALUE or NEG_NAN_VALUE;
+    public static bool IsNaN(string s) => s is NAN_VALUE or PO_NAN_VALUE or NEG_NAN_VALUE;
 
     /// <summary>
     /// 是整型
@@ -3160,7 +3154,7 @@ internal static class TomlSyntax
     public const char ARRAY_END_SYMBOL = ']';
     public const char ITEM_SEPARATOR = ',';
     public const char ARRAY_START_SYMBOL = '[';
-    public const char BASIC_STRING_SYMBOL = '\"';
+    public const char BASI_STRING_SYMBOL = '\"';
     public const char COMMENT_SYMBOL = '#';
     public const char ESCAPE_SYMBOL = '\\';
     public const char KEY_VALUE_SEPARATOR = '=';
@@ -3172,7 +3166,7 @@ internal static class TomlSyntax
     public const char INLINE_TABLE_START_SYMBOL = '{';
     public const char INLINE_TABLE_END_SYMBOL = '}';
     public const char LITERAL_STRING_SYMBOL = '\'';
-    public const char INT_NUMBER_SEPARATOR = '_';
+    public const char INT_NUMBE_SEPARATOR = '_';
 
     public static readonly char[] NewLineCharacters =
     {
@@ -3180,7 +3174,7 @@ internal static class TomlSyntax
         NEWLINE_CARRIAGE_RETURN_CHARACTER
     };
 
-    public static bool IsQuoted(char c) => c is BASIC_STRING_SYMBOL or LITERAL_STRING_SYMBOL;
+    public static bool IsQuoted(char c) => c is BASI_STRING_SYMBOL or LITERAL_STRING_SYMBOL;
 
     public static bool IsWhiteSpace(char c) => c is ' ' or '\t';
 
@@ -3231,7 +3225,7 @@ internal static class StringUtils
         var quote = key == string.Empty || key.Any(c => !TomlSyntax.IsBareKey(c));
         return quote is false
             ? key
-            : $"{TomlSyntax.BASIC_STRING_SYMBOL}{key.Escape()}{TomlSyntax.BASIC_STRING_SYMBOL}";
+            : $"{TomlSyntax.BASI_STRING_SYMBOL}{key.Escape()}{TomlSyntax.BASI_STRING_SYMBOL}";
     }
 
     /// <summary>

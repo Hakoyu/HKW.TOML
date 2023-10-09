@@ -32,7 +32,7 @@ internal class TOMLClassValue
     /// </summary>
     public HashSet<string> Attributes { get; set; } = new();
 
-    private readonly TOMLAsClasses r_tomlAsClasses;
+    private readonly TOMLAsClasses _tomlAsClasses;
 
     /// <summary>
     /// 构造
@@ -42,7 +42,7 @@ internal class TOMLClassValue
     /// <param name="typeName">类型名称</param>
     public TOMLClassValue(TOMLAsClasses tomlAsClass, string name, string typeName)
     {
-        r_tomlAsClasses = tomlAsClass;
+        _tomlAsClasses = tomlAsClass;
         Name = name;
         TypeName = typeName;
     }
@@ -55,9 +55,9 @@ internal class TOMLClassValue
     /// <param name="node">类值(推断类型名称)</param>
     public TOMLClassValue(TOMLAsClasses tomlAsClass, string name, TomlNode node)
     {
-        r_tomlAsClasses = tomlAsClass;
+        _tomlAsClasses = tomlAsClass;
         Name = name;
-        TypeName = r_tomlAsClasses.r_options.GetConvertName(node, TomlType.GetTypeCode(node));
+        TypeName = _tomlAsClasses._options.GetConvertName(node, TomlType.GetTypeCode(node));
     }
 
     /// <summary>
@@ -67,8 +67,8 @@ internal class TOMLClassValue
     public override string ToString()
     {
         var valueData = string.Format(
-            r_tomlAsClasses.r_options.PropertyFormat,
-            r_tomlAsClasses.r_options.Indent,
+            _tomlAsClasses._options.PropertyFormat,
+            _tomlAsClasses._options.Indent,
             TypeName,
             Name
         );
@@ -87,8 +87,8 @@ internal class TOMLClassValue
         var comments = comment.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         if (comments.Length is 1)
             return string.Format(
-                r_tomlAsClasses.r_options.CommentFormat,
-                r_tomlAsClasses.r_options.Indent,
+                _tomlAsClasses._options.CommentFormat,
+                _tomlAsClasses._options.Indent,
                 comments[0]
             );
         var multiLineComment =
@@ -99,15 +99,15 @@ internal class TOMLClassValue
                 comments[1..].Select(
                     s =>
                         string.Format(
-                            r_tomlAsClasses.r_options.CommentParaFormat,
-                            r_tomlAsClasses.r_options.Indent,
+                            _tomlAsClasses._options.CommentParaFormat,
+                            _tomlAsClasses._options.Indent,
                             s
                         )
                 )
             );
         return string.Format(
-            r_tomlAsClasses.r_options.CommentFormat,
-            r_tomlAsClasses.r_options.Indent,
+            _tomlAsClasses._options.CommentFormat,
+            _tomlAsClasses._options.Indent,
             multiLineComment
         );
     }
@@ -123,8 +123,8 @@ internal class TOMLClassValue
         foreach (var attribute in attributes)
             sb.AppendLine(
                 string.Format(
-                    r_tomlAsClasses.r_options.AttributeFormat,
-                    r_tomlAsClasses.r_options.Indent,
+                    _tomlAsClasses._options.AttributeFormat,
+                    _tomlAsClasses._options.Indent,
                     attribute
                 )
             );

@@ -18,45 +18,16 @@ public class TOMLSerializer
     /// <summary>
     /// Toml序列化设置
     /// </summary>
-    private readonly TOMLSerializerOptions r_options;
+    private readonly TOMLSerializerOptions _options;
 
     /// <inheritdoc/>
     /// <param name="options">设置</param>
     private TOMLSerializer(TOMLSerializerOptions? options = null)
     {
-        r_options = options ?? new();
+        _options = options ?? new();
     }
 
     #region Serialize
-    /// <summary>
-    /// 序列化至Toml文件
-    /// </summary>
-    /// <param name="tomlFile">Toml文件</param>
-    /// <param name="source">源</param>
-    /// <param name="options">序列化设置</param>
-    public static void SerializeToFile(
-        string tomlFile,
-        object source,
-        TOMLSerializerOptions? options = null
-    )
-    {
-        Serialize(source, options).SaveToFile(tomlFile);
-    }
-
-    /// <summary>
-    /// 异步序列化至Toml文件
-    /// </summary>
-    /// <param name="tomlFile">Toml文件</param>
-    /// <param name="source">源</param>
-    /// <param name="options">序列化设置</param>
-    public static async Task SerializeToFileAsync(
-        string tomlFile,
-        object source,
-        TOMLSerializerOptions? options = null
-    )
-    {
-        (await SerializeAsync(source, options)).SaveToFile(tomlFile);
-    }
 
     /// <summary>
     /// 序列化至Toml表格
@@ -81,41 +52,7 @@ public class TOMLSerializer
         TOMLSerializerOptions? options = null
     )
     {
-        return await Task.Run(() =>
-        {
-            var serializer = new TOMLSerializer(options);
-            return serializer.Serialize(source);
-        });
-    }
-
-    /// <summary>
-    /// 序列化静态类至Toml文件
-    /// </summary>
-    /// <param name="options">序列化设置</param>
-    /// <param name="staticClassType">静态类类型</param>
-    /// <param name="tomlFile">Toml文件</param>
-    public static void SerializeStaticToFile(
-        string tomlFile,
-        Type staticClassType,
-        TOMLSerializerOptions? options = null
-    )
-    {
-        SerializeToFile(tomlFile, staticClassType, options);
-    }
-
-    /// <summary>
-    /// 异步序列化静态类至Toml文件
-    /// </summary>
-    /// <param name="options">序列化设置</param>
-    /// <param name="staticClassType">静态类类型</param>
-    /// <param name="tomlFile">Toml文件</param>
-    public static async Task SerializeStaticToFileAsync(
-        string tomlFile,
-        Type staticClassType,
-        TOMLSerializerOptions? options = null
-    )
-    {
-        await SerializeToFileAsync(tomlFile, staticClassType, options);
+        return await Task.Run(() => Serialize(source, options));
     }
 
     /// <summary>
@@ -252,7 +189,7 @@ public class TOMLSerializer
         type ??= source.GetType();
         return Type.GetTypeCode(type) switch
         {
-            _ when type.IsEnum && r_options.EnumToInteger is false
+            _ when type.IsEnum && _options.EnumToInteger is false
                 => new TomlString(source.ToString()!),
             TypeCode.Boolean => new TomlBoolean((bool)source),
 
@@ -317,15 +254,15 @@ public class TOMLSerializer
         else
             properties = source.GetType().GetProperties();
         // 使用自定义比较器排序
-        if (r_options.PropertiesOrderComparer is not null)
+        if (_options.PropertiesOrderComparer is not null)
         {
-            Array.Sort(properties, r_options.PropertiesOrderComparer);
+            Array.Sort(properties, _options.PropertiesOrderComparer);
             // 判断是否倒序
-            if (r_options.PropertiesReverseOrder)
+            if (_options.PropertiesReverseOrder)
                 Array.Reverse(properties);
             return properties;
         }
-        return CheckTomlParameterOrder(properties, r_options.PropertiesReverseOrder);
+        return CheckTomlParameterOrder(properties, _options.PropertiesReverseOrder);
     }
 
     /// <summary>

@@ -11,6 +11,8 @@ using HKW.HKWTOML.AsClasses;
 using HKWTOML.Utils;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 #endif
 
 namespace HKWTOML;

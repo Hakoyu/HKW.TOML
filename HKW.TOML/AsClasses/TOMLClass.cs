@@ -48,7 +48,7 @@ internal class TOMLClass
     /// </summary>
     public HashSet<string> Attributes { get; set; } = new();
 
-    private readonly TOMLAsClasses r_tomlAsClasses;
+    private readonly TOMLAsClasses _tomlAsClasses;
 
     /// <summary>
     /// 构造
@@ -58,7 +58,7 @@ internal class TOMLClass
     /// <param name="parentName">父类名称</param>
     public TOMLClass(TOMLAsClasses tomlAsClasses, string name, string? parentName)
     {
-        r_tomlAsClasses = tomlAsClasses;
+        _tomlAsClasses = tomlAsClasses;
         Name = name;
         FullName = name + parentName;
         ParentName = parentName ?? string.Empty;
@@ -82,22 +82,22 @@ internal class TOMLClass
             )
                 sb.AppendLine(comment);
             if (
-                GetAttribute(r_tomlAsClasses.r_options.ClassAttributes) is string attribute
+                GetAttribute(_tomlAsClasses._options.ClassAttributes) is string attribute
                 && string.IsNullOrWhiteSpace(attribute) is false
             )
                 sb.AppendLine(attribute);
-            classname += GetInheritance(r_tomlAsClasses.r_options.MultipleInheritance);
+            classname += GetInheritance(_tomlAsClasses._options.MultipleInheritance);
             // 添加ITomlClass接口中的值
-            if (r_tomlAsClasses.r_options.AddITomlClassCommentInterface)
+            if (_tomlAsClasses._options.AddITomlClassCommentInterface)
                 iTomlClassCommentValue =
                     string.Format(
-                        r_tomlAsClasses.r_options.ITomlClassInterfaceValueFormat,
-                        r_tomlAsClasses.r_options.Indent
+                        _tomlAsClasses._options.ITomlClassInterfaceValueFormat,
+                        _tomlAsClasses._options.Indent
                     ) + Environment.NewLine;
         }
 
         return string.Format(
-            r_tomlAsClasses.r_options.ClassFormat,
+            _tomlAsClasses._options.ClassFormat,
             sb.ToString(),
             classname,
             iTomlClassCommentValue + GetValues(Values.Values)
@@ -115,25 +115,17 @@ internal class TOMLClass
             return comment;
         var comments = comment.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         if (comments.Length is 1)
-            return string.Format(
-                r_tomlAsClasses.r_options.CommentFormat,
-                string.Empty,
-                comments[0]
-            );
+            return string.Format(_tomlAsClasses._options.CommentFormat, string.Empty, comments[0]);
         var multiLineComment =
             comments[0]
             + Environment.NewLine
             + string.Join(
                 Environment.NewLine,
                 comments[1..].Select(
-                    s => string.Format(r_tomlAsClasses.r_options.CommentParaFormat, string.Empty, s)
+                    s => string.Format(_tomlAsClasses._options.CommentParaFormat, string.Empty, s)
                 )
             );
-        return string.Format(
-            r_tomlAsClasses.r_options.CommentFormat,
-            string.Empty,
-            multiLineComment
-        );
+        return string.Format(_tomlAsClasses._options.CommentFormat, string.Empty, multiLineComment);
     }
 
     /// <summary>
@@ -146,7 +138,7 @@ internal class TOMLClass
         var sb = new StringBuilder();
         foreach (var attribute in attributes)
             sb.AppendLine(
-                string.Format(r_tomlAsClasses.r_options.AttributeFormat, string.Empty, attribute)
+                string.Format(_tomlAsClasses._options.AttributeFormat, string.Empty, attribute)
             );
         return sb.ToString();
     }
@@ -161,7 +153,7 @@ internal class TOMLClass
         var str = string.Join(", ", inheritances);
         if (string.IsNullOrWhiteSpace(str))
             return string.Empty;
-        return string.Format(r_tomlAsClasses.r_options.InheritanceFormat, str);
+        return string.Format(_tomlAsClasses._options.InheritanceFormat, str);
     }
 
     /// <summary>

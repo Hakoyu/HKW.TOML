@@ -18,22 +18,22 @@ public partial class TOMLAsClasses
     /// 所有类
     /// <para>(类名称, 类值)</para>
     /// </summary>
-    private readonly Dictionary<string, TOMLClass> r_tomlClasses = new();
+    private readonly Dictionary<string, TOMLClass> _tomlClasses = new();
 
     /// <summary>
     /// 所有数组名称
     /// <para>(数组值类型名称, 数组名称)</para>
     /// </summary>
-    private readonly Dictionary<string, string> r_arrayTypeNames = new();
+    private readonly Dictionary<string, string> _arrayTypeNames = new();
 
     /// <summary>
     /// 设置
     /// </summary>
-    internal readonly TOMLAsClassesOptions r_options = new();
+    internal readonly TOMLAsClassesOptions _options = new();
 
     private TOMLAsClasses(TOMLAsClassesOptions? options)
     {
-        r_options = options ?? new();
+        _options = options ?? new();
     }
 
     #region Generate
@@ -103,7 +103,7 @@ public partial class TOMLAsClasses
 
         // 生成数据
         var sb = new StringBuilder();
-        foreach (var tomlClass in r_tomlClasses.Values)
+        foreach (var tomlClass in _tomlClasses.Values)
             sb.AppendLine(tomlClass.ToString());
         return sb.ToString();
     }
@@ -113,33 +113,30 @@ public partial class TOMLAsClasses
     /// </summary>
     private void InitializeData()
     {
-        r_arrayTypeNames.Add(
-            r_options.TomlFloatNameConvert,
-            string.Format(r_options.ListFormat, r_options.TomlFloatNameConvert)
+        _arrayTypeNames.Add(
+            _options.TomlFloatNameConvert,
+            string.Format(_options.ListFormat, _options.TomlFloatNameConvert)
         );
-        r_arrayTypeNames.Add(
-            r_options.TomlIntegerNameConvert,
-            string.Format(r_options.ListFormat, r_options.TomlIntegerNameConvert)
+        _arrayTypeNames.Add(
+            _options.TomlIntegerNameConvert,
+            string.Format(_options.ListFormat, _options.TomlIntegerNameConvert)
         );
-        r_arrayTypeNames.Add(
-            r_options.TomlInteger64NameConvert,
-            string.Format(r_options.ListFormat, r_options.TomlInteger64NameConvert)
+        _arrayTypeNames.Add(
+            _options.TomlInteger64NameConvert,
+            string.Format(_options.ListFormat, _options.TomlInteger64NameConvert)
         );
-        r_arrayTypeNames.Add(
-            nameof(TomlNode),
-            string.Format(r_options.ListFormat, nameof(TomlNode))
-        );
+        _arrayTypeNames.Add(nameof(TomlNode), string.Format(_options.ListFormat, nameof(TomlNode)));
 
-        if (r_options.AddITomlClassCommentInterface)
-            r_options.MultipleInheritance.Add(r_options.ITomlClassCommentInterface);
+        if (_options.AddITomlClassCommentInterface)
+            _options.MultipleInheritance.Add(_options.ITomlClassCommentInterface);
 
         // 统一特性的格式
-        if (r_options.ClassAttributes.Any())
-            r_options.ClassAttributes = r_options.ClassAttributes
+        if (_options.ClassAttributes.Any())
+            _options.ClassAttributes = _options.ClassAttributes
                 .Select(s => RemoveSurroundedSquareBrackets(s))
                 .ToHashSet();
-        if (r_options.PropertyAttributes.Any())
-            r_options.PropertyAttributes = r_options.PropertyAttributes
+        if (_options.PropertyAttributes.Any())
+            _options.PropertyAttributes = _options.PropertyAttributes
                 .Select(s => RemoveSurroundedSquareBrackets(s))
                 .ToHashSet();
     }
@@ -173,10 +170,10 @@ public partial class TOMLAsClasses
         {
             var name = kv.Key;
             var node = kv.Value;
-            if (r_options.KeyNameConverterFunc is not null)
-                name = r_options.KeyNameConverterFunc(name);
-            else if (r_options.KeyNameToPascal)
-                name = name.ToPascal(r_options.KeyWordSeparator, r_options.RemoveKeyWordSeparator);
+            if (_options.KeyNameConverterFunc is not null)
+                name = _options.KeyNameConverterFunc(name);
+            else if (_options.KeyNameToPascal)
+                name = name.ToPascal(_options.KeyWordSeparator, _options.RemoveKeyWordSeparator);
 
             // 检测关键词
             if (TOMLUtils.CsharpKeywords.Contains(name))
@@ -205,22 +202,22 @@ public partial class TOMLAsClasses
         TOMLClass tomlClass
     )
     {
-        if (r_options.PropertyAttributes is not null)
-            foreach (var attribute in r_options.PropertyAttributes)
+        if (_options.PropertyAttributes is not null)
+            foreach (var attribute in _options.PropertyAttributes)
                 tomlClass.Values[name].Attributes.Add(attribute);
-        if (r_options.AddTomlRequiredAttribute)
-            tomlClass.Values[name].Attributes.Add(r_options.TomlRequiredAttribute);
-        if (r_options.AddTomlPropertyOrderAttribute)
+        if (_options.AddTomlRequiredAttribute)
+            tomlClass.Values[name].Attributes.Add(_options.TomlRequiredAttribute);
+        if (_options.AddTomlPropertyOrderAttribute)
             tomlClass.Values[name].Attributes.Add(
-                string.Format(r_options.TomlPropertyOrderAttributeFormat, index++)
+                string.Format(_options.TomlPropertyOrderAttributeFormat, index++)
             );
-        if (r_options.AddTomlPropertyNameAttribute)
+        if (_options.AddTomlPropertyNameAttribute)
             tomlClass.Values[name].Attributes.Add(
-                string.Format(r_options.TomlPropertyNameAttributeFormat, originalName)
+                string.Format(_options.TomlPropertyNameAttributeFormat, originalName)
             );
         if (isAnonymousClass)
             return;
-        if (r_options.AddComment)
+        if (_options.AddComment)
             tomlClass.Values[name].Comment = node.Comment;
     }
 
@@ -238,12 +235,12 @@ public partial class TOMLAsClasses
         if (TOMLUtils.CsharpKeywords.Contains(className))
             throw new Exception($"Used CsharpKeywords \"{className}\"");
         // 获取已存在的类
-        if (r_tomlClasses.TryGetValue(className, out var tomlClass) is false)
+        if (_tomlClasses.TryGetValue(className, out var tomlClass) is false)
         {
             tomlClass = new(this, className, parentClassName);
-            if (r_options.AddComment)
+            if (_options.AddComment)
                 tomlClass.Comment = table.Comment;
-            r_tomlClasses.TryAdd(tomlClass.FullName, tomlClass);
+            _tomlClasses.TryAdd(tomlClass.FullName, tomlClass);
         }
         return tomlClass;
     }
@@ -259,12 +256,12 @@ public partial class TOMLAsClasses
         if (node.IsTomlTable)
         {
             // 获取类名称
-            var className = string.Format(r_options.ClassNameFormat, name);
+            var className = string.Format(_options.ClassNameFormat, name);
             // 判断是否有父类,有则为父类添加新的属性,没有则新建
             if (string.IsNullOrWhiteSpace(tomlClass.ParentName))
                 tomlClass.Values.TryAdd(name, new(this, name, className));
             else
-                r_tomlClasses[tomlClass.FullName].Values.TryAdd(name, new(this, name, className));
+                _tomlClasses[tomlClass.FullName].Values.TryAdd(name, new(this, name, className));
             // 解析类
             ParseTable(className, tomlClass.Name, node.AsTomlTable);
         }
@@ -290,7 +287,7 @@ public partial class TOMLAsClasses
     {
         // 如果数组中没有值(无法判断值类型),则设置为TomlNode
         if (array.ChildrenCount is 0)
-            return r_arrayTypeNames[nameof(TomlNode)];
+            return _arrayTypeNames[nameof(TomlNode)];
 
         // 遍历所有值,并获取类型标识
         var tomlTypeCode = TomlType.GetTypeCode(array[0]);
@@ -307,17 +304,17 @@ public partial class TOMLAsClasses
         {
             typeName = ParseTableInArrayValue(name, array);
             // 匿名类不需要缓存
-            return string.Format(r_options.ListFormat, typeName);
+            return string.Format(_options.ListFormat, typeName);
         }
         else
-            typeName = r_options.GetConvertName(
+            typeName = _options.GetConvertName(
                 array.FirstOrDefault(n => n.AsTomlInteger?.IsInteger64 is true, array[0]),
                 MergeTomlTypeCode(tomlTypeCode)
             );
 
         // 将数组名缓存
-        r_arrayTypeNames.TryAdd(typeName, string.Format(r_options.ListFormat, typeName));
-        return r_arrayTypeNames[typeName];
+        _arrayTypeNames.TryAdd(typeName, string.Format(_options.ListFormat, typeName));
+        return _arrayTypeNames[typeName];
     }
 
     /// <summary>
@@ -329,7 +326,7 @@ public partial class TOMLAsClasses
     {
         // 如果同时存在int和float类型,则会被转换成float
         if (
-            r_options.MergeIntegerAndFloat
+            _options.MergeIntegerAndFloat
             && tomlTypeCode is (TomlTypeCode.Integer | TomlTypeCode.Float)
         )
             return TomlTypeCode.Float;
@@ -365,40 +362,40 @@ public partial class TOMLAsClasses
             return typeNames.First();
         else if (
             typeNames.Count is 2
-            && typeNames.Contains(r_arrayTypeNames[r_options.TomlIntegerNameConvert])
-            && typeNames.Contains(r_arrayTypeNames[r_options.TomlInteger64NameConvert])
+            && typeNames.Contains(_arrayTypeNames[_options.TomlIntegerNameConvert])
+            && typeNames.Contains(_arrayTypeNames[_options.TomlInteger64NameConvert])
         )
         {
             // 如果同时为int和int64,则变为int64
-            return r_arrayTypeNames[r_options.TomlInteger64NameConvert];
+            return _arrayTypeNames[_options.TomlInteger64NameConvert];
         }
         else if (
-            r_options.MergeIntegerAndFloat
+            _options.MergeIntegerAndFloat
             && typeNames.Count is 2
             && (
-                typeNames.Contains(r_arrayTypeNames[r_options.TomlIntegerNameConvert])
-                || typeNames.Contains(r_arrayTypeNames[r_options.TomlInteger64NameConvert])
+                typeNames.Contains(_arrayTypeNames[_options.TomlIntegerNameConvert])
+                || typeNames.Contains(_arrayTypeNames[_options.TomlInteger64NameConvert])
             )
-            && typeNames.Contains(r_arrayTypeNames[r_options.TomlFloatNameConvert])
+            && typeNames.Contains(_arrayTypeNames[_options.TomlFloatNameConvert])
         )
         {
             // 如果同时为int或int64和float则返回float
-            return r_arrayTypeNames[r_options.TomlFloatNameConvert];
+            return _arrayTypeNames[_options.TomlFloatNameConvert];
         }
         else if (
-            r_options.MergeIntegerAndFloat
+            _options.MergeIntegerAndFloat
             && typeNames.Count is 3
-            && typeNames.Contains(r_arrayTypeNames[r_options.TomlIntegerNameConvert])
-            && typeNames.Contains(r_arrayTypeNames[r_options.TomlInteger64NameConvert])
-            && typeNames.Contains(r_arrayTypeNames[r_options.TomlFloatNameConvert])
+            && typeNames.Contains(_arrayTypeNames[_options.TomlIntegerNameConvert])
+            && typeNames.Contains(_arrayTypeNames[_options.TomlInteger64NameConvert])
+            && typeNames.Contains(_arrayTypeNames[_options.TomlFloatNameConvert])
         )
         {
             // 如果同时为int和int64和float则返回float
-            return r_arrayTypeNames[r_options.TomlFloatNameConvert];
+            return _arrayTypeNames[_options.TomlFloatNameConvert];
         }
         else
             // 否则返回TomlNode
-            return r_arrayTypeNames[nameof(TomlNode)];
+            return _arrayTypeNames[nameof(TomlNode)];
     }
 
     /// <summary>
@@ -410,7 +407,7 @@ public partial class TOMLAsClasses
     private string ParseTableInArrayValue(string name, TomlArray array)
     {
         // 获取匿名类名称
-        var anonymousClassName = string.Format(r_options.AnonymousClassNameFormat, name);
+        var anonymousClassName = string.Format(_options.AnonymousClassNameFormat, name);
         foreach (var item in array)
         {
             var table = item.AsTomlTable;

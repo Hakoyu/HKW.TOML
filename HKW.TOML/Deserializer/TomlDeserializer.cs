@@ -19,59 +19,28 @@ public class TOMLDeserializer
     /// <summary>
     /// 设置
     /// </summary>
-    private readonly TOMLDeserializerOptions r_options = null!;
+    private readonly TOMLDeserializerOptions _options = null!;
 
     /// <summary>
     /// 缺失的必要属性
     /// </summary>
-    private readonly HashSet<string> r_missingPequiredProperties = new();
+    private readonly HashSet<string> _missingPequiredProperties = new();
 
     /// <inheritdoc/>
     /// <param name="options">设置</param>
     private TOMLDeserializer(TOMLDeserializerOptions? options)
     {
-        r_options = options ?? new();
+        _options = options ?? new();
     }
 
     #region Deserialize
-    /// <summary>
-    /// 从Toml文件反序列化
-    /// </summary>
-    /// <typeparam name="T">targetType</typeparam>
-    /// <param name="tomlFile">Toml文件</param>
-    /// <param name="options">反序列化设置</param>
-    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
-    /// <returns>完成反序列化的对象</returns>
-    public static T DeserializeFromFile<T>(string tomlFile, TOMLDeserializerOptions? options = null)
-        where T : class, new()
-    {
-        return Deserialize<T>(TOML.ParseFromFile(tomlFile), options);
-    }
-
-    /// <summary>
-    /// 从Toml文件异步反序列化
-    /// </summary>
-    /// <typeparam name="T">targetType</typeparam>
-    /// <param name="tomlFile">Toml文件</param>
-    /// <param name="options">反序列化设置</param>
-    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
-    /// <returns>完成反序列化的对象</returns>
-    public static async Task<T> DeserializeFromFileAsync<T>(
-        string tomlFile,
-        TOMLDeserializerOptions? options = null
-    )
-        where T : class, new()
-    {
-        return await DeserializeAsync<T>(TOML.ParseFromFile(tomlFile), options);
-    }
 
     /// <summary>
     /// 从Toml表格反序列化
     /// </summary>
-    /// <typeparam name="T">targetType</typeparam>
+    /// <typeparam name="T">目标类型</typeparam>
     /// <param name="table">Toml表格</param>
     /// <param name="options">反序列化设置</param>
-    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
     /// <returns>完成反序列化的对象</returns>
     public static T Deserialize<T>(TomlTable table, TOMLDeserializerOptions? options = null)
         where T : class, new()
@@ -85,10 +54,9 @@ public class TOMLDeserializer
     /// <summary>
     /// 从Toml表格异步反序列化
     /// </summary>
-    /// <typeparam name="T">targetType</typeparam>
+    /// <typeparam name="T">目标类型</typeparam>
     /// <param name="table">Toml表格</param>
     /// <param name="options">反序列化设置</param>
-    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
     /// <returns>完成反序列化的对象</returns>
     public static async Task<T> DeserializeAsync<T>(
         TomlTable table,
@@ -96,61 +64,62 @@ public class TOMLDeserializer
     )
         where T : class, new()
     {
-        var target = new T();
-        await Task.Run(() =>
+        return await Task.Run(() =>
         {
-            var target = new T();
-            var deserializer = new TOMLDeserializer(options);
-            deserializer.Deserialize(target, typeof(T), table);
+            return Deserialize<T>(table, options);
         });
+    }
+
+    /// <summary>
+    /// 从Toml表格反序列化
+    /// </summary>
+    /// <param name="table">Toml表格</param>
+    /// <param name="target">目标</param>
+    /// <param name="options">反序列化设置</param>
+    /// <returns>完成反序列化的对象</returns>
+    public static object Deserialize(
+        TomlTable table,
+        object target,
+        TOMLDeserializerOptions? options = null
+    )
+    {
+        var deserializer = new TOMLDeserializer(options);
+        deserializer.Deserialize(target, target.GetType(), table);
         return target;
     }
 
     /// <summary>
-    /// 从Toml文件反序列化至静态类
+    /// 从Toml表格异步反序列化
     /// </summary>
-    /// <param name="tomlFile">Toml文件</param>
-    /// <param name="staticClass">静态类类型</param>
+    /// <param name="table">Toml表格</param>
+    /// <param name="target">目标</param>
     /// <param name="options">反序列化设置</param>
-    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
-    public static void DeserializeStaticFromFile(
-        string tomlFile,
-        Type staticClass,
+    /// <returns>完成反序列化的对象</returns>
+    public static async Task<object> DeserializeAsync(
+        TomlTable table,
+        object target,
         TOMLDeserializerOptions? options = null
     )
     {
-        DeserializeStatic(TOML.ParseFromFile(tomlFile), staticClass, options);
-    }
-
-    /// <summary>
-    /// 从Toml文件异步反序列化至静态类
-    /// </summary>
-    /// <param name="tomlFile">Toml文件</param>
-    /// <param name="staticClass">静态类类型</param>
-    /// <param name="options">反序列化设置</param>
-    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
-    public static async Task DeserializeStaticFromFileAsync(
-        string tomlFile,
-        Type staticClass,
-        TOMLDeserializerOptions? options = null
-    )
-    {
-        await DeserializeStaticeAsync(TOML.ParseFromFile(tomlFile), staticClass, options);
+        return await Task.Run(() =>
+        {
+            return Deserialize(table, target, options);
+        });
     }
 
     /// <summary>
     /// 从Toml表格反序列化至静态类
     /// </summary>
+    /// <typeparam name="T">目标类型</typeparam>
     /// <param name="table">Toml表格</param>
-    /// <param name="staticClass">静态类类型</param>
     /// <param name="options">反序列化设置</param>
-    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
-    public static void DeserializeStatic(
+    public static void DeserializeStatic<T>(
         TomlTable table,
-        Type staticClass,
         TOMLDeserializerOptions? options = null
     )
+        where T : class
     {
+        var staticClass = typeof(T);
         var deserializer = new TOMLDeserializer(options);
         deserializer.Deserialize(staticClass, staticClass, table);
     }
@@ -158,21 +127,50 @@ public class TOMLDeserializer
     /// <summary>
     /// 从Toml表格异步反序列化至静态类
     /// </summary>
+    /// <typeparam name="T">目标类型</typeparam>
     /// <param name="table">Toml表格</param>
-    /// <param name="staticClass">静态类类型</param>
     /// <param name="options">反序列化设置</param>
-    /// <exception cref="MissingRequiredException">缺失必要属性异常</exception>
-    public static async Task DeserializeStaticeAsync(
+    public static async Task DeserializeStaticeAsync<T>(
         TomlTable table,
-        Type staticClass,
         TOMLDeserializerOptions? options = null
     )
+        where T : class
     {
         await Task.Run(() =>
         {
-            var deserializer = new TOMLDeserializer(options);
-            deserializer.Deserialize(staticClass, staticClass, table);
+            DeserializeStatic<T>(table, options);
         });
+    }
+
+    /// <summary>
+    /// 从Toml表格反序列化至静态类
+    /// </summary>
+    /// <param name="table">Toml表格</param>
+    /// <param name="targetType">静态类类型</param>
+    /// <param name="options">反序列化设置</param>
+    public static void DeserializeStatic(
+        TomlTable table,
+        Type targetType,
+        TOMLDeserializerOptions? options = null
+    )
+    {
+        var deserializer = new TOMLDeserializer(options);
+        deserializer.Deserialize(targetType, targetType, table);
+    }
+
+    /// <summary>
+    /// 从Toml表格异步反序列化至静态类
+    /// </summary>
+    /// <param name="table">Toml表格</param>
+    /// <param name="targetType">静态类类型</param>
+    /// <param name="options">反序列化设置</param>
+    public static async Task DeserializeStaticeAsync(
+        TomlTable table,
+        Type targetType,
+        TOMLDeserializerOptions? options = null
+    )
+    {
+        await Task.Run(() => DeserializeStatic(table, targetType, options));
     }
     #endregion
     #region Deserialize Value
@@ -185,11 +183,11 @@ public class TOMLDeserializer
     private void Deserialize(object target, Type type, TomlTable table)
     {
         DeserializeTable(target, type, table);
-        if (r_missingPequiredProperties.Any())
+        if (_missingPequiredProperties.Any())
         {
             throw new MissingRequiredException(
                 "Deserialize error: missing required properties exception",
-                r_missingPequiredProperties.OrderBy(s => s)
+                _missingPequiredProperties.OrderBy(s => s)
             );
         }
     }
@@ -243,7 +241,7 @@ public class TOMLDeserializer
     {
         // 设置忽略大小写
         var originalKeyIgnoreCase = table.KeyIgnoreCase;
-        table.KeyIgnoreCase = r_options.PropertyNameCaseInsensitive;
+        table.KeyIgnoreCase = _options.PropertyNameCaseInsensitive;
         // 运行反序列化前的方法
         RunMethodOnDeserializingWithClass(target, type);
         GetMethods(type, out var methodOnDeserializing, out var methodOnDeserialized);
@@ -318,7 +316,7 @@ public class TOMLDeserializer
         else if (propertyInfo.PropertyType.IsEnum)
         {
             // 如果属性是枚举类型
-            if (r_options.IntegerToEnum)
+            if (_options.IntegerToEnum)
             {
                 propertyInfo.SetValue(
                     target,
@@ -329,7 +327,7 @@ public class TOMLDeserializer
             {
                 propertyInfo.SetValue(
                     target,
-                    Enum.Parse(propertyInfo.PropertyType, node.AsString, r_options.EnumIgnoreCase)
+                    Enum.Parse(propertyInfo.PropertyType, node.AsString, _options.EnumIgnoreCase)
                 );
             }
         }
@@ -357,7 +355,7 @@ public class TOMLDeserializer
         // 如果泛型类型是枚举 则直接从字符串转换
         if (elementType.IsEnum)
         {
-            if (r_options.IntegerToEnum)
+            if (_options.IntegerToEnum)
             {
                 foreach (var node in array)
                     list.Add(Enum.ToObject(elementType, node.AsInt64));
@@ -365,7 +363,7 @@ public class TOMLDeserializer
             else
             {
                 foreach (var node in array)
-                    list.Add(Enum.Parse(elementType, node.AsString, r_options.EnumIgnoreCase));
+                    list.Add(Enum.Parse(elementType, node.AsString, _options.EnumIgnoreCase));
             }
             return;
         }
@@ -587,7 +585,7 @@ public class TOMLDeserializer
     )
     {
         foreach (var propertyName in missingPequiredProperties)
-            r_missingPequiredProperties.Add($"{className}.{propertyName}");
+            _missingPequiredProperties.Add($"{className}.{propertyName}");
     }
     #endregion
 }

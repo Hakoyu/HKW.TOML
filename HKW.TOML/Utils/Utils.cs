@@ -10,8 +10,8 @@ namespace HKWTOML.Utils;
 
 internal static class TOMLUtils
 {
-    public const string c_propertyGetMethodStartsWith = "get_";
-    public const string c_propertySetMethodStartsWith = "set_";
+    public const string _propertyGetMethodStartsWith = "get_";
+    public const string _propertySetMethodStartsWith = "set_";
 
     /// <summary>
     /// 获取类的所有方法(排除属性生成的get,set方法)
@@ -24,8 +24,8 @@ internal static class TOMLUtils
             .Where(
                 m =>
                     (
-                        m.Name.StartsWith(c_propertyGetMethodStartsWith)
-                        || m.Name.StartsWith(c_propertySetMethodStartsWith)
+                        m.Name.StartsWith(_propertyGetMethodStartsWith)
+                        || m.Name.StartsWith(_propertySetMethodStartsWith)
                     )
                         is false
             );
