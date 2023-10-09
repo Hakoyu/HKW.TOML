@@ -5,13 +5,13 @@ public class TomlExample
     //public static string ExampleFile { get; set; } = "..\\..\\..\\Example.toml";
     public static string ExampleData =>
         @"
-# This is an example TOML document which shows most of its features.
+# This is an example HKWTOML document which shows most of its features.
 
 # Simple key/value with a string.
-title = ""TOML example \U0001F60A""
+title = ""HKWTOML example \U0001F60A""
 
 desc = """"""
-An example TOML document. \
+An example HKWTOML document. \
 """"""
 
 # Array with integers and floats in the various allowed formats.
@@ -62,7 +62,7 @@ distros = [
 
     public static string ClassData =>
         @"/// <summary>
-/// This is an example TOML document which shows most of its features.
+/// This is an example HKWTOML document which shows most of its features.
 /// </summary>
 public class ClassExample : ITomlClassComment
 {

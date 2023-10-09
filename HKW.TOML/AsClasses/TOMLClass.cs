@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
 
 namespace HKW.HKWTOML.AsClasses;
@@ -9,7 +6,7 @@ namespace HKW.HKWTOML.AsClasses;
 /// <summary>
 /// Toml构造类
 /// </summary>
-[DebuggerDisplay("{Name},Count = {Count}")]
+[DebuggerDisplay("{Name}, Count = {Count}")]
 internal class TOMLClass
 {
     /// <summary>
@@ -161,7 +158,7 @@ internal class TOMLClass
     /// </summary>
     /// <param name="values">值</param>
     /// <returns>格式化的值数据</returns>
-    private string GetValues(IEnumerable<TOMLClassValue> values)
+    private static string GetValues(IEnumerable<TOMLClassValue> values)
     {
         var sb = new StringBuilder();
         sb.AppendJoin(Environment.NewLine + Environment.NewLine, values);

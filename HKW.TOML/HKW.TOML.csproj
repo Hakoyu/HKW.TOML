@@ -14,6 +14,7 @@
     <Authors>HKW</Authors>
     <Company>HKW</Company>
     <Description>HKW.TOML is TOML reader, writer, deserializer, serializer and generate classes for C#.</Description>
+    <RootNamespace>HKW.HKWTOML</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

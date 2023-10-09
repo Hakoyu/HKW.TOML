@@ -1,7 +1,5 @@
-﻿using HKW.HKWTOML.Interfaces;
-using HKW.HKWTOML.Attributes;
-using System;
-using System.Collections.Generic;
+﻿using HKW.HKWTOML.Attributes;
+using HKW.HKWTOML.Interfaces;
 
 namespace HKW.HKWTOML.AsClasses;
 

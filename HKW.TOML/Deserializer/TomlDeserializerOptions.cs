@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace HKW.HKWTOML.Deserializer;
+﻿namespace HKW.HKWTOML.Deserializer;
 
 /// <summary>
 /// Toml反序列化设置

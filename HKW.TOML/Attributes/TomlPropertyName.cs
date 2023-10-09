@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HKW.HKWTOML.Attributes;
+﻿namespace HKW.HKWTOML.Attributes;
 
 /// <summary>
 /// Toml属性名称
