@@ -58,29 +58,26 @@ public class TOMLSerializer
     /// <summary>
     /// 序列化静态类至Toml表格
     /// </summary>
-    /// <param name="staticClassType">静态类类型</param>
+    /// <param name="sourceType">静态类类型</param>
     /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
-    public static TomlTable SerializeStatic(
-        Type staticClassType,
-        TOMLSerializerOptions? options = null
-    )
+    public static TomlTable SerializeStatic(Type sourceType, TOMLSerializerOptions? options = null)
     {
-        return Serialize(staticClassType, options);
+        return Serialize(sourceType, options);
     }
 
     /// <summary>
     /// 异步序列化静态类至Toml表格
     /// </summary>
-    /// <param name="staticClassType">静态类类型</param>
+    /// <param name="sourceType">静态类类型</param>
     /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
     public static async Task<TomlTable> SerializeStaticAsync(
-        Type staticClassType,
+        Type sourceType,
         TOMLSerializerOptions? options = null
     )
     {
-        return await SerializeAsync(staticClassType, options);
+        return await SerializeAsync(sourceType, options);
     }
     #endregion
 

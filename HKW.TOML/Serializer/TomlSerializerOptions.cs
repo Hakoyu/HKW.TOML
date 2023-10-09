@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 
 namespace HKW.HKWTOML.Serializer;
@@ -16,11 +17,12 @@ public class TOMLSerializerOptions
     /// <summary>
     /// 属性倒序排列
     /// </summary>
+    [DefaultValue(false)]
     public bool PropertiesReverseOrder { get; set; } = false;
 
     /// <summary>
     /// 将枚举转换为 <see cref="TomlInteger"/> 而不是 <see cref="TomlString"/>
-    /// <para>默认为 <see langword="false"/></para>
     /// </summary>
+    [DefaultValue(false)]
     public bool EnumToInteger { get; set; } = false;
 }
