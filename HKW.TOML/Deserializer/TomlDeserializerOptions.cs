@@ -1,4 +1,6 @@
-﻿namespace HKW.HKWTOML.Deserializer;
+﻿using System.ComponentModel;
+
+namespace HKW.HKWTOML.Deserializer;
 
 /// <summary>
 /// Toml反序列化设置
@@ -21,18 +23,22 @@ public class TOMLDeserializerOptions
     /// 属性名称忽略大小写
     /// <para>默认为 <see langword="true"/></para>
     /// </summary>
-    public bool PropertyNameCaseInsensitive { get; set; } = true;
+    [DefaultValue(false)]
+    public bool PropertyNameIgnoreCase { get; set; } = false;
 
     /// <summary>
     /// 枚举转换时忽略大小写
     /// <para>默认为 <see langword="true"/></para>
     /// <para>在 <see cref="IntegerToEnum"/> 为 <see langword="true"/> 时 此值无效</para>
     /// </summary>
-    public bool EnumIgnoreCase { get; set; } = true;
+    [DefaultValue(false)]
+    public bool EnumIgnoreCase { get; set; } = false;
 
     /// <summary>
-    /// 从 <see cref="TomlInteger"/> 而不是 <see cref="TomlString"/> 中获取枚举
-    /// <para>默认为 <see langword="false"/></para>
+    /// 为 true 时, 从 <see cref="TomlInteger"/> 中获取枚举项
+    /// 为 false 时, 从 <see cref="TomlString"/> 中获取枚举项
+    /// 为 null 时, 从 <see cref="TomlInteger"/> 和 <see cref="TomlString"/> 中获取枚举项
     /// </summary>
-    public bool IntegerToEnum { get; set; } = false;
+    [DefaultValue(false)]
+    public bool? IntegerToEnum { get; set; } = false;
 }

@@ -7,6 +7,8 @@ using System.Reflection;
 
 namespace HKW.HKWTOML.Deserializer;
 
+// TODO: 记录每个属性的错误
+
 /// <summary>
 /// Toml反序列化
 /// </summary>
@@ -237,7 +239,7 @@ public class TOMLDeserializer
     {
         // 设置忽略大小写
         var originalKeyIgnoreCase = table.KeyIgnoreCase;
-        table.KeyIgnoreCase = _options.PropertyNameCaseInsensitive;
+        table.KeyIgnoreCase = _options.PropertyNameIgnoreCase;
         // 运行反序列化前的方法
         RunMethodOnDeserializingWithClass(target, type);
         GetMethods(type, out var methodOnDeserializing, out var methodOnDeserialized);
@@ -312,20 +314,12 @@ public class TOMLDeserializer
         else if (propertyInfo.PropertyType.IsEnum)
         {
             // 如果属性是枚举类型
-            if (_options.IntegerToEnum)
-            {
-                propertyInfo.SetValue(
-                    target,
-                    Enum.ToObject(propertyInfo.PropertyType, node.AsInt64)
-                );
-            }
+            if (_options.IntegerToEnum is true)
+                propertyInfo.SetValue(target, GetEnum(propertyInfo.PropertyType, node.AsInt64));
+            else if (_options.IntegerToEnum is false)
+                propertyInfo.SetValue(target, GetEnum(propertyInfo.PropertyType, node.AsString));
             else
-            {
-                propertyInfo.SetValue(
-                    target,
-                    Enum.Parse(propertyInfo.PropertyType, node.AsString, _options.EnumIgnoreCase)
-                );
-            }
+                propertyInfo.SetValue(target, GetEnum(propertyInfo.PropertyType, node));
         }
         else
         {
@@ -348,19 +342,11 @@ public class TOMLDeserializer
         // 获取列表值的类型
         if (type.GetGenericArguments()[0] is not Type elementType)
             return;
-        // 如果泛型类型是枚举 则直接从字符串转换
+        // 如果泛型类型是枚举
         if (elementType.IsEnum)
         {
-            if (_options.IntegerToEnum)
-            {
-                foreach (var node in array)
-                    list.Add(Enum.ToObject(elementType, node.AsInt64));
-            }
-            else
-            {
-                foreach (var node in array)
-                    list.Add(Enum.Parse(elementType, node.AsString, _options.EnumIgnoreCase));
-            }
+            foreach (var node in array)
+                list.Add(GetEnum(elementType, node));
             return;
         }
         // 如果值是Toml节点,则直接添加
@@ -583,5 +569,35 @@ public class TOMLDeserializer
         foreach (var propertyName in missingPequiredProperties)
             _missingPequiredProperties.Add($"{className}.{propertyName}");
     }
+    #endregion
+
+    #region Enum
+
+    /// <summary>
+    /// 获取枚举值
+    /// </summary>
+    /// <param name="enumType">枚举类型</param>
+    /// <param name="node">Toml节点</param>
+    /// <returns>获取的枚举值</returns>
+    private object? GetEnum(Type enumType, TomlNode node)
+    {
+        try
+        {
+            if (node is TomlString)
+            {
+                return Enum.ToObject(enumType, node.AsInt64);
+            }
+            else if (node is TomlInteger)
+            {
+                return Enum.Parse(enumType, node.AsString, _options.EnumIgnoreCase);
+            }
+        }
+        catch
+        {
+            throw;
+        }
+        return null;
+    }
+
     #endregion
 }

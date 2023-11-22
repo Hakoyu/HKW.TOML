@@ -6,6 +6,8 @@
 
 #endregion
 
+using System.Text;
+
 namespace HKW.HKWTOML;
 
 /// <summary>
@@ -13,6 +15,11 @@ namespace HKW.HKWTOML;
 /// </summary>
 public static class TOML
 {
+    /// <summary>
+    /// TOML 文件拓展名
+    /// </summary>
+    public const string TOMLExtension = ".toml";
+
     /// <summary>
     /// 强制ASCII编码
     /// </summary>
@@ -81,5 +88,30 @@ public static class TOML
     public static async Task<TomlTable> ParseFromFileAsync(string tomlFile)
     {
         return await Task.Run(() => ParseFromFile(tomlFile));
+    }
+
+    /// <summary>
+    /// 添加TOML文件拓展名
+    /// </summary>
+    /// <param name="tomlFile">TOML文件</param>
+    /// <returns>带有TOML文件拓展名的文件名</returns>
+    public static string AddTOMLExtension(string tomlFile)
+    {
+        if (tomlFile.EndsWith(TOMLExtension) is false)
+            tomlFile += TOMLExtension;
+        return tomlFile;
+    }
+
+    /// <summary>
+    /// 添加TOML文件拓展名
+    /// </summary>
+    /// <param name="tomlFile">TOML文件</param>
+    /// <returns>带有TOML文件拓展名的文件名</returns>
+    public static StringBuilder AddTOMLExtension(StringBuilder tomlFile)
+    {
+        var index = tomlFile.Length - TOMLExtension.Length;
+        if (index <= 0 || TOMLExtension.Any(c => c != tomlFile[index++]))
+            return tomlFile.Append(TOMLExtension);
+        return tomlFile;
     }
 }

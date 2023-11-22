@@ -20,6 +20,7 @@ namespace HKW.HKWTOML;
 [DebuggerTypeProxy(typeof(HKWUtils.DebugViews.CollectionDebugView))]
 public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 {
+    #region TomlNode
     /// <inheritdoc/>
     public new IEnumerator<KeyValuePair<string, TomlNode>> GetEnumerator() =>
         RawTable.GetEnumerator();
@@ -67,10 +68,10 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     public override int ChildrenCount => RawTable.Count;
 
     /// <inheritdoc/>
-    public override IEnumerable<TomlNode> Children => RawTable.Select(kv => kv.Value);
+    public override IEnumerable<TomlNode> Children => RawTable.Values;
 
     /// <inheritdoc/>
-    public override IEnumerable<string> Keys => RawTable.Select(kv => kv.Key);
+    public override IEnumerable<string> Keys => RawTable.Keys;
 
     /// <inheritdoc/>
     ICollection<string> IDictionary<string, TomlNode>.Keys =>
@@ -90,22 +91,6 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 
     /// <inheritdoc/>
     public override void Add(string key, TomlNode node) => RawTable.Add(key, node);
-
-    /// <summary>
-    /// 添加多个键值对
-    /// </summary>
-    /// <param name="table">Toml表格</param>
-    public void AddRange(TomlTable table) => AddRange(table.AsDictionary);
-
-    /// <summary>
-    /// 添加多个键值对
-    /// </summary>
-    /// <param name="dic">多个键值对</param>
-    public void AddRange(IDictionary<string, TomlNode> dic)
-    {
-        foreach (var kv in dic)
-            RawTable.Add(kv.Key, kv.Value);
-    }
 
     /// <inheritdoc/>
     public override bool TryGetNode(string key, out TomlNode node) =>
@@ -145,6 +130,23 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 
         sb.Append(TomlSyntax.INLINE_TABLE_END_SYMBOL);
         return sb.ToString();
+    }
+    #endregion
+
+    /// <summary>
+    /// 添加多个键值对
+    /// </summary>
+    /// <param name="table">Toml表格</param>
+    public void AddRange(TomlTable table) => AddRange(table.AsDictionary);
+
+    /// <summary>
+    /// 添加多个键值对
+    /// </summary>
+    /// <param name="dic">多个键值对</param>
+    public void AddRange(IDictionary<string, TomlNode> dic)
+    {
+        foreach (var kv in dic)
+            RawTable.Add(kv.Key, kv.Value);
     }
 
     /// <summary>
@@ -194,14 +196,14 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         return nodes;
     }
 
+    #region Save
     /// <summary>
     /// 保存至
     /// </summary>
     /// <param name="tomlFile">Toml文件</param>
     public void SaveToFile(string tomlFile)
     {
-        if (tomlFile.EndsWith(".toml") is false)
-            tomlFile += ".toml";
+        tomlFile = TOML.AddTOMLExtension(tomlFile);
         using var sw = new StreamWriter(tomlFile);
         WriteTo(sw, null!, false);
     }
@@ -245,7 +247,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
             return ToTomlString();
         });
     }
-
+    #endregion
     /// <inheritdoc/>
     public override void WriteTo(TextWriter tw, string tomlFile) => WriteTo(tw, tomlFile, true);
 
@@ -322,6 +324,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         }
     }
 
+    #region IDictionary
     /// <inheritdoc/>
     public bool ContainsKey(string key) =>
         ((IDictionary<string, TomlNode>)RawTable).ContainsKey(key);
@@ -352,6 +355,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     public bool Remove(KeyValuePair<string, TomlNode> item) =>
         ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Remove(item);
 
+    #endregion
     /// <summary>
     /// 键忽视大小写
     /// </summary>
@@ -368,7 +372,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         public bool Equals(string? x, string? y)
         {
             if (IgnoreCase)
-                return StringComparer.OrdinalIgnoreCase.Equals(x, y);
+                return StringComparer.InvariantCultureIgnoreCase.Equals(x, y);
             else
                 return EqualityComparer<string>.Default.Equals(x, y);
         }
