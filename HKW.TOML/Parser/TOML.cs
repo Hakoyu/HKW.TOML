@@ -18,7 +18,7 @@ public static class TOML
     /// <summary>
     /// TOML 文件拓展名
     /// </summary>
-    public const string TOMLExtension = ".toml";
+    public const string ExtensionName = ".toml";
 
     /// <summary>
     /// 强制ASCII编码
@@ -32,7 +32,7 @@ public static class TOML
     /// <returns>解析完成的Toml表格</returns>
     public static TomlTable Parse(TextReader reader)
     {
-        using var parser = new TOMLParser(reader) { ForceASCII = ForceASCII };
+        using var parser = new TomlParser(reader) { ForceASCII = ForceASCII };
         return parser.Parse();
     }
 
@@ -44,7 +44,7 @@ public static class TOML
     public static TomlTable Parse(string tomlData)
     {
         using var sr = new StringReader(tomlData);
-        using var parser = new TOMLParser(sr) { ForceASCII = ForceASCII };
+        using var parser = new TomlParser(sr) { ForceASCII = ForceASCII };
         return parser.Parse();
     }
 
@@ -56,7 +56,7 @@ public static class TOML
     public static TomlTable ParseFromFile(string tomlFile)
     {
         using var reader = File.OpenText(tomlFile);
-        using var parser = new TOMLParser(reader) { ForceASCII = ForceASCII };
+        using var parser = new TomlParser(reader) { ForceASCII = ForceASCII };
         return parser.Parse();
     }
 
@@ -97,8 +97,8 @@ public static class TOML
     /// <returns>带有TOML文件拓展名的文件名</returns>
     public static string AddTOMLExtension(string tomlFile)
     {
-        if (tomlFile.EndsWith(TOMLExtension) is false)
-            tomlFile += TOMLExtension;
+        if (tomlFile.EndsWith(ExtensionName) is false)
+            tomlFile += ExtensionName;
         return tomlFile;
     }
 
@@ -109,9 +109,9 @@ public static class TOML
     /// <returns>带有TOML文件拓展名的文件名</returns>
     public static StringBuilder AddTOMLExtension(StringBuilder tomlFile)
     {
-        var index = tomlFile.Length - TOMLExtension.Length;
-        if (index <= 0 || TOMLExtension.Any(c => c != tomlFile[index++]))
-            return tomlFile.Append(TOMLExtension);
+        var index = tomlFile.Length - ExtensionName.Length;
+        if (index <= 0 || ExtensionName.Any(c => c != tomlFile[index++]))
+            return tomlFile.Append(ExtensionName);
         return tomlFile;
     }
 }

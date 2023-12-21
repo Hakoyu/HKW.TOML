@@ -15,7 +15,7 @@ public class TomlSerializerTest
     public void Deserialize()
     {
         TomlTable table = TOML.Parse(TomlExample.ExampleData);
-        ClassExample example = TOMLDeserializer.Deserialize<ClassExample>(table);
+        ExampleObject example = TOMLDeserializer.Deserialize<ExampleObject>(table);
         TomlTable serializeTable = TOMLSerializer.Serialize(example);
         //Console.WriteLine(serializeTable.ToTomlString());
     }

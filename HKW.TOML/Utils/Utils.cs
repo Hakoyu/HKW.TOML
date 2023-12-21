@@ -4,6 +4,21 @@ namespace HKWTOML.Utils;
 
 internal static class TOMLUtils
 {
+    /// <summary>
+    /// 是静态
+    /// </summary>
+    /// <param name="propertyInfo">属性信息</param>
+    /// <returns>是为 <see langword="true"/> 不是为 <see langword="false"/></returns>
+    public static bool IsStatic(this PropertyInfo propertyInfo)
+    {
+        if (propertyInfo.GetMethod is MethodInfo getMethod)
+            return getMethod.IsStatic;
+        else if (propertyInfo.SetMethod is MethodInfo setMethod)
+            return setMethod.IsStatic;
+        else
+            return false;
+    }
+
     public const string _propertyGetMethodStartsWith = "get_";
     public const string _propertySetMethodStartsWith = "set_";
 

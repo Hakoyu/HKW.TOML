@@ -14,7 +14,7 @@ namespace HKW.HKWTOML;
 /// <summary>
 /// TOML解析器
 /// </summary>
-public class TOMLParser : IDisposable
+public class TomlParser : IDisposable
 {
     /// <summary>
     /// 解析状态
@@ -73,7 +73,7 @@ public class TOMLParser : IDisposable
     /// 从文本读取器解析
     /// </summary>
     /// <param name="reader">文明读取器</param>
-    public TOMLParser(TextReader reader)
+    public TomlParser(TextReader reader)
     {
         _reader = reader;
         _line = _column = 0;
@@ -776,7 +776,7 @@ public class TOMLParser : IDisposable
         )
             return new TomlDateTimeOffset(dateTimeOffsetResult) { SecondsPrecision = precision };
 
-        AddError($"Value \"{value}\" is not a valid HKWTOML value!");
+        AddError($"Value \"{value}\" is not a valid TOML value!");
         return null!;
     }
 

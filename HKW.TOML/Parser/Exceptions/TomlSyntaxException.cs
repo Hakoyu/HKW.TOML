@@ -17,7 +17,7 @@ public class TomlSyntaxException : Exception
     /// <summary>
     /// 解析状态
     /// </summary>
-    public TOMLParser.ParseState ParseState { get; }
+    public TomlParser.ParseState ParseState { get; }
 
     /// <summary>
     /// 行
@@ -36,7 +36,7 @@ public class TomlSyntaxException : Exception
     /// <param name="state">解析状态</param>
     /// <param name="line">行</param>
     /// <param name="column">列</param>
-    public TomlSyntaxException(string message, TOMLParser.ParseState state, int line, int column)
+    public TomlSyntaxException(string message, TomlParser.ParseState state, int line, int column)
         : base(message)
     {
         ParseState = state;

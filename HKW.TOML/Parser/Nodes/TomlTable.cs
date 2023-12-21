@@ -7,6 +7,7 @@
 #endregion
 
 using System.Collections;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
@@ -45,7 +46,7 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     public bool IsInline { get; set; }
 
     /// <summary>
-    /// 原始值
+    /// 原始表格
     /// </summary>
     public Dictionary<string, TomlNode> RawTable { get; private set; } =
         new(new TomlTableComparer());
@@ -356,30 +357,40 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Remove(item);
 
     #endregion
+
     /// <summary>
-    /// 键忽视大小写
+    /// 键获取 HashCode 使用的默认 <see cref="StringComparison"/>
+    /// <para>
+    /// 改变后在新对象生效
+    /// </para>
     /// </summary>
-    public bool KeyIgnoreCase
+    [DefaultValue(StringComparison.OrdinalIgnoreCase)]
+    public static StringComparison DefaultKeyHashCodeComparison { get; set; } =
+        StringComparison.OrdinalIgnoreCase;
+
+    /// <summary>
+    /// 键比较器
+    /// </summary>
+    public StringComparison KeyComparison
     {
-        get { return ((TomlTableComparer)RawTable.Comparer).IgnoreCase; }
-        set { ((TomlTableComparer)RawTable.Comparer).IgnoreCase = value; }
+        get => ((TomlTableComparer)RawTable.Comparer).KeyComparison;
+        set => ((TomlTableComparer)RawTable.Comparer).KeyComparison = value;
     }
 
     internal class TomlTableComparer : IEqualityComparer<string>
     {
-        public bool IgnoreCase { get; set; } = false;
+        public StringComparison KeyComparison { get; set; } = StringComparison.CurrentCulture;
+
+        public StringComparison KeyHashCodeComparison { get; } = DefaultKeyHashCodeComparison;
 
         public bool Equals(string? x, string? y)
         {
-            if (IgnoreCase)
-                return StringComparer.InvariantCultureIgnoreCase.Equals(x, y);
-            else
-                return EqualityComparer<string>.Default.Equals(x, y);
+            return StringComparer.FromComparison(KeyComparison).Equals(x, y);
         }
 
         public int GetHashCode([DisallowNull] string obj)
         {
-            return StringComparer.OrdinalIgnoreCase.GetHashCode();
+            return obj.GetHashCode(KeyHashCodeComparison);
         }
     }
 }

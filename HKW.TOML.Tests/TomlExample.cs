@@ -64,7 +64,7 @@ distros = [
         @"/// <summary>
 /// This is an example HKWTOML document which shows most of its features.
 /// </summary>
-public class ClassExample : ITomlClassComment
+public class ExampleObject : ITomlObjectComment
 {
     /// <inheritdoc/>
     public string ClassComment { get; set; } = string.Empty;
@@ -146,7 +146,7 @@ public class DistrosAnonymousClass
     public string Packages { get; set; }
 }
 
-public class ServersClass : ITomlClassComment
+public class ServersClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public string ClassComment { get; set; } = string.Empty;
@@ -170,7 +170,7 @@ public class ServersClass : ITomlClassComment
 /// <summary>
 /// Create new table; note the ""servers"" table is created implicitly.
 /// </summary>
-public class AlphaClass : ITomlClassComment
+public class AlphaClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public string ClassComment { get; set; } = string.Empty;
@@ -196,7 +196,7 @@ public class AlphaClass : ITomlClassComment
     public bool Enabled { get; set; }
 }
 
-public class BetaClass : ITomlClassComment
+public class BetaClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public string ClassComment { get; set; } = string.Empty;
@@ -220,7 +220,7 @@ public class BetaClass : ITomlClassComment
     public bool Enabled { get; set; }
 }
 
-public class CharactersClass : ITomlClassComment
+public class CharactersClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public string ClassComment { get; set; } = string.Empty;
@@ -247,7 +247,7 @@ public class Star-trekAnonymousClass
     public string Rank { get; set; }
 }
 
-public class UndecodedClass : ITomlClassComment
+public class UndecodedClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public string ClassComment { get; set; } = string.Empty;

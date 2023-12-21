@@ -43,7 +43,7 @@ internal class HKWToml
         Value3,
     }
 
-    public class ClassExample1 : ITOMLClassComment
+    public class ClassExample1 : ITomlObjectComment
     {
         /// <inheritdoc/>
         public string ClassComment { get; set; } = string.Empty;

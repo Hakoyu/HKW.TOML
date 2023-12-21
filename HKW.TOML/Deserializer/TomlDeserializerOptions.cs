@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel;
+using System.Reflection;
+using HKW.HKWTOML.Exceptions;
 
 namespace HKW.HKWTOML.Deserializer;
 
@@ -7,38 +9,46 @@ namespace HKW.HKWTOML.Deserializer;
 /// </summary>
 public class TOMLDeserializerOptions
 {
-    ///// <summary>
-    ///// 删除键的单词分隔符 如 "_"
-    ///// <para>默认为 <see langword="true"/></para>
-    ///// </summary>
-    //public bool RemoveKeyWordSeparator { get; set; } = true;
-
-    ///// <summary>
-    ///// 单词分隔符
-    ///// <para>默认为 '<see langword="_"/>'</para>
-    ///// </summary>
-    //public char KeyWordSeparator { get; set; } = '_';
-
     /// <summary>
-    /// 属性名称忽略大小写
-    /// <para>默认为 <see langword="true"/></para>
+    /// 允许非公有属性
     /// </summary>
     [DefaultValue(false)]
-    public bool PropertyNameIgnoreCase { get; set; } = false;
+    public bool AllowNonPublicProperty { get; set; } = false;
+
+    /// <summary>
+    /// 允许静态属性
+    /// </summary>
+    [DefaultValue(false)]
+    public bool AllowStaticProperty { get; set; } = false;
+
+    /// <summary>
+    /// 键比较
+    /// </summary>
+    [DefaultValue(StringComparison.CurrentCulture)]
+    public StringComparison KeyComparison { get; set; } = StringComparison.CurrentCulture;
 
     /// <summary>
     /// 枚举转换时忽略大小写
-    /// <para>默认为 <see langword="true"/></para>
-    /// <para>在 <see cref="IntegerToEnum"/> 为 <see langword="true"/> 时 此值无效</para>
     /// </summary>
     [DefaultValue(false)]
     public bool EnumIgnoreCase { get; set; } = false;
 
     /// <summary>
-    /// 为 true 时, 从 <see cref="TomlInteger"/> 中获取枚举项
-    /// 为 false 时, 从 <see cref="TomlString"/> 中获取枚举项
-    /// 为 null 时, 从 <see cref="TomlInteger"/> 和 <see cref="TomlString"/> 中获取枚举项
+    /// 缺失的必要属性值
     /// </summary>
-    [DefaultValue(false)]
-    public bool? IntegerToEnum { get; set; } = false;
+    public HashSet<string> MissingPequiredProperties { get; set; } = new();
+
+    /// <summary>
+    /// 异常处理模式
+    /// </summary>
+    [DefaultValue(ExceptionHandlingMode.Throw)]
+    public ExceptionHandlingMode ExceptionHandling { get; set; } = ExceptionHandlingMode.Throw;
+
+    /// <summary>
+    /// 所有异常
+    /// <para>
+    /// (PropertyFullName, Exception)
+    /// </para>
+    /// </summary>
+    public Dictionary<string, Exception> Exceptions { get; set; } = new();
 }

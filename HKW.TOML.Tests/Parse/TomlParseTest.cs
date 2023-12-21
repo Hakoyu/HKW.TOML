@@ -15,10 +15,4 @@ public class TomlParseTest
         TomlTable table = TOML.Parse(TomlExample.ExampleData);
         //Console.WriteLine(table.ToTomlString());
     }
-
-    //public static void ParseExampleFromFile()
-    //{
-    //    TomlTable table = TOML.ParseFromFile(TomlExample.ExampleFile);
-    //    Console.WriteLine(table.ToTomlString());
-    //}
 }

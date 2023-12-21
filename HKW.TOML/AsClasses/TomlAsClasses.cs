@@ -1,6 +1,7 @@
 ﻿using HKW.HKWUtils.Extensions;
 using HKWTOML.Utils;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace HKW.HKWTOML.AsClasses;
 

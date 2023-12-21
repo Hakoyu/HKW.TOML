@@ -148,7 +148,7 @@ public class TOMLAsClassesOptions
     public HashSet<string> MultipleInheritance { get; set; } = new();
 
     /// <summary>
-    /// 为所有非匿名类添加 <see cref="ITOMLClassComment"/> 接口
+    /// 为所有非匿名类添加 <see cref="ITomlObjectComment"/> 接口
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
     public bool AddITomlClassCommentInterface { get; set; } = false;
@@ -157,7 +157,7 @@ public class TOMLAsClassesOptions
     /// ITomlClassComment接口名称
     /// <para>默认为 <see langword="nameof(ITomlClassComment)"/></para>
     /// </summary>
-    public string ITomlClassCommentInterface { get; set; } = nameof(ITOMLClassComment);
+    public string ITomlClassCommentInterface { get; set; } = nameof(ITomlObjectComment);
 
     /// <summary>
     /// 继承格式化文本

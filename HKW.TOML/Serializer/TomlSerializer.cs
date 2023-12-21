@@ -1,4 +1,6 @@
-﻿using HKW.HKWTOML.Attributes;
+﻿using HKW.FastMember;
+using HKW.HKWTOML.Attributes;
+using HKW.HKWTOML.Exceptions;
 using HKW.HKWTOML.Interfaces;
 using HKWTOML.Utils;
 using System.Collections;
@@ -8,21 +10,12 @@ namespace HKW.HKWTOML.Serializer;
 
 /// <summary>
 /// Toml序列化
+/// <para>
+/// 要序列化静态类请使用 Serialize(typeof(StaticObject))
+/// </para>
 /// </summary>
 public class TOMLSerializer
 {
-    /// <summary>
-    /// Toml序列化设置
-    /// </summary>
-    private readonly TOMLSerializerOptions _options;
-
-    /// <inheritdoc/>
-    /// <param name="options">设置</param>
-    private TOMLSerializer(TOMLSerializerOptions? options = null)
-    {
-        _options = options ?? new();
-    }
-
     #region Serialize
 
     /// <summary>
@@ -50,34 +43,39 @@ public class TOMLSerializer
     {
         return await Task.Run(() => Serialize(source, options));
     }
-
-    /// <summary>
-    /// 序列化静态类至Toml表格
-    /// </summary>
-    /// <param name="sourceType">静态类类型</param>
-    /// <param name="options">序列化设置</param>
-    /// <returns>Toml表格数据</returns>
-    public static TomlTable SerializeStatic(Type sourceType, TOMLSerializerOptions? options = null)
-    {
-        return Serialize(sourceType, options);
-    }
-
-    /// <summary>
-    /// 异步序列化静态类至Toml表格
-    /// </summary>
-    /// <param name="sourceType">静态类类型</param>
-    /// <param name="options">序列化设置</param>
-    /// <returns>Toml表格数据</returns>
-    public static async Task<TomlTable> SerializeStaticAsync(
-        Type sourceType,
-        TOMLSerializerOptions? options = null
-    )
-    {
-        return await SerializeAsync(sourceType, options);
-    }
     #endregion
 
-    #region Create TOML
+    /// <summary>
+    /// Toml序列化设置
+    /// </summary>
+    private readonly TOMLSerializerOptions _options;
+
+    /// <summary>
+    /// 是默认设置
+    /// </summary>
+    private readonly bool _isDefaultOptions = false;
+
+    /// <summary>
+    /// 属性标识符
+    /// </summary>
+    private readonly BindingFlags _propertyBindingFlags =
+        BindingFlags.Public | BindingFlags.Instance;
+
+    /// <inheritdoc/>
+    /// <param name="options">设置</param>
+    private TOMLSerializer(TOMLSerializerOptions? options)
+    {
+        if (options is null)
+            _isDefaultOptions = true;
+        _options = options ?? new();
+
+        if (_options.AllowStaticProperty)
+            _propertyBindingFlags |= BindingFlags.Static;
+        if (_options.AllowNonPublicProperty)
+            _propertyBindingFlags |= BindingFlags.NonPublic;
+    }
+
+    #region SerializeObject
 
     /// <summary>
     /// 序列化
@@ -86,89 +84,100 @@ public class TOMLSerializer
     /// <returns>Toml表格数据</returns>
     private TomlTable Serialize(object source)
     {
-        return CreateTomlTable(source);
+        Type type;
+        // 检查是否为静态类
+        if (source is Type staticType && staticType.IsSealed && staticType.IsAbstract)
+        {
+            if (_options.AllowStaticProperty is false)
+                throw new TomlSerializeException(
+                    "Target is static object but Options.AllowStaticProperty is false"
+                        + Environment.NewLine
+                        + "If you want to serialize a static object please set Options.AllowStaticProperty to true"
+                );
+            type = staticType;
+        }
+        else
+        {
+            type = source.GetType();
+        }
+        return SerializeTomlTable(source, type);
     }
 
     /// <summary>
     /// 创建Toml表格
     /// </summary>
     /// <param name="source">源</param>
+    /// <param name="type">类型</param>
     /// <returns>Toml表格</returns>
-    private TomlTable CreateTomlTable(object source)
+    private TomlTable SerializeTomlTable(object source, Type type)
     {
-        if (source is not Type type)
-            type = source.GetType();
-        RunMethodOnSerializingWithClass(source, type);
-        GetMethods(type, out var methodOnSerializing, out var methodOnSerialized);
-        RunMethodOnSerializing(source, methodOnSerializing);
-
+        var accessor = ObjectAccessor.Create(source);
         var table = new TomlTable();
         // 获取所有属性
-        var properties = GetProperties(source);
-        var iTomlClass = source as ITOMLClassComment;
+        var properties = GetProperties(type);
+        var iTomlClass = source as ITomlObjectComment;
         // 设置注释
         if (iTomlClass is not null)
             table.Comment = iTomlClass.ClassComment;
 
-        ParseProperties(source, table, properties, iTomlClass);
+        foreach (var propertyInfo in properties)
+        {
+            try
+            {
+                if (SerializeProperty(accessor, propertyInfo, iTomlClass) is var (name, node))
+                    table.Add(name, node);
+            }
+            catch (Exception ex)
+            {
+                if (_options.ExceptionHandling is ExceptionHandlingMode.Ignore)
+                    continue;
+                else if (_options.ExceptionHandling is ExceptionHandlingMode.Throw)
+                    throw;
+                else if (_options.ExceptionHandling is ExceptionHandlingMode.Record)
+                    _options.Exceptions.TryAdd($"{type.FullName}.{propertyInfo.Name}", ex);
+            }
+        }
 
-        RunMethodOnSerializedWithClass(source, type);
-        RunMethodOnSerialized(source, methodOnSerialized);
         return table;
     }
 
     /// <summary>
-    /// 解析属性
+    /// 反序列化属性
     /// </summary>
-    /// <param name="source">源头</param>
-    /// <param name="table">Toml表格数据</param>
-    /// <param name="properties">多个属性</param>
-    /// <param name="iTomlClass">Toml注释接口</param>
-    void ParseProperties(
-        object source,
-        TomlTable table,
-        IEnumerable<PropertyInfo> properties,
-        ITOMLClassComment? iTomlClass
+    /// <param name="accessor">访问器</param>
+    /// <param name="propertyInfo">属性信息</param>
+    /// <param name="iTomlObject"></param>
+    /// <returns></returns>
+    private (string name, TomlNode node)? SerializeProperty(
+        ObjectAccessor accessor,
+        PropertyInfo propertyInfo,
+        ITomlObjectComment? iTomlObject
     )
-    {
-        foreach (var propertyInfo in properties)
-        {
-            // 检测是否有隐藏特性
-            if (Attribute.IsDefined(propertyInfo, typeof(TOMLIgnoreAttribute)))
-                continue;
-            // 跳过ITomlClass生成的接口
-            if (
-                iTomlClass is not null
-                && (
-                    propertyInfo.Name == nameof(ITOMLClassComment.ClassComment)
-                    || propertyInfo.Name == nameof(ITOMLClassComment.ValueComments)
-                )
+    { // 跳过ITomlClass生成的接口
+        if (
+            iTomlObject is not null
+            && (
+                propertyInfo.Name == nameof(ITomlObjectComment.ClassComment)
+                || propertyInfo.Name == nameof(ITomlObjectComment.ValueComments)
             )
-                continue;
-            // 获取属性的值
-            if (propertyInfo.GetValue(source) is not object value)
-                continue;
-            // 获取名称
-            var name = GetTomlKeyName(propertyInfo) ?? propertyInfo.Name;
-            // 创建Toml节点
-            var node = CheckTomlConverter(value, propertyInfo) ?? CreateTomlNode(value);
-            table.TryAdd(name, node);
-            // 设置注释
-            node.Comment = SetCommentToNode(iTomlClass, propertyInfo.Name)!;
-        }
-    }
+        )
+            return null;
+        // 检测是否有隐藏特性
+        if (propertyInfo.GetCustomAttribute<TOMLIgnoreAttribute>() is not null)
+            return null;
 
-    /// <summary>
-    /// 创建Toml数组
-    /// </summary>
-    /// <param name="list">列表</param>
-    /// <returns>Toml数组</returns>
-    private TomlArray CreateTomlArray(IEnumerable list)
-    {
-        var array = new TomlArray();
-        foreach (var item in list)
-            array.Add(CreateTomlNode(item));
-        return array;
+        // 获取属性的值
+        if (accessor[propertyInfo.Name] is not object value)
+            return null;
+        // 获取名称
+        var name = GetTomlKeyName(propertyInfo) ?? propertyInfo.Name;
+
+        // 创建Toml节点
+        var node = CheckTomlConverter(value, propertyInfo) ?? CreateTomlNode(value);
+
+        // 设置注释
+        node.Comment = SetComment(iTomlObject, propertyInfo.Name)!;
+        return (name, node);
     }
 
     /// <summary>
@@ -208,14 +217,47 @@ public class TOMLSerializer
             TypeCode.DateTime => new TomlDateTimeLocal((DateTime)source),
             TypeCode.Object when source is DateTimeOffset offset => new TomlDateTimeOffset(offset),
 
-            TypeCode.Object when source is TomlNode node => node,
-            TypeCode.Object when source is IEnumerable list => CreateTomlArray(list),
-            TypeCode.Object when type.IsClass => CreateTomlTable(source),
+            // 对象
+            TypeCode.Object when source is TomlNode node
+                => node,
+            TypeCode.Object when source is IDictionary dictionary
+                => SerializeDictionary(dictionary),
+            TypeCode.Object when source is IEnumerable list => SerializeList(list),
+            TypeCode.Object when type.IsClass => SerializeTomlTable(source, type),
             _
                 => throw new NotSupportedException(
                     $"Unknown source !\nType = {type.Name}, Source = {source}"
                 )
         };
+    }
+
+    /// <summary>
+    /// 创建Toml数组
+    /// </summary>
+    /// <param name="list">列表</param>
+    /// <returns>Toml数组</returns>
+    private TomlArray SerializeList(IEnumerable list)
+    {
+        var array = new TomlArray();
+        foreach (var item in list)
+            array.Add(CreateTomlNode(item));
+        return array;
+    }
+
+    /// <summary>
+    /// 创建Toml表格
+    /// </summary>
+    /// <param name="dictionary">字典</param>
+    /// <returns>Toml表格</returns>
+    private TomlTable SerializeDictionary(IDictionary dictionary)
+    {
+        var table = new TomlTable();
+        foreach (var item in dictionary)
+        {
+            var kv = (DictionaryEntry)item;
+            table.Add(kv.Key.ToString()!, CreateTomlNode(kv.Value!));
+        }
+        return table;
     }
 
     /// <summary>
@@ -237,15 +279,11 @@ public class TOMLSerializer
     /// <summary>
     /// 获取源中的所有属性
     /// </summary>
-    /// <param name="source">源</param>
+    /// <param name="type">类型</param>
     /// <returns>经过排序后的属性</returns>
-    private IEnumerable<PropertyInfo> GetProperties(object source)
+    private IEnumerable<PropertyInfo> GetProperties(Type type)
     {
-        PropertyInfo[] properties;
-        if (source is Type type)
-            properties = type.GetProperties();
-        else
-            properties = source.GetType().GetProperties();
+        var properties = type.GetProperties(_propertyBindingFlags);
         // 使用自定义比较器排序
         if (_options.PropertiesOrderComparer is not null)
         {
@@ -311,113 +349,14 @@ public class TOMLSerializer
     /// <summary>
     /// 设置注释
     /// </summary>
-    /// <param name="iTomlClass">TomlClass接口</param>
+    /// <param name="iTomlObject">TomlClass接口</param>
     /// <param name="name">键名</param>
-    private static string SetCommentToNode(ITOMLClassComment? iTomlClass, string name)
+    private static string SetComment(ITomlObjectComment? iTomlObject, string name)
     {
         // 检查值注释
-        if (iTomlClass?.ValueComments?.TryGetValue(name, out var comment) is true)
+        if (iTomlObject?.ValueComments?.TryGetValue(name, out var comment) is true)
             return comment;
         return string.Empty;
     }
-    #endregion
-    #region RunMethod
-    /// <summary>
-    /// 获取方法
-    /// </summary>
-    /// <param name="type">类型</param>
-    /// <param name="methodOnSerializing">运行于序列化之前的方法</param>
-    /// <param name="methodOnSerialized">运行于序列化之后的方法</param>
-    private static void GetMethods(
-        Type type,
-        out IEnumerable<MethodAndParameters> methodOnSerializing,
-        out IEnumerable<MethodAndParameters> methodOnSerialized
-    )
-    {
-        List<MethodAndParameters> tempMethodOnSerializing = new();
-        List<MethodAndParameters> tempMethodOnSerialized = new();
-        foreach (var method in TOMLUtils.GetRuntimeMethodsNotContainProperty(type))
-        {
-            if (
-                method.GetCustomAttribute(typeof(RunOnTOMLSerializingAttribute))
-                is RunOnTOMLSerializingAttribute runOnTomlSerializingAttribute
-            )
-            {
-                tempMethodOnSerializing.Add(new(method, runOnTomlSerializingAttribute.Parameters));
-            }
-            else if (
-                method.GetCustomAttribute(typeof(RunOnTOMLSerializedAttribute))
-                is RunOnTOMLSerializedAttribute runOnTomlSerializedAttribute
-            )
-            {
-                tempMethodOnSerialized.Add(new(method, runOnTomlSerializedAttribute.Parameters));
-            }
-        }
-        methodOnSerializing = tempMethodOnSerializing;
-        methodOnSerialized = tempMethodOnSerialized;
-    }
-
-    /// <summary>
-    /// 运行序列化之前的方法
-    /// </summary>
-    /// <param name="target">目标</param>
-    /// <param name="methodOnSerializing">运行于序列化之前的方法</param>
-    private static void RunMethodOnSerializing(
-        object target,
-        IEnumerable<MethodAndParameters> methodOnSerializing
-    )
-    {
-        foreach (var mp in methodOnSerializing)
-        {
-            mp.Method.Invoke(target, mp.Parameters);
-        }
-    }
-
-    /// <summary>
-    /// 运行序列化之后的方法
-    /// </summary>
-    /// <param name="target">目标</param>
-    /// <param name="methodOnSerialized">运行于序列化之后的方法</param>
-    private static void RunMethodOnSerialized(
-        object target,
-        IEnumerable<MethodAndParameters> methodOnSerialized
-    )
-    {
-        foreach (var mp in methodOnSerialized)
-        {
-            mp.Method.Invoke(target, mp.Parameters);
-        }
-    }
-
-    /// <summary>
-    /// 运行反序列化时,类附加的方法
-    /// </summary>
-    /// <param name="target">目标</param>
-    /// <param name="type">类型</param>
-    private static void RunMethodOnSerializingWithClass(object target, Type type)
-    {
-        if (
-            type.GetCustomAttribute(typeof(RunOnTOMLSerializingAttribute))
-            is not RunOnTOMLSerializingAttribute runOnTomlSerializing
-        )
-            return;
-        runOnTomlSerializing.Method?.Invoke(target, runOnTomlSerializing.Parameters);
-    }
-
-    /// <summary>
-    /// 运行反序列化后,类附加的方法
-    /// </summary>
-    /// <param name="target">目标</param>
-    /// <param name="type">类型</param>
-    private static void RunMethodOnSerializedWithClass(object target, Type type)
-    {
-        if (
-            type.GetCustomAttribute(typeof(RunOnTOMLSerializedAttribute))
-            is not RunOnTOMLSerializedAttribute runOnTomlSerialized
-        )
-            return;
-        runOnTomlSerialized.Method?.Invoke(target, runOnTomlSerialized.Parameters);
-    }
-
     #endregion
 }

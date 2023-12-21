@@ -16,7 +16,7 @@ public class TomlAsClassesTest
         var table = TOML.Parse(TomlExample.ExampleData);
         string classString = TOMLAsClasses.Generate(
             table,
-            "ClassExample",
+            "ExampleObject",
             new()
             {
                 AddComment = true,
@@ -26,6 +26,6 @@ public class TomlAsClassesTest
                 RemoveKeyWordSeparator = true,
             }
         );
-        Assert.IsTrue(classString.Length == TomlExample.ClassData.Length);
+        Assert.IsTrue(classString == TomlExample.ClassData);
     }
 }
