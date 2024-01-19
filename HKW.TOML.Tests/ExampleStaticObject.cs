@@ -7,55 +7,55 @@ public static class ExampleStaticObject
     /// <summary>
     /// Simple key/value with a string.
     /// </summary>
-    [TOMLPropertyOrder(0)]
-    [TOMLPropertyName("title")]
+    [TomlPropertyOrder(0)]
+    [TomlPropertyName("title")]
     public static string Title { get; set; }
 
-    [TOMLPropertyOrder(1)]
-    [TOMLPropertyName("desc")]
+    [TomlPropertyOrder(1)]
+    [TomlPropertyName("desc")]
     public static string Desc { get; set; }
 
     /// <summary>
     /// Array with integers and floats in the various allowed formats.
     /// </summary>
-    [TOMLPropertyOrder(2)]
-    [TOMLPropertyName("integers")]
+    [TomlPropertyOrder(2)]
+    [TomlPropertyName("integers")]
     public static List<int> Integers { get; set; }
 
-    [TOMLPropertyOrder(3)]
-    [TOMLPropertyName("floats")]
+    [TomlPropertyOrder(3)]
+    [TomlPropertyName("floats")]
     public static List<double> Floats { get; set; }
 
     /// <summary>
     /// Array with supported datetime formats.
     /// </summary>
-    [TOMLPropertyOrder(4)]
-    [TOMLPropertyName("times")]
+    [TomlPropertyOrder(4)]
+    [TomlPropertyName("times")]
     public static List<TomlNode> Times { get; set; }
 
     /// <summary>
     /// Durations.
     /// </summary>
-    [TOMLPropertyOrder(5)]
-    [TOMLPropertyName("duration")]
+    [TomlPropertyOrder(5)]
+    [TomlPropertyName("duration")]
     public static List<string> Duration { get; set; }
 
     /// <summary>
     /// Table with inline tables.
     /// </summary>
-    [TOMLPropertyOrder(6)]
-    [TOMLPropertyName("distros")]
+    [TomlPropertyOrder(6)]
+    [TomlPropertyName("distros")]
     public static List<DistrosAnonymousClass> Distros { get; set; }
 
-    [TOMLPropertyOrder(7)]
-    [TOMLPropertyName("servers")]
+    [TomlPropertyOrder(7)]
+    [TomlPropertyName("servers")]
     public static ServersClass Servers { get; set; }
 
-    [TOMLPropertyOrder(8)]
-    [TOMLPropertyName("characters")]
+    [TomlPropertyOrder(8)]
+    [TomlPropertyName("characters")]
     public static CharactersClass Characters { get; set; }
 
-    [TOMLPropertyOrder(9)]
-    [TOMLPropertyName("undecoded")]
+    [TomlPropertyOrder(9)]
+    [TomlPropertyName("undecoded")]
     public static UndecodedClass Undecoded { get; set; }
 }

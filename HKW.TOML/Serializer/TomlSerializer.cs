@@ -118,7 +118,7 @@ public class TOMLSerializer
         var iTomlClass = source as ITomlObjectComment;
         // 设置注释
         if (iTomlClass is not null)
-            table.Comment = iTomlClass.ClassComment;
+            table.Comment = iTomlClass.ObjectComment;
 
         foreach (var propertyInfo in properties)
         {
@@ -157,13 +157,13 @@ public class TOMLSerializer
         if (
             iTomlObject is not null
             && (
-                propertyInfo.Name == nameof(ITomlObjectComment.ClassComment)
-                || propertyInfo.Name == nameof(ITomlObjectComment.ValueComments)
+                propertyInfo.Name == nameof(ITomlObjectComment.ObjectComment)
+                || propertyInfo.Name == nameof(ITomlObjectComment.PropertyComments)
             )
         )
             return null;
         // 检测是否有隐藏特性
-        if (propertyInfo.GetCustomAttribute<TOMLIgnoreAttribute>() is not null)
+        if (propertyInfo.GetCustomAttribute<TomlIgnoreAttribute>() is not null)
             return null;
 
         // 获取属性的值
@@ -269,11 +269,11 @@ public class TOMLSerializer
     private static TomlNode? CheckTomlConverter(object value, PropertyInfo propertyInfo)
     {
         if (
-            propertyInfo.GetCustomAttribute(typeof(TOMLConverterAttribute))
-            is not TOMLConverterAttribute tomlConverter
+            propertyInfo.GetCustomAttribute(typeof(TomlConverterAttribute))
+            is not TomlConverterAttribute tomlConverter
         )
             return null;
-        return tomlConverter.Write(value);
+        return tomlConverter.Converter.ConverteBack(value);
     }
 
     /// <summary>
@@ -321,8 +321,8 @@ public class TOMLSerializer
     private static int GetPropertyOrder(PropertyInfo property)
     {
         if (
-            property.GetCustomAttribute<TOMLPropertyOrderAttribute>()
-            is TOMLPropertyOrderAttribute parameterOrder
+            property.GetCustomAttribute<TomlPropertyOrderAttribute>()
+            is TomlPropertyOrderAttribute parameterOrder
         )
             return parameterOrder.Value;
         return int.MaxValue;
@@ -337,8 +337,8 @@ public class TOMLSerializer
     {
         // 检查TomlName特性
         if (
-            propertyInfo.GetCustomAttribute<TOMLPropertyNameAttribute>()
-            is not TOMLPropertyNameAttribute tomlName
+            propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>()
+            is not TomlPropertyNameAttribute tomlName
         )
             return null;
         if (string.IsNullOrWhiteSpace(tomlName.Value))
@@ -354,7 +354,7 @@ public class TOMLSerializer
     private static string SetComment(ITomlObjectComment? iTomlObject, string name)
     {
         // 检查值注释
-        if (iTomlObject?.ValueComments?.TryGetValue(name, out var comment) is true)
+        if (iTomlObject?.PropertyComments?.TryGetValue(name, out var comment) is true)
             return comment;
         return string.Empty;
     }

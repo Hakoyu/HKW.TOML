@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Text;
 
-namespace HKW.HKWTOML.AsClasses;
+namespace HKW.HKWTOML.ObjectBuilder;
 
 /// <summary>
 /// Toml构造类
 /// </summary>
 [DebuggerDisplay("{Name}, Count = {Count}")]
-internal class TOMLClass
+internal class ObjectData
 {
     /// <summary>
     /// 名称
@@ -38,28 +38,29 @@ internal class TOMLClass
     /// 值字典
     /// <para>(值名称, 值)</para>
     /// </summary>
-    public Dictionary<string, TOMLClassValue> Values { get; set; } = new();
+    public Dictionary<string, ObjectValueData> Values { get; set; } = new();
 
     /// <summary>
     /// 特性
     /// </summary>
     public HashSet<string> Attributes { get; set; } = new();
 
-    private readonly TOMLAsClasses _tomlAsClasses;
-
     /// <summary>
-    /// 构造
+    /// 设置
     /// </summary>
-    /// <param name="tomlAsClasses"></param>
+    private readonly ObjectBuilderOptions _options;
+
+    /// <inheritdoc/>
+    /// <param name="options">设置</param>
     /// <param name="name">名称</param>
     /// <param name="parentName">父类名称</param>
-    public TOMLClass(TOMLAsClasses tomlAsClasses, string name, string? parentName)
+    public ObjectData(ObjectBuilderOptions options, string name, string? parentName)
     {
-        _tomlAsClasses = tomlAsClasses;
+        _options = options;
         Name = name;
         FullName = name + parentName;
         ParentName = parentName ?? string.Empty;
-        IsAnonymous = parentName is not null && string.IsNullOrWhiteSpace(parentName);
+        IsAnonymous = string.IsNullOrWhiteSpace(parentName);
     }
 
     /// <summary>
@@ -79,22 +80,20 @@ internal class TOMLClass
             )
                 sb.AppendLine(comment);
             if (
-                GetAttribute(_tomlAsClasses._options.ClassAttributes) is string attribute
+                GetAttribute(_options.ObjectAttributes) is string attribute
                 && string.IsNullOrWhiteSpace(attribute) is false
             )
                 sb.AppendLine(attribute);
-            classname += GetInheritance(_tomlAsClasses._options.MultipleInheritance);
+            classname += GetInheritance(_options.MultipleInheritance);
             // 添加ITomlClass接口中的值
-            if (_tomlAsClasses._options.AddITomlClassCommentInterface)
+            if (_options.AddITomlClassCommentInterface)
                 iTomlClassCommentValue =
-                    string.Format(
-                        _tomlAsClasses._options.ITomlClassInterfaceValueFormat,
-                        _tomlAsClasses._options.Indent
-                    ) + Environment.NewLine;
+                    string.Format(_options.ITomlClassInterfaceValueFormat, _options.Indent)
+                    + Environment.NewLine;
         }
 
         return string.Format(
-            _tomlAsClasses._options.ClassFormat,
+            _options.ClassFormat,
             sb.ToString(),
             classname,
             iTomlClassCommentValue + GetValues(Values.Values)
@@ -112,17 +111,17 @@ internal class TOMLClass
             return comment;
         var comments = comment.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         if (comments.Length is 1)
-            return string.Format(_tomlAsClasses._options.CommentFormat, string.Empty, comments[0]);
+            return string.Format(_options.CommentFormat, string.Empty, comments[0]);
         var multiLineComment =
             comments[0]
             + Environment.NewLine
             + string.Join(
                 Environment.NewLine,
                 comments[1..].Select(
-                    s => string.Format(_tomlAsClasses._options.CommentParaFormat, string.Empty, s)
+                    s => string.Format(_options.CommentParaFormat, string.Empty, s)
                 )
             );
-        return string.Format(_tomlAsClasses._options.CommentFormat, string.Empty, multiLineComment);
+        return string.Format(_options.CommentFormat, string.Empty, multiLineComment);
     }
 
     /// <summary>
@@ -134,9 +133,7 @@ internal class TOMLClass
     {
         var sb = new StringBuilder();
         foreach (var attribute in attributes)
-            sb.AppendLine(
-                string.Format(_tomlAsClasses._options.AttributeFormat, string.Empty, attribute)
-            );
+            sb.AppendLine(string.Format(_options.AttributeFormat, string.Empty, attribute));
         return sb.ToString();
     }
 
@@ -150,7 +147,7 @@ internal class TOMLClass
         var str = string.Join(", ", inheritances);
         if (string.IsNullOrWhiteSpace(str))
             return string.Empty;
-        return string.Format(_tomlAsClasses._options.InheritanceFormat, str);
+        return string.Format(_options.InheritanceFormat, str);
     }
 
     /// <summary>
@@ -158,7 +155,7 @@ internal class TOMLClass
     /// </summary>
     /// <param name="values">值</param>
     /// <returns>格式化的值数据</returns>
-    private static string GetValues(IEnumerable<TOMLClassValue> values)
+    private static string GetValues(IEnumerable<ObjectValueData> values)
     {
         var sb = new StringBuilder();
         sb.AppendJoin(Environment.NewLine + Environment.NewLine, values);

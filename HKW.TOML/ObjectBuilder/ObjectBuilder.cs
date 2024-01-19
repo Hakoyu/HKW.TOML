@@ -1,20 +1,19 @@
 ﻿using HKW.HKWUtils.Extensions;
 using HKWTOML.Utils;
 using System.Text;
-using System.Text.RegularExpressions;
 
-namespace HKW.HKWTOML.AsClasses;
+namespace HKW.HKWTOML.ObjectBuilder;
 
 /// <summary>
-/// Toml转换为类
+/// 对象构造器
 /// </summary>
-public partial class TOMLAsClasses
+public partial class ObjectBuilder
 {
     /// <summary>
     /// 所有类
     /// <para>(类名称, 类值)</para>
     /// </summary>
-    private readonly Dictionary<string, TOMLClass> _tomlClasses = new();
+    private readonly Dictionary<string, ObjectData> _objectValues = new();
 
     /// <summary>
     /// 所有数组名称
@@ -25,21 +24,21 @@ public partial class TOMLAsClasses
     /// <summary>
     /// 设置
     /// </summary>
-    internal readonly TOMLAsClassesOptions _options = new();
+    private readonly ObjectBuilderOptions _options = new();
 
-    private TOMLAsClasses(TOMLAsClassesOptions? options)
+    private ObjectBuilder(ObjectBuilderOptions? options)
     {
         _options = options ?? new();
     }
 
-    #region Generate
+    #region Build
     /// <summary>
     /// 从文件中生成
     /// </summary>
     /// <param name="tomlFile">toml文件</param>
     /// <param name="options">设置</param>
     /// <returns>生成的数据</returns>
-    public static string GenerateFromFile(string tomlFile, TOMLAsClassesOptions? options = null)
+    public static string BuildFromFile(string tomlFile, ObjectBuilderOptions? options = null)
     {
         var toml = TOML.ParseFromFile(tomlFile);
         var rootClassName = Path.GetFileNameWithoutExtension(tomlFile);
@@ -53,10 +52,10 @@ public partial class TOMLAsClasses
     /// <param name="rootClassName">基类名称</param>
     /// <param name="options">设置</param>
     /// <returns>生成的数据</returns>
-    public static string GenerateFromFile(
+    public static string BuildFromFile(
         string tomlFile,
         string rootClassName = "",
-        TOMLAsClassesOptions? options = null
+        ObjectBuilderOptions? options = null
     )
     {
         var toml = TOML.ParseFromFile(tomlFile);
@@ -75,10 +74,10 @@ public partial class TOMLAsClasses
     public static string Generate(
         TomlTable table,
         string rootClassName,
-        TOMLAsClassesOptions? options = null
+        ObjectBuilderOptions? options = null
     )
     {
-        var asClasses = new TOMLAsClasses(options);
+        var asClasses = new ObjectBuilder(options);
         return asClasses.Generate(table, rootClassName);
     }
     #endregion
@@ -99,13 +98,13 @@ public partial class TOMLAsClasses
 
         // 生成数据
         var sb = new StringBuilder();
-        foreach (var tomlClass in _tomlClasses.Values)
+        foreach (var tomlClass in _objectValues.Values)
             sb.AppendLine(tomlClass.ToString());
         return sb.ToString();
     }
 
     /// <summary>
-    /// 初始化列表名称
+    /// 初始化数据
     /// </summary>
     private void InitializeData()
     {
@@ -125,28 +124,6 @@ public partial class TOMLAsClasses
 
         if (_options.AddITomlClassCommentInterface)
             _options.MultipleInheritance.Add(_options.ITomlClassCommentInterface);
-
-        // 统一特性的格式
-        if (_options.ClassAttributes.Any())
-            _options.ClassAttributes = _options.ClassAttributes
-                .Select(s => RemoveSurroundedSquareBrackets(s))
-                .ToHashSet();
-        if (_options.PropertyAttributes.Any())
-            _options.PropertyAttributes = _options.PropertyAttributes
-                .Select(s => RemoveSurroundedSquareBrackets(s))
-                .ToHashSet();
-    }
-
-    /// <summary>
-    /// 删除首尾的方括号
-    /// </summary>
-    /// <param name="s">字符串</param>
-    /// <returns>去除掉首尾的方括号的字符串</returns>
-    private static string RemoveSurroundedSquareBrackets(string s)
-    {
-        if (s[0] is '[' && s[^1] is ']')
-            return s[1..^2];
-        return s;
     }
 
     /// <summary>
@@ -169,10 +146,10 @@ public partial class TOMLAsClasses
             if (_options.KeyNameConverterFunc is not null)
                 name = _options.KeyNameConverterFunc(name);
             else if (_options.KeyNameToPascal)
-                name = name.ToPascal(_options.KeyWordSeparator, _options.RemoveKeyWordSeparator);
+                name = name.ToPascal(_options.KeyWordSeparator);
 
             // 检测关键词
-            if (TOMLUtils.CsharpKeywords.Contains(name))
+            if (TomlUtils.CsharpKeywords.Contains(name))
                 throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
             // 解析表格的值
             ParseTableValue(tomlClass, name, node);
@@ -195,7 +172,7 @@ public partial class TOMLAsClasses
         string originalName,
         ref int index,
         TomlNode node,
-        TOMLClass tomlClass
+        ObjectData tomlClass
     )
     {
         if (_options.PropertyAttributes is not null)
@@ -225,18 +202,18 @@ public partial class TOMLAsClasses
     /// <param name="table">Toml表格</param>
     /// <returns>Toml类</returns>
     /// <exception cref="Exception">使用了Csharp的内部字符</exception>
-    private TOMLClass GetTomlClass(string className, string? parentClassName, TomlTable table)
+    private ObjectData GetTomlClass(string className, string? parentClassName, TomlTable table)
     {
         // 检测关键字
-        if (TOMLUtils.CsharpKeywords.Contains(className))
+        if (TomlUtils.CsharpKeywords.Contains(className))
             throw new Exception($"Used CsharpKeywords \"{className}\"");
         // 获取已存在的类
-        if (_tomlClasses.TryGetValue(className, out var tomlClass) is false)
+        if (_objectValues.TryGetValue(className, out var tomlClass) is false)
         {
-            tomlClass = new(this, className, parentClassName);
+            tomlClass = new(_options, className, parentClassName);
             if (_options.AddComment)
                 tomlClass.Comment = table.Comment;
-            _tomlClasses.TryAdd(tomlClass.FullName, tomlClass);
+            _objectValues.TryAdd(tomlClass.FullName, tomlClass);
         }
         return tomlClass;
     }
@@ -247,7 +224,7 @@ public partial class TOMLAsClasses
     /// <param name="tomlClass">toml类</param>
     /// <param name="name">值名称</param>
     /// <param name="node">值数据</param>
-    private void ParseTableValue(TOMLClass tomlClass, string name, TomlNode node)
+    private void ParseTableValue(ObjectData tomlClass, string name, TomlNode node)
     {
         if (node.IsTomlTable)
         {
@@ -255,9 +232,12 @@ public partial class TOMLAsClasses
             var className = string.Format(_options.ClassNameFormat, name);
             // 判断是否有父类,有则为父类添加新的属性,没有则新建
             if (string.IsNullOrWhiteSpace(tomlClass.ParentName))
-                tomlClass.Values.TryAdd(name, new(this, name, className));
+                tomlClass.Values.TryAdd(name, new(_options, name, className));
             else
-                _tomlClasses[tomlClass.FullName].Values.TryAdd(name, new(this, name, className));
+                _objectValues[tomlClass.FullName].Values.TryAdd(
+                    name,
+                    new(_options, name, className)
+                );
             // 解析类
             ParseTable(className, tomlClass.Name, node.AsTomlTable);
         }
@@ -265,11 +245,11 @@ public partial class TOMLAsClasses
         {
             // 获取数组类名称
             var arrayTypeName = ParseArray(name, node.AsTomlArray);
-            tomlClass.Values.TryAdd(name, new(this, name, arrayTypeName));
+            tomlClass.Values.TryAdd(name, new(_options, name, arrayTypeName));
         }
         else
         {
-            tomlClass.Values.TryAdd(name, new(this, name, node));
+            tomlClass.Values.TryAdd(name, new(_options, name, node));
         }
     }
 

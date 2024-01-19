@@ -4,4 +4,4 @@
 /// 必要属性
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class TOMLRequiredAttribute : Attribute { }
+public class TomlRequiredAttribute : Attribute { }

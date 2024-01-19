@@ -398,8 +398,8 @@ public class TOMLDeserializer
         var iTomlClass = target as ITomlObjectComment;
         if (iTomlClass is not null)
         {
-            iTomlClass.ClassComment = table.Comment ?? string.Empty;
-            iTomlClass.ValueComments ??= new();
+            iTomlClass.ObjectComment = table.Comment ?? string.Empty;
+            iTomlClass.PropertyComments ??= new();
         }
 
         foreach (var propertyInfo in type.GetProperties(_propertyBindingFlags))
@@ -527,14 +527,14 @@ public class TOMLDeserializer
     )
     {
         // 检测是否为隐藏属性
-        if (propertyInfo.GetCustomAttribute<TOMLIgnoreAttribute>() is not null)
+        if (propertyInfo.GetCustomAttribute<TomlIgnoreAttribute>() is not null)
             return true;
         // 跳过ITomlClassComment生成的接口
         if (iTomlClassComment is not null)
         {
-            if (propertyInfo.Name == nameof(ITomlObjectComment.ClassComment))
+            if (propertyInfo.Name == nameof(ITomlObjectComment.ObjectComment))
                 return true;
-            else if (propertyInfo.Name == nameof(ITomlObjectComment.ValueComments))
+            else if (propertyInfo.Name == nameof(ITomlObjectComment.PropertyComments))
                 return true;
         }
         // 获取属性名
@@ -543,13 +543,13 @@ public class TOMLDeserializer
         if (table.TryGetValue(name, out var node) is false)
         {
             // 如果这是必要属性, 则返回失败
-            if (propertyInfo.GetCustomAttribute<TOMLRequiredAttribute>() is not null)
+            if (propertyInfo.GetCustomAttribute<TomlRequiredAttribute>() is not null)
                 return false;
             return true;
         }
 
         // 设置注释
-        iTomlClassComment?.ValueComments.TryAdd(name, node.Comment ?? string.Empty);
+        iTomlClassComment?.PropertyComments.TryAdd(name, node.Comment ?? string.Empty);
         DeserializePropertyValue(accessor, node, propertyInfo);
         return true;
     }
@@ -571,11 +571,11 @@ public class TOMLDeserializer
 
         // 检测TomlConverter
         if (
-            propertyInfo.GetCustomAttribute<TOMLConverterAttribute>()
-            is TOMLConverterAttribute tomlConverter
+            propertyInfo.GetCustomAttribute<TomlConverterAttribute>()
+            is TomlConverterAttribute tomlConverter
         )
         {
-            SetPropertyValue(accessor, propertyInfo, tomlConverter.Read(node));
+            SetPropertyValue(accessor, propertyInfo, tomlConverter.Converter.Converte(node));
             return;
         }
 
@@ -625,8 +625,8 @@ public class TOMLDeserializer
     {
         // 获取TomlKeyName
         if (
-            propertyInfo.GetCustomAttribute<TOMLPropertyNameAttribute>()
-            is TOMLPropertyNameAttribute keyName
+            propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>()
+            is TomlPropertyNameAttribute keyName
         )
             return keyName.Value;
         else

@@ -67,9 +67,9 @@ distros = [
 public class ExampleObject : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ClassComment { get; set; } = string.Empty;
+    public string ObjectComment { get; set; } = string.Empty;
     /// <inheritdoc/>
-    public Dictionary<string, string> ValueComments { get; set; } = new();
+    public Dictionary<string, string> PropertyComments { get; set; } = new();
 
 
     /// <summary>
@@ -149,9 +149,9 @@ public class DistrosAnonymousClass
 public class ServersClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ClassComment { get; set; } = string.Empty;
+    public string ObjectComment { get; set; } = string.Empty;
     /// <inheritdoc/>
-    public Dictionary<string, string> ValueComments { get; set; } = new();
+    public Dictionary<string, string> PropertyComments { get; set; } = new();
 
 
     /// <summary>
@@ -173,9 +173,9 @@ public class ServersClass : ITomlObjectComment
 public class AlphaClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ClassComment { get; set; } = string.Empty;
+    public string ObjectComment { get; set; } = string.Empty;
     /// <inheritdoc/>
-    public Dictionary<string, string> ValueComments { get; set; } = new();
+    public Dictionary<string, string> PropertyComments { get; set; } = new();
 
 
     /// <summary>
@@ -199,9 +199,9 @@ public class AlphaClass : ITomlObjectComment
 public class BetaClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ClassComment { get; set; } = string.Empty;
+    public string ObjectComment { get; set; } = string.Empty;
     /// <inheritdoc/>
-    public Dictionary<string, string> ValueComments { get; set; } = new();
+    public Dictionary<string, string> PropertyComments { get; set; } = new();
 
 
 
@@ -223,9 +223,9 @@ public class BetaClass : ITomlObjectComment
 public class CharactersClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ClassComment { get; set; } = string.Empty;
+    public string ObjectComment { get; set; } = string.Empty;
     /// <inheritdoc/>
-    public Dictionary<string, string> ValueComments { get; set; } = new();
+    public Dictionary<string, string> PropertyComments { get; set; } = new();
 
 
 
@@ -250,9 +250,9 @@ public class Star-trekAnonymousClass
 public class UndecodedClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ClassComment { get; set; } = string.Empty;
+    public string ObjectComment { get; set; } = string.Empty;
     /// <inheritdoc/>
-    public Dictionary<string, string> ValueComments { get; set; } = new();
+    public Dictionary<string, string> PropertyComments { get; set; } = new();
 
 
 

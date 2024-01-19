@@ -1,12 +1,12 @@
 ﻿using HKW.HKWTOML.Attributes;
 using HKW.HKWTOML.Interfaces;
 
-namespace HKW.HKWTOML.AsClasses;
+namespace HKW.HKWTOML.ObjectBuilder;
 
 /// <summary>
 /// Toml转换为类设置
 /// </summary>
-public class TOMLAsClassesOptions
+public class ObjectBuilderOptions
 {
     /// <summary>
     /// 合并int和float
@@ -71,25 +71,25 @@ public class TOMLAsClassesOptions
     #region Attribute
 
     /// <summary>
-    /// 所有属性添加 <see cref="TOMLPropertyOrderAttribute"/>
+    /// 所有属性添加 <see cref="TomlPropertyOrderAttribute"/>
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
     public bool AddTomlPropertyOrderAttribute { get; set; } = false;
 
     /// <summary>
-    /// 特性 <see cref="TOMLPropertyOrderAttribute"/> 格式化文本
+    /// 特性 <see cref="TomlPropertyOrderAttribute"/> 格式化文本
     /// <para>默认为 "<see langword="TomlPropertyOrder({0})"/>"</para>
     /// </summary>
     public string TomlPropertyOrderAttributeFormat { get; set; } = "TomlPropertyOrder({0})";
 
     /// <summary>
-    /// 所有属性添加 <see cref="TOMLPropertyNameAttribute"/>
+    /// 所有属性添加 <see cref="TomlPropertyNameAttribute"/>
     /// <para>默认为 <see langword="false"/></para>
     /// </summary>
     public bool AddTomlPropertyNameAttribute { get; set; } = false;
 
     /// <summary>
-    /// 特性 <see cref="TOMLPropertyNameAttribute"/> 格式化文本
+    /// 特性 <see cref="TomlPropertyNameAttribute"/> 格式化文本
     /// <para>默认为 "<see langword="TomlPropertyName(&quot;{0}&quot;)"/>"</para>
     /// </summary>
     public string TomlPropertyNameAttributeFormat { get; set; } = "TomlPropertyName(\"{0}\")";
@@ -114,11 +114,13 @@ public class TOMLAsClassesOptions
 
     /// <summary>
     /// 类添加的特性
+    /// <para>注意: 不要加 "[]"</para>
     /// </summary>
-    public HashSet<string> ClassAttributes { get; set; } = new();
+    public HashSet<string> ObjectAttributes { get; set; } = new();
 
     /// <summary>
     /// 属性添加的特性
+    /// <para>注意: 不要加 "[]"</para>
     /// </summary>
     public HashSet<string> PropertyAttributes { get; set; } = new();
 
@@ -179,9 +181,9 @@ public class TOMLAsClassesOptions
     /// </summary>
     public string ITomlClassInterfaceValueFormat { get; set; } =
         @"{0}/// <inheritdoc/>
-{0}public string ClassComment {{ get; set; }} = string.Empty;
+{0}public string ObjectComment {{ get; set; }} = string.Empty;
 {0}/// <inheritdoc/>
-{0}public Dictionary<string, string> ValueComments {{ get; set; }} = new();
+{0}public Dictionary<string, string> PropertyComments {{ get; set; }} = new();
 
 ";
 

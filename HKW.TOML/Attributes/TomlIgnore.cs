@@ -5,4 +5,4 @@
 /// <para>在序列化和反序列化时忽略的值</para>
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class TOMLIgnoreAttribute : Attribute { }
+public sealed class TomlIgnoreAttribute : Attribute { }

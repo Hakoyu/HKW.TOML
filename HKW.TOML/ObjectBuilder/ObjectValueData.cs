@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Text;
 
-namespace HKW.HKWTOML.AsClasses;
+namespace HKW.HKWTOML.ObjectBuilder;
 
 /// <summary>
 /// toml类值
 /// </summary>
 [DebuggerDisplay("{TypeName}, {Name}")]
-internal class TOMLClassValue
+internal class ObjectValueData
 {
     /// <summary>
     /// 名称
@@ -29,17 +29,20 @@ internal class TOMLClassValue
     /// </summary>
     public HashSet<string> Attributes { get; set; } = new();
 
-    private readonly TOMLAsClasses _tomlAsClasses;
+    /// <summary>
+    /// 设置
+    /// </summary>
+    private readonly ObjectBuilderOptions _options;
 
     /// <summary>
     /// 构造
     /// </summary>
-    /// <param name="tomlAsClass"></param>
+    /// <param name="options">设置</param>
     /// <param name="name">名称</param>
     /// <param name="typeName">类型名称</param>
-    public TOMLClassValue(TOMLAsClasses tomlAsClass, string name, string typeName)
+    public ObjectValueData(ObjectBuilderOptions options, string name, string typeName)
     {
-        _tomlAsClasses = tomlAsClass;
+        _options = options;
         Name = name;
         TypeName = typeName;
     }
@@ -47,15 +50,11 @@ internal class TOMLClassValue
     /// <summary>
     /// 构造
     /// </summary>
-    /// <param name="tomlAsClass"></param>
+    /// <param name="options">设置</param>
     /// <param name="name">名称</param>
     /// <param name="node">类值(推断类型名称)</param>
-    public TOMLClassValue(TOMLAsClasses tomlAsClass, string name, TomlNode node)
-    {
-        _tomlAsClasses = tomlAsClass;
-        Name = name;
-        TypeName = _tomlAsClasses._options.GetConvertName(node, TomlType.GetTypeCode(node));
-    }
+    public ObjectValueData(ObjectBuilderOptions options, string name, TomlNode node)
+        : this(options, name, options.GetConvertName(node, TomlType.GetTypeCode(node))) { }
 
     /// <summary>
     /// 转化为格式化字符串
@@ -63,12 +62,7 @@ internal class TOMLClassValue
     /// <returns>字符串</returns>
     public override string ToString()
     {
-        var valueData = string.Format(
-            _tomlAsClasses._options.PropertyFormat,
-            _tomlAsClasses._options.Indent,
-            TypeName,
-            Name
-        );
+        var valueData = string.Format(_options.PropertyFormat, _options.Indent, TypeName, Name);
         return GetComment(Comment) + Environment.NewLine + GetAttribute(Attributes) + valueData;
     }
 
@@ -83,30 +77,17 @@ internal class TOMLClassValue
             return comment;
         var comments = comment.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         if (comments.Length is 1)
-            return string.Format(
-                _tomlAsClasses._options.CommentFormat,
-                _tomlAsClasses._options.Indent,
-                comments[0]
-            );
+            return string.Format(_options.CommentFormat, _options.Indent, comments[0]);
         var multiLineComment =
             comments[0]
             + Environment.NewLine
             + string.Join(
                 Environment.NewLine,
                 comments[1..].Select(
-                    s =>
-                        string.Format(
-                            _tomlAsClasses._options.CommentParaFormat,
-                            _tomlAsClasses._options.Indent,
-                            s
-                        )
+                    s => string.Format(_options.CommentParaFormat, _options.Indent, s)
                 )
             );
-        return string.Format(
-            _tomlAsClasses._options.CommentFormat,
-            _tomlAsClasses._options.Indent,
-            multiLineComment
-        );
+        return string.Format(_options.CommentFormat, _options.Indent, multiLineComment);
     }
 
     /// <summary>
@@ -118,13 +99,7 @@ internal class TOMLClassValue
     {
         var sb = new StringBuilder();
         foreach (var attribute in attributes)
-            sb.AppendLine(
-                string.Format(
-                    _tomlAsClasses._options.AttributeFormat,
-                    _tomlAsClasses._options.Indent,
-                    attribute
-                )
-            );
+            sb.AppendLine(string.Format(_options.AttributeFormat, _options.Indent, attribute));
         return sb.ToString();
     }
 }

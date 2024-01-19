@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HKW.HKWTOML.AsClasses;
+using HKW.HKWTOML.ObjectBuilder;
 
 namespace HKW.HKWTOML.Tests.AsClasses;
 
@@ -14,7 +14,7 @@ public class TomlAsClassesTest
     public void AsClasses()
     {
         var table = TOML.Parse(TomlExample.ExampleData);
-        string classString = TOMLAsClasses.Generate(
+        string classString = ObjectBuilder.ObjectBuilder.Generate(
             table,
             "ExampleObject",
             new()

@@ -52,10 +52,7 @@ public class TomlString : TomlNode
     {
         // Automatically convert literal to non-literal if there are too many literal string symbols
         if (
-            Value.IndexOf(
-                new string(TomlSyntax.LITERAL_STRING_SYMBOL, IsMultiline ? 3 : 1),
-                StringComparison.Ordinal
-            ) != -1
+            Value.Contains(new string(TomlSyntax.LITERAL_STRING_SYMBOL, IsMultiline ? 3 : 1))
             && PreferLiteral
         )
             PreferLiteral = false;

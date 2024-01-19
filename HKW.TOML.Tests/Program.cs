@@ -1,5 +1,5 @@
 ﻿using BenchmarkDotNet.Running;
-using HKW.HKWTOML.AsClasses;
+using HKW.HKWTOML.ObjectBuilder;
 using HKW.HKWTOML.Serializer;
 using HKW.HKWTOML.Tests.Benchmark;
 using System.Collections;

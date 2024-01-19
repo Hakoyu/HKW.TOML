@@ -2,7 +2,7 @@
 
 namespace HKWTOML.Utils;
 
-internal static class TOMLUtils
+internal static class TomlUtils
 {
     /// <summary>
     /// 是静态
@@ -17,27 +17,6 @@ internal static class TOMLUtils
             return setMethod.IsStatic;
         else
             return false;
-    }
-
-    public const string _propertyGetMethodStartsWith = "get_";
-    public const string _propertySetMethodStartsWith = "set_";
-
-    /// <summary>
-    /// 获取类的所有方法(排除属性生成的get,set方法)
-    /// </summary>
-    /// <param name="type">类型</param>
-    /// <returns>所有方法</returns>
-    public static IEnumerable<MethodInfo> GetRuntimeMethodsNotContainProperty(Type type)
-    {
-        return type.GetRuntimeMethods()
-            .Where(
-                m =>
-                    (
-                        m.Name.StartsWith(_propertyGetMethodStartsWith)
-                        || m.Name.StartsWith(_propertySetMethodStartsWith)
-                    )
-                        is false
-            );
     }
 
     /// <summary>

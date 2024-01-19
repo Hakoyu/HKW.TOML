@@ -4,7 +4,7 @@
 /// Toml参数顺序
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class TOMLPropertyOrderAttribute : Attribute
+public class TomlPropertyOrderAttribute : Attribute
 {
     /// <summary>
     /// 顺序
@@ -12,5 +12,5 @@ public class TOMLPropertyOrderAttribute : Attribute
     public int Value { get; }
 
     /// <inheritdoc/>
-    public TOMLPropertyOrderAttribute(int order) => Value = order;
+    public TomlPropertyOrderAttribute(int order) => Value = order;
 }
