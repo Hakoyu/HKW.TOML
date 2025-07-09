@@ -6,7 +6,7 @@ namespace HKW.HKWTOML.ObjectBuilder;
 /// <summary>
 /// Toml构造类
 /// </summary>
-[DebuggerDisplay("{Name}, Count = {Count}")]
+[DebuggerDisplay("{Name}, Count = {Values.Count}")]
 internal class ObjectData
 {
     /// <summary>
@@ -38,12 +38,12 @@ internal class ObjectData
     /// 值字典
     /// <para>(值名称, 值)</para>
     /// </summary>
-    public Dictionary<string, ObjectValueData> Values { get; set; } = new();
+    public Dictionary<string, ObjectValueData> Values { get; set; } = [];
 
     /// <summary>
     /// 特性
     /// </summary>
-    public HashSet<string> Attributes { get; set; } = new();
+    public HashSet<string> Attributes { get; set; } = [];
 
     /// <summary>
     /// 设置
@@ -76,7 +76,8 @@ internal class ObjectData
         if (IsAnonymous is false)
         {
             if (
-                GetComment(Comment) is string comment && string.IsNullOrWhiteSpace(comment) is false
+                GetComment(Comment) is string comment
+                && string.IsNullOrWhiteSpace(comment) is false
             )
                 sb.AppendLine(comment);
             if (
@@ -109,7 +110,7 @@ internal class ObjectData
     {
         if (string.IsNullOrWhiteSpace(comment))
             return comment;
-        var comments = comment.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var comments = comment.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
         if (comments.Length is 1)
             return string.Format(_options.CommentFormat, string.Empty, comments[0]);
         var multiLineComment =
@@ -117,9 +118,8 @@ internal class ObjectData
             + Environment.NewLine
             + string.Join(
                 Environment.NewLine,
-                comments[1..].Select(
-                    s => string.Format(_options.CommentParaFormat, string.Empty, s)
-                )
+                comments[1..]
+                    .Select(s => string.Format(_options.CommentParaFormat, string.Empty, s))
             );
         return string.Format(_options.CommentFormat, string.Empty, multiLineComment);
     }

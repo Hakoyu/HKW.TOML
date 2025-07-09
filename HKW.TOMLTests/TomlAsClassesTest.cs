@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HKW.HKWTOML.Benchmark;
 using HKW.HKWTOML.ObjectBuilder;
 
-namespace HKW.HKWTOML.Tests.AsClasses;
+namespace HKW.HKWTOML.Tests;
 
 [TestClass]
 public class TomlAsClassesTest
@@ -26,6 +27,6 @@ public class TomlAsClassesTest
                 RemoveKeyWordSeparator = true,
             }
         );
-        Assert.IsTrue(classString == TomlExample.ClassData);
+        Assert.AreEqual(TomlExample.ClassData, classString);
     }
 }

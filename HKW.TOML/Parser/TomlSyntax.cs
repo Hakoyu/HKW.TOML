@@ -13,7 +13,7 @@ namespace HKW.HKWTOML;
 /// <summary>
 /// Toml语法
 /// </summary>
-internal static class TomlSyntax
+internal static partial class TomlSyntax
 {
     #region Type Patterns
 
@@ -115,37 +115,24 @@ internal static class TomlSyntax
         return true;
     }
 
-    /**
-     * A pattern to verify the integer value according to the TOML specification.
-     */
+    /// <summary>
+    /// A pattern to verify the integer value according to the TOML specification.
+    /// </summary>
+    public static readonly Regex IntegerPattern = IntegerPatternRegexGenerater();
 
-    public static readonly Regex IntegerPattern =
-        new(@"^(\+|-)?(?!_)(0|(?!0)(_?\d)*)$", RegexOptions.Compiled);
+    /// <summary>
+    /// A pattern to verify a special 0x, 0o and 0b forms of an integer according to the TOML specification.
+    /// </summary>
+    public static readonly Regex BasedIntegerPattern = BasedIntegerPatternRegexGenerater();
 
-    /**
-     * A pattern to verify a special 0x, 0o and 0b forms of an integer according to the TOML specification.
-     */
+    /// <summary>
+    /// A pattern to verify the float value according to the TOML specification.
+    /// </summary>
+    public static readonly Regex FloatPattern = FloatPatternRegexGenerater();
 
-    public static readonly Regex BasedIntegerPattern =
-        new(
-            @"^0(?<base>x|b|o)(?!_)(_?[0-9A-F])*$",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase
-        );
-
-    /**
-     * A pattern to verify the float value according to the TOML specification.
-     */
-
-    public static readonly Regex FloatPattern =
-        new(
-            @"^(\+|-)?(?!_)(0|(?!0)(_?\d)+)(((e(\+|-)?(?!_)(_?\d)+)?)|(\.(?!_)(_?\d)+(e(\+|-)?(?!_)(_?\d)+)?))$",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase
-        );
-
-    /**
-     * A helper dictionary to map TOML base codes into the radii.
-     */
-
+    /// <summary>
+    /// A helper dictionary to map TOML base codes into the radii.
+    /// </summary>
     public static readonly Dictionary<string, int> IntegerBases =
         new()
         {
@@ -154,10 +141,9 @@ internal static class TomlSyntax
             ["b"] = 2
         };
 
-    /**
-     * A helper dictionary to map non-decimal bases to their TOML identifiers
-     */
-
+    /// <summary>
+    /// A helper dictionary to map non-decimal bases to their TOML identifiers
+    /// </summary>
     public static readonly Dictionary<int, string> BaseIdentifiers =
         new()
         {
@@ -171,12 +157,11 @@ internal static class TomlSyntax
     public const string ISO861ZeroZone = "+00:00";
     public const string RFC3339ZeroZone = "Z";
 
-    /**
-     * Valid date formats with timezone as per RFC3339.
-     */
-
+    /// <summary>
+    /// Valid date formats with timezone as per RFC3339.
+    /// </summary>
     public static readonly string[] RFC3339Formats =
-    {
+    [
         "yyyy'-'MM-ddTHH':'mm':'ssK",
         "yyyy'-'MM-ddTHH':'mm':'ss'.'fK",
         "yyyy'-'MM-ddTHH':'mm':'ss'.'ffK",
@@ -185,14 +170,14 @@ internal static class TomlSyntax
         "yyyy'-'MM-ddTHH':'mm':'ss'.'fffffK",
         "yyyy'-'MM-ddTHH':'mm':'ss'.'ffffffK",
         "yyyy'-'MM-ddTHH':'mm':'ss'.'fffffffK"
-    };
+    ];
 
-    /**
-     * Valid date formats without timezone (assumes local) as per RFC3339.
-     */
+    /// <summary>
+    /// Valid date formats without timezone (assumes local) as per RFC3339.
+    /// </summary>
 
     public static readonly string[] RFC3339LocalDateTimeFormats =
-    {
+    [
         "yyyy'-'MM-ddTHH':'mm':'ss",
         "yyyy'-'MM-ddTHH':'mm':'ss'.'f",
         "yyyy'-'MM-ddTHH':'mm':'ss'.'ff",
@@ -201,19 +186,18 @@ internal static class TomlSyntax
         "yyyy'-'MM-ddTHH':'mm':'ss'.'fffff",
         "yyyy'-'MM-ddTHH':'mm':'ss'.'ffffff",
         "yyyy'-'MM-ddTHH':'mm':'ss'.'fffffff"
-    };
+    ];
 
-    /**
-     * Valid full date format as per TOML spec.
-     */
+    /// <summary>
+    /// Valid full date format as per TOML spec.
+    /// </summary>
     public static readonly string LocalDateFormat = "yyyy'-'MM'-'dd";
 
-    /**
-     * Valid time formats as per TOML spec.
-     */
-
+    /// <summary>
+    /// Valid time formats as per TOML spec.
+    /// </summary>
     public static readonly string[] RFC3339LocalTimeFormats =
-    {
+    [
         "HH':'mm':'ss",
         "HH':'mm':'ss'.'f",
         "HH':'mm':'ss'.'ff",
@@ -222,7 +206,7 @@ internal static class TomlSyntax
         "HH':'mm':'ss'.'fffff",
         "HH':'mm':'ss'.'ffffff",
         "HH':'mm':'ss'.'fffffff"
-    };
+    ];
 
     #endregion
 
@@ -246,10 +230,10 @@ internal static class TomlSyntax
     public const char INT_NUMBE_SEPARATOR = '_';
 
     public static readonly char[] NewLineCharacters =
-    {
+    [
         NEWLINE_CHARACTER,
         NEWLINE_CARRIAGE_RETURN_CHARACTER
-    };
+    ];
 
     public static bool IsQuoted(char c) => c is BASI_STRING_SYMBOL or LITERAL_STRING_SYMBOL;
 
@@ -283,6 +267,23 @@ internal static class TomlSyntax
 
     public static bool IsValueSeparator(char c) =>
         c is ITEM_SEPARATOR or ARRAY_END_SYMBOL or INLINE_TABLE_END_SYMBOL;
+
+    [GeneratedRegex(@"^(\+|-)?(?!_)(0|(?!0)(_?\d)*)$")]
+    private static partial Regex IntegerPatternRegexGenerater();
+
+    [GeneratedRegex(
+        @"^0(?<base>x|b|o)(?!_)(_?[0-9A-F])*$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+        "zh-CN"
+    )]
+    private static partial Regex BasedIntegerPatternRegexGenerater();
+
+    [GeneratedRegex(
+        @"^(\+|-)?(?!_)(0|(?!0)(_?\d)+)(((e(\+|-)?(?!_)(_?\d)+)?)|(\.(?!_)(_?\d)+(e(\+|-)?(?!_)(_?\d)+)?))$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+        "zh-CN"
+    )]
+    private static partial Regex FloatPatternRegexGenerater();
 
     #endregion
 }

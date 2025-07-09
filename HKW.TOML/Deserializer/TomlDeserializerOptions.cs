@@ -36,7 +36,7 @@ public class TOMLDeserializerOptions
     /// <summary>
     /// 缺失的必要属性值
     /// </summary>
-    public HashSet<string> MissingPequiredProperties { get; set; } = new();
+    public HashSet<string> MissingPequiredProperties { get; set; } = [];
 
     /// <summary>
     /// 异常处理模式
@@ -50,5 +50,5 @@ public class TOMLDeserializerOptions
     /// (PropertyFullName, Exception)
     /// </para>
     /// </summary>
-    public Dictionary<string, Exception> Exceptions { get; set; } = new();
+    public Dictionary<string, Exception> Exceptions { get; set; } = [];
 }

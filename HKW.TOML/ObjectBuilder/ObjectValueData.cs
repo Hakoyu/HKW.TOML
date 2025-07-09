@@ -27,7 +27,7 @@ internal class ObjectValueData
     /// <summary>
     /// 特性
     /// </summary>
-    public HashSet<string> Attributes { get; set; } = new();
+    public HashSet<string> Attributes { get; set; } = [];
 
     /// <summary>
     /// 设置
@@ -75,7 +75,7 @@ internal class ObjectValueData
     {
         if (string.IsNullOrWhiteSpace(comment))
             return comment;
-        var comments = comment.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var comments = comment.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
         if (comments.Length is 1)
             return string.Format(_options.CommentFormat, _options.Indent, comments[0]);
         var multiLineComment =
@@ -83,9 +83,8 @@ internal class ObjectValueData
             + Environment.NewLine
             + string.Join(
                 Environment.NewLine,
-                comments[1..].Select(
-                    s => string.Format(_options.CommentParaFormat, _options.Indent, s)
-                )
+                comments[1..]
+                    .Select(s => string.Format(_options.CommentParaFormat, _options.Indent, s))
             );
         return string.Format(_options.CommentFormat, _options.Indent, multiLineComment);
     }

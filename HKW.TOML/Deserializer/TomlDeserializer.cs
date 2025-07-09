@@ -1,10 +1,10 @@
-﻿using HKW.FastMember;
+﻿using System.Collections;
+using System.Reflection;
+using HKW.FastMember;
 using HKW.HKWTOML.Attributes;
 using HKW.HKWTOML.Exceptions;
 using HKW.HKWTOML.Interfaces;
 using HKWTOML.Utils;
-using System.Collections;
-using System.Reflection;
 
 namespace HKW.HKWTOML.Deserializer;
 
@@ -371,7 +371,7 @@ public class TOMLDeserializer
         DeserializeTable(target, type, table);
 
         // 检查缺失的必要属性
-        if (_options.MissingPequiredProperties.Any())
+        if (_options.MissingPequiredProperties.Count != 0)
         {
             if (_isDefaultOptions)
                 throw new TomlDeserializeException(
@@ -399,7 +399,7 @@ public class TOMLDeserializer
         if (iTomlClass is not null)
         {
             iTomlClass.ObjectComment = table.Comment ?? string.Empty;
-            iTomlClass.PropertyComments ??= new();
+            iTomlClass.PropertyComments ??= [];
         }
 
         foreach (var propertyInfo in type.GetProperties(_propertyBindingFlags))
@@ -702,8 +702,8 @@ public class TOMLDeserializer
     private void SetPropertyValue(ObjectAccessor accessor, PropertyInfo propertyInfo, object? value)
     {
         if (_options.AllowStaticProperty && propertyInfo.IsStatic())
-            propertyInfo.SetValue(accessor.Target, value);
+            propertyInfo.SetValue(accessor.Source, value);
         else
-            accessor[propertyInfo.Name] = value;
+            accessor[propertyInfo.Name] = value!;
     }
 }

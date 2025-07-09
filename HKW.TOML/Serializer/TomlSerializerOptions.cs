@@ -29,8 +29,8 @@ public class TOMLSerializerOptions
     /// <summary>
     /// 属性倒序排列
     /// </summary>
-    [DefaultValue(false)]
-    public bool PropertiesReverseOrder { get; set; } = false;
+    [DefaultValue(PropertiesOrderMode.None)]
+    public PropertiesOrderMode PropertiesOrderMode { get; set; } = PropertiesOrderMode.None;
 
     /// <summary>
     /// 将枚举转换为 <see cref="TomlInteger"/> 而不是 <see cref="TomlString"/>
@@ -51,4 +51,25 @@ public class TOMLSerializerOptions
     /// </para>
     /// </summary>
     public Dictionary<string, Exception> Exceptions { get; set; } = new();
+}
+
+/// <summary>
+/// 属性排序模式
+/// </summary>
+public enum PropertiesOrderMode
+{
+    /// <summary>
+    /// 无
+    /// </summary>
+    None,
+
+    /// <summary>
+    /// 顺序
+    /// </summary>
+    Order,
+
+    /// <summary>
+    /// 倒序
+    /// </summary>
+    ReverseOrder,
 }

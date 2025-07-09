@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HKW.HKWTOML.Benchmark;
 using HKW.HKWTOML.Deserializer;
 
-namespace HKW.HKWTOML.Tests.Deserializer;
+namespace HKW.HKWTOML.Tests;
 
 [TestClass]
 public class TomlDeserializerTest

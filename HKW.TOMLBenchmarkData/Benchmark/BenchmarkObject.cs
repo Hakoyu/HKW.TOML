@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKW.HKWTOML.Tests.Benchmark;
+namespace HKW.HKWTOML.Benchmark.Benchmark;
 
 public class BenchmarkObject
 {

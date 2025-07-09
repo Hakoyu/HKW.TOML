@@ -95,7 +95,7 @@ public class TomlParser : IDisposable
     /// <exception cref="TomlParseException">解析错误</exception>
     public TomlTable Parse()
     {
-        _syntaxErrors = new List<TomlSyntaxException>();
+        _syntaxErrors = [];
         _line = _column = 1;
         var rootTable = new TomlTable();
         var currentTable = rootTable;
@@ -435,7 +435,7 @@ public class TomlParser : IDisposable
      * ^                           ^
      */
 
-    private TomlNode ReadKeyValuePair(List<string> keyParts)
+    private TomlNode? ReadKeyValuePair(List<string> keyParts)
     {
         int cur;
         while ((cur = _reader.Peek()) >= 0)
@@ -447,11 +447,11 @@ public class TomlParser : IDisposable
                 if (keyParts.Count != 0)
                 {
                     AddError("Encountered extra characters in key definition!");
-                    return null!;
+                    return null;
                 }
 
                 if (ReadKeyName(ref keyParts, TomlSyntax.KEY_VALUE_SEPARATOR) is false)
-                    return null!;
+                    return null;
 
                 continue;
             }
@@ -469,10 +469,10 @@ public class TomlParser : IDisposable
             }
 
             AddError($"Unexpected character \"{c}\" in key name.");
-            return null!;
+            return null;
         }
 
-        return null!;
+        return null;
     }
 
     /**
@@ -485,7 +485,7 @@ public class TomlParser : IDisposable
      * ^                 ^
      */
 
-    private TomlNode ReadValue(bool skipNewlines = false)
+    private TomlNode? ReadValue(bool skipNewlines = false)
     {
         int cur;
         while ((cur = _reader.Peek()) >= 0)
@@ -501,7 +501,7 @@ public class TomlParser : IDisposable
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
                 AddError("No value found!");
-                return null!;
+                return null;
             }
 
             if (TomlSyntax.IsNewLine(c))
@@ -514,7 +514,7 @@ public class TomlParser : IDisposable
                 }
 
                 AddError("Encountered a newline when expecting a value!");
-                return null!;
+                return null;
             }
 
             if (TomlSyntax.IsQuoted(c))
@@ -523,14 +523,14 @@ public class TomlParser : IDisposable
 
                 // Error occurred in triple quote parsing
                 if (_currentState is ParseState.None)
-                    return null!;
+                    return null;
 
                 var value = isMultiline
                     ? ReadQuotedValueMultiLine(c)
                     : ReadQuotedValueSingleLine(c, excess);
 
                 if (value is null)
-                    return null!;
+                    return null;
 
                 return new TomlString(value)
                 {
@@ -607,7 +607,6 @@ public class TomlParser : IDisposable
             if (TomlSyntax.IsQuoted(c))
             {
                 if (quoted)
-
                     return AddError("Expected a subkey separator but got extra data instead!");
 
                 if (buffer.Length != 0)
@@ -789,12 +788,12 @@ public class TomlParser : IDisposable
      * ^                        ^
      */
 
-    private TomlArray ReadArray()
+    private TomlArray? ReadArray()
     {
         // Consume the start of array character
         ConsumeChar();
         var result = new TomlArray();
-        TomlNode currentValue = null!;
+        TomlNode? currentValue = null;
         var expectValue = true;
 
         int cur;
@@ -828,11 +827,11 @@ public class TomlParser : IDisposable
                 if (currentValue == null)
                 {
                     AddError("Encountered multiple value separators");
-                    return null!;
+                    return null;
                 }
 
                 result.Add(currentValue);
-                currentValue = null!;
+                currentValue = null;
                 expectValue = true;
                 ConsumeChar();
                 continue;
@@ -841,14 +840,14 @@ public class TomlParser : IDisposable
             if (expectValue is false)
             {
                 AddError("Missing separator between values");
-                return null!;
+                return null;
             }
             currentValue = ReadValue(true);
             if (currentValue == null)
             {
                 if (_currentState != ParseState.None)
                     AddError("Failed to determine and parse a value!");
-                return null!;
+                return null;
             }
             expectValue = false;
         }
@@ -867,11 +866,11 @@ public class TomlParser : IDisposable
      * ^                                                            ^
      */
 
-    private TomlNode ReadInlineTable()
+    private TomlTable? ReadInlineTable()
     {
         ConsumeChar();
         var result = new TomlTable { IsInline = true };
-        TomlNode currentValue = null!;
+        TomlNode? currentValue = null;
         var separator = false;
         var keyParts = new List<string>();
         int cur;
@@ -888,13 +887,13 @@ public class TomlParser : IDisposable
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
                 AddError("Incomplete inline table definition!");
-                return null!;
+                return null;
             }
 
             if (TomlSyntax.IsNewLine(c))
             {
                 AddError("Inline tables are only allowed to be on single line");
-                return null!;
+                return null;
             }
 
             if (TomlSyntax.IsWhiteSpace(c))
@@ -908,13 +907,13 @@ public class TomlParser : IDisposable
                 if (currentValue == null)
                 {
                     AddError("Encountered multiple value separators in inline table!");
-                    return null!;
+                    return null;
                 }
 
                 if (InsertNode(currentValue, result, keyParts) is false)
-                    return null!;
+                    return null;
                 keyParts.Clear();
-                currentValue = null!;
+                currentValue = null;
                 separator = true;
                 ConsumeChar();
                 continue;
@@ -927,11 +926,11 @@ public class TomlParser : IDisposable
         if (separator)
         {
             AddError("Trailing commas are not allowed in inline tables.");
-            return null!;
+            return null;
         }
 
         if (currentValue is not null && !InsertNode(currentValue, result, keyParts))
-            return null!;
+            return null;
 
         return result;
     }
@@ -1224,7 +1223,7 @@ public class TomlParser : IDisposable
 
     #region Node creation
 
-    private bool InsertNode(TomlNode node, TomlNode root, IList<string> path)
+    private bool InsertNode(TomlNode node, TomlNode root, List<string> path)
     {
         var latestNode = root;
         if (path.Count > 1)
@@ -1251,14 +1250,14 @@ public class TomlParser : IDisposable
                     );
             }
 
-        if (latestNode.HasKey(path[path.Count - 1]))
+        if (latestNode.HasKey(path[^1]))
             return AddError($"The key {".".Join(path)} is already defined!");
-        latestNode[path[path.Count - 1]] = node;
+        latestNode[path[^1]] = node;
         node.CollapseLevel = path.Count - 1;
         return true;
     }
 
-    private TomlTable CreateTable(TomlNode root, IList<string> path, bool arrayTable)
+    private TomlTable CreateTable(TomlNode root, List<string> path, bool arrayTable)
     {
         if (path.Count is 0)
             return null!;

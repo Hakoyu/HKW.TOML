@@ -1,13 +1,4 @@
-﻿#region TOML Official Site
-
-// https://toml.io
-// Original project
-// https://github.com/dezhidki/Tommy
-
-#endregion
-
-
-namespace HKW.HKWTOML;
+﻿namespace HKW.HKWTOML;
 
 /// <summary>
 /// Toml类

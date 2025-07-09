@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>HKW.HKWTOML.Tests</RootNamespace>
-    <StartupObject>HKW.HKWTOML.Tests.Program</StartupObject>
+    <RootNamespace>HKW.HKWTOML.Benchmark</RootNamespace>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,18 +17,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.11" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
-    <PackageReference Include="coverlet.collector" Version="6.0.0">
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Samboy063.Tomlet" Version="5.2.0" />
+    <PackageReference Include="Samboy063.Tomlet" Version="6.1.0" />
     <PackageReference Include="SimdJsonSharp.Managed" Version="1.5.0" />
-    <PackageReference Include="Tomlyn" Version="0.17.0" />
+    <PackageReference Include="Tomlyn" Version="0.19.0" />
     <PackageReference Include="Tommy" Version="3.1.2" />
   </ItemGroup>
 

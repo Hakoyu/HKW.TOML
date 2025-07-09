@@ -18,7 +18,7 @@ namespace HKW.HKWTOML;
 /// Toml表格
 /// </summary>
 [DebuggerDisplay("Count = {ChildrenCount}")]
-[DebuggerTypeProxy(typeof(HKWUtils.DebugViews.CollectionDebugView))]
+[DebuggerTypeProxy(typeof(HKWUtils.DebugViews.ICollectionDebugView))]
 public class TomlTable : TomlNode, IDictionary<string, TomlNode>
 {
     #region TomlNode
@@ -119,9 +119,8 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
                 sb.Append(' ');
                 sb.Append(
                     $"{TomlSyntax.ITEM_SEPARATOR} ".Join(
-                        collapsed.Select(
-                            n =>
-                                $"{n.Key} {TomlSyntax.KEY_VALUE_SEPARATOR} {n.Value.ToInlineToml()}"
+                        collapsed.Select(n =>
+                            $"{n.Key} {TomlSyntax.KEY_VALUE_SEPARATOR} {n.Value.ToInlineToml()}"
                         )
                     )
                 );
@@ -272,8 +271,8 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         if (collapsedItems.Count is 0)
             return;
 
-        var hasRealValues = !collapsedItems.All(
-            n => n.Value is TomlTable { IsInline: false } or TomlArray { IsTableArray: true }
+        var hasRealValues = !collapsedItems.All(n =>
+            n.Value is TomlTable { IsInline: false } or TomlArray { IsTableArray: true }
         );
 
         if (string.IsNullOrWhiteSpace(Comment) is false)

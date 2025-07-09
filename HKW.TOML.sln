@@ -5,7 +5,9 @@ VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HKW.TOML", "HKW.TOML\HKW.TOML.csproj", "{173EEC8C-4584-48C2-959A-085D636B7E1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HKW.TOML.Tests", "HKW.TOML.Tests\HKW.TOML.Tests.csproj", "{FDC31974-C710-4ABA-B167-2CF3237305F6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HKW.TOMLBenchmark", "HKW.TOMLBenchmarkData\HKW.TOMLBenchmark.csproj", "{FDC31974-C710-4ABA-B167-2CF3237305F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HKW.TOMLTests", "HKW.TOMLTests\HKW.TOMLTests.csproj", "{2F1CF928-5AE4-44DB-9945-4364AF6A3AFF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{FDC31974-C710-4ABA-B167-2CF3237305F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDC31974-C710-4ABA-B167-2CF3237305F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDC31974-C710-4ABA-B167-2CF3237305F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F1CF928-5AE4-44DB-9945-4364AF6A3AFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F1CF928-5AE4-44DB-9945-4364AF6A3AFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F1CF928-5AE4-44DB-9945-4364AF6A3AFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F1CF928-5AE4-44DB-9945-4364AF6A3AFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

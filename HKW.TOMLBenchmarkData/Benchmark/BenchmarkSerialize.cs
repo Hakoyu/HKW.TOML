@@ -1,14 +1,14 @@
-﻿using BenchmarkDotNet.Attributes;
-using HKW.HKWTOML.Serializer;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using BenchmarkDotNet.Attributes;
+using HKW.HKWTOML.Serializer;
 using Tomlet;
 
-namespace HKW.HKWTOML.Tests.Benchmark;
+namespace HKW.HKWTOML.Benchmark.Benchmark;
 
 [MemoryDiagnoser]
 public class BenchmarkSerialize
@@ -36,26 +36,37 @@ public class BenchmarkSerialize
     public void Initialize() { }
 
     //[Benchmark]
+    //[IterationCount(10)]
     //public object? Net_JsonSerialize()
     //{
     //    return System.Text.Json.JsonSerializer.SerializeToNode(Obj);
     //}
 
     //[Benchmark]
+    //[IterationCount(10)]
     //public object? Newtonsoft_JsonSerialize()
     //{
-    //    return Newtonsoft.Json.JsonConvert.SerializeObject(Obj);
+    //    return Newtonsoft.Json.Linq.JObject.FromObject(Obj);
     //}
 
     [Benchmark]
+    [IterationCount(10)]
     public object? HKW_TomlSerialize()
     {
         return TOMLSerializer.Serialize(Obj);
     }
 
     //[Benchmark]
+    //[IterationCount(10)]
     //public object? Tomlet_TomlSerialize()
     //{
-    //    return TomletMain.DocumentFrom(_obj);
+    //    return TomletMain.DocumentFrom(Obj);
+    //}
+
+    //[Benchmark]
+    //[IterationCount(10)]
+    //public object? Tomlyn_TomlSerialize()
+    //{
+    //    return Tomlyn.Toml.FromModel(Obj);
     //}
 }

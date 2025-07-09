@@ -1,10 +1,13 @@
-﻿using HKW.FastMember;
+﻿using System.Collections;
+using System.Reflection;
+using HKW.FastMember;
 using HKW.HKWTOML.Attributes;
 using HKW.HKWTOML.Exceptions;
 using HKW.HKWTOML.Interfaces;
+using HKW.HKWUtils;
+using HKW.HKWUtils.Collections;
+using HKW.HKWUtils.Extensions;
 using HKWTOML.Utils;
-using System.Collections;
-using System.Reflection;
 
 namespace HKW.HKWTOML.Serializer;
 
@@ -24,10 +27,13 @@ public class TOMLSerializer
     /// <param name="source">源</param>
     /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
-    public static TomlTable Serialize(object source, TOMLSerializerOptions? options = null)
+    public static TomlTable? Serialize(object source, TOMLSerializerOptions? options = null)
     {
         var serializer = new TOMLSerializer(options);
-        return serializer.Serialize(source);
+        var result = serializer.Serialize(source);
+        serializer._propertiesCache.Clear();
+        serializer._attributeDictionaryCache.Clear();
+        return result;
     }
 
     /// <summary>
@@ -36,7 +42,7 @@ public class TOMLSerializer
     /// <param name="source">源</param>
     /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
-    public static async Task<TomlTable> SerializeAsync(
+    public static async Task<TomlTable?> SerializeAsync(
         object source,
         TOMLSerializerOptions? options = null
     )
@@ -60,6 +66,10 @@ public class TOMLSerializer
     /// </summary>
     private readonly BindingFlags _propertyBindingFlags =
         BindingFlags.Public | BindingFlags.Instance;
+
+    private readonly CacheDictionary<Type, PropertyInfo[]> _propertiesCache = new(16);
+    private readonly CacheDictionary<PropertyInfo, AttributeDictionary> _attributeDictionaryCache =
+        new(32);
 
     /// <inheritdoc/>
     /// <param name="options">设置</param>
@@ -114,14 +124,21 @@ public class TOMLSerializer
         var accessor = ObjectAccessor.Create(source);
         var table = new TomlTable();
         // 获取所有属性
-        var properties = GetProperties(type);
+        if (_propertiesCache.TryGetValue(type, out var properties) is false)
+        {
+            if (_options.PropertiesOrderMode is PropertiesOrderMode.None)
+                _propertiesCache[type] = properties = type.GetProperties(_propertyBindingFlags);
+            else
+                _propertiesCache[type] = properties = [.. GetObjectProperties(type)];
+        }
         var iTomlClass = source as ITomlObjectComment;
         // 设置注释
         if (iTomlClass is not null)
             table.Comment = iTomlClass.ObjectComment;
 
-        foreach (var propertyInfo in properties)
+        for (var i = 0; i < properties.Length; i++)
         {
+            var propertyInfo = properties[i];
             try
             {
                 if (SerializeProperty(accessor, propertyInfo, iTomlClass) is var (name, node))
@@ -162,21 +179,32 @@ public class TOMLSerializer
             )
         )
             return null;
+        if (
+            _attributeDictionaryCache.TryGetValue(propertyInfo, out var attributeDictionary)
+            is false
+        )
+        {
+            _attributeDictionaryCache[propertyInfo] = attributeDictionary =
+                propertyInfo.GetAttributeDictionary();
+        }
         // 检测是否有隐藏特性
-        if (propertyInfo.GetCustomAttribute<TomlIgnoreAttribute>() is not null)
+        if (attributeDictionary.Contains<TomlIgnoreAttribute>())
             return null;
 
         // 获取属性的值
         if (accessor[propertyInfo.Name] is not object value)
             return null;
         // 获取名称
-        var name = GetTomlKeyName(propertyInfo) ?? propertyInfo.Name;
+        var name = GetTomlKeyName(propertyInfo, attributeDictionary);
 
         // 创建Toml节点
-        var node = CheckTomlConverter(value, propertyInfo) ?? CreateTomlNode(value);
+        var node =
+            CheckTomlConverter(value, attributeDictionary)
+            ?? CreateTomlNode(value, propertyInfo.PropertyType);
 
         // 设置注释
-        node.Comment = SetComment(iTomlObject, propertyInfo.Name)!;
+        if (iTomlObject is not null)
+            node.Comment = GetObjectComment(iTomlObject, propertyInfo.Name);
         return (name, node);
     }
 
@@ -189,44 +217,36 @@ public class TOMLSerializer
     private TomlNode CreateTomlNode(object source, Type? type = null)
     {
         type ??= source.GetType();
-        return Type.GetTypeCode(type) switch
+        return source switch
         {
-            _ when type.IsEnum && _options.EnumToInteger is false
-                => new TomlString(source.ToString()!),
-            TypeCode.Boolean => new TomlBoolean((bool)source),
-
-            TypeCode.Char => new TomlString(source.ToString()!),
-            TypeCode.String => new TomlString((string)source),
-
+            bool b => new TomlBoolean(b),
+            char c => new TomlString(c.ToString()!),
+            string s => new TomlString(s),
             // 浮点型
-            TypeCode.Single
-                => new TomlFloat((double)Convert.ChangeType(source, TypeCode.Double)),
-            TypeCode.Double => new TomlFloat((double)Convert.ChangeType(source, TypeCode.Double)),
-
+            float f => new TomlFloat(f),
+            double d => new TomlFloat(d),
+            // 枚举, 必须在整型前
+            Enum e when _options.EnumToInteger is false => new TomlString(e.ToString()),
             // 整型
-            TypeCode.SByte
-                => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.Byte => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.Int16 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.UInt16 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.Int32 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.UInt32 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.Int64 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-            TypeCode.UInt64 => new TomlInteger((long)Convert.ChangeType(source, TypeCode.Int64)),
-
-            TypeCode.DateTime => new TomlDateTimeLocal((DateTime)source),
-            TypeCode.Object when source is DateTimeOffset offset => new TomlDateTimeOffset(offset),
-
+            sbyte sb => new TomlInteger(sb),
+            byte b => new TomlInteger(b),
+            short sh => new TomlInteger(sh),
+            ushort ush => new TomlInteger(ush),
+            int i => new TomlInteger(i),
+            uint ui => new TomlInteger(ui),
+            long l => new TomlInteger(l),
+            ulong ul => new TomlInteger((long)ul),
+            DateTime dt => new TomlDateTimeLocal(dt),
+            DateTimeOffset dto => new TomlDateTimeOffset(dto),
             // 对象
-            TypeCode.Object when source is TomlNode node
-                => node,
-            TypeCode.Object when source is IDictionary dictionary
-                => SerializeDictionary(dictionary),
-            TypeCode.Object when source is IEnumerable list => SerializeList(list),
-            TypeCode.Object when type.IsClass => SerializeTomlTable(source, type),
+            TomlNode node when source is TomlNode => node,
+            IDictionary dictionary when source is IDictionary => SerializeDictionary(dictionary),
+            IEnumerable list when source is IEnumerable => SerializeList(list),
+            _ when type.IsClass => SerializeTomlTable(source, type),
+            // 其他类型
             _
                 => throw new NotSupportedException(
-                    $"Unknown source !\nType = {type.Name}, Source = {source}"
+                    $"Unknown source type!\nType = {type.Name}, Source = {source}"
                 )
         };
     }
@@ -264,13 +284,16 @@ public class TOMLSerializer
     /// 检查Toml值转换特性
     /// </summary>
     /// <param name="value">值</param>
-    /// <param name="propertyInfo">属性信息</param>
+    /// <param name="attributeDictionary">属性字典</param>
     /// <returns>特性存在返回 <see cref="TomlNode"/> 否则返回 <see langword="null"/></returns>
-    private static TomlNode? CheckTomlConverter(object value, PropertyInfo propertyInfo)
+    private static TomlNode? CheckTomlConverter(
+        object value,
+        AttributeDictionary attributeDictionary
+    )
     {
         if (
-            propertyInfo.GetCustomAttribute(typeof(TomlConverterAttribute))
-            is not TomlConverterAttribute tomlConverter
+            attributeDictionary.TryGetAttribute<TomlConverterAttribute>(out var tomlConverter)
+            is false
         )
             return null;
         return tomlConverter.Converter.ConverteBack(value);
@@ -281,7 +304,7 @@ public class TOMLSerializer
     /// </summary>
     /// <param name="type">类型</param>
     /// <returns>经过排序后的属性</returns>
-    private IEnumerable<PropertyInfo> GetProperties(Type type)
+    private IEnumerable<PropertyInfo> GetObjectProperties(Type type)
     {
         var properties = type.GetProperties(_propertyBindingFlags);
         // 使用自定义比较器排序
@@ -289,28 +312,15 @@ public class TOMLSerializer
         {
             Array.Sort(properties, _options.PropertiesOrderComparer);
             // 判断是否倒序
-            if (_options.PropertiesReverseOrder)
+            if (_options.PropertiesOrderMode is PropertiesOrderMode.ReverseOrder)
                 Array.Reverse(properties);
             return properties;
         }
-        return CheckTomlParameterOrder(properties, _options.PropertiesReverseOrder);
-    }
 
-    /// <summary>
-    /// 检查Toml参数顺序属性并修改顺序
-    /// </summary>
-    /// <param name="properties">属性</param>
-    /// <param name="descending">倒序</param>
-    /// <returns>修改顺序后的属性</returns>
-    private static IEnumerable<PropertyInfo> CheckTomlParameterOrder(
-        IEnumerable<PropertyInfo> properties,
-        bool descending
-    )
-    {
-        if (descending is false)
-            return properties.OrderBy(p => GetPropertyOrder(p)).ThenBy(p => p.Name);
+        if (_options.PropertiesOrderMode is PropertiesOrderMode.Order)
+            return properties.OrderBy(GetPropertyOrder);
         else
-            return properties.OrderByDescending(p => GetPropertyOrder(p)).ThenBy(p => p.Name);
+            return properties.OrderByDescending(GetPropertyOrder);
     }
 
     /// <summary>
@@ -321,37 +331,42 @@ public class TOMLSerializer
     private static int GetPropertyOrder(PropertyInfo property)
     {
         if (
-            property.GetCustomAttribute<TomlPropertyOrderAttribute>()
-            is TomlPropertyOrderAttribute parameterOrder
+            property.IsDefined<TomlPropertyOrderAttribute>() is false
+            || property.GetCustomAttribute<TomlPropertyOrderAttribute>()
+                is not TomlPropertyOrderAttribute parameterOrder
         )
-            return parameterOrder.Value;
-        return int.MaxValue;
+            return int.MaxValue;
+        return parameterOrder.Value;
     }
 
     /// <summary>
     /// 获取Toml键名特性的值
     /// </summary>
-    /// <param name="propertyInfo"></param>
-    /// <returns></returns>
-    private static string? GetTomlKeyName(PropertyInfo propertyInfo)
+    /// <param name="propertyInfo">属性信息</param>
+    /// <param name="attributeDictionary">属性字典</param>
+    /// <returns>Toml键名</returns>
+    private static string GetTomlKeyName(
+        PropertyInfo propertyInfo,
+        AttributeDictionary attributeDictionary
+    )
     {
         // 检查TomlName特性
         if (
-            propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>()
-            is not TomlPropertyNameAttribute tomlName
+            attributeDictionary.TryGetAttribute<TomlPropertyNameAttribute>(out var tomlName)
+                is false
+            || string.IsNullOrWhiteSpace(tomlName.Value)
         )
-            return null;
-        if (string.IsNullOrWhiteSpace(tomlName.Value))
-            return null;
-        return tomlName.Value;
+            return propertyInfo.Name;
+        else
+            return tomlName.Value;
     }
 
     /// <summary>
-    /// 设置注释
+    /// 获取对象注释
     /// </summary>
     /// <param name="iTomlObject">TomlClass接口</param>
     /// <param name="name">键名</param>
-    private static string SetComment(ITomlObjectComment? iTomlObject, string name)
+    private static string GetObjectComment(ITomlObjectComment? iTomlObject, string name)
     {
         // 检查值注释
         if (iTomlObject?.PropertyComments?.TryGetValue(name, out var comment) is true)

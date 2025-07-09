@@ -1,6 +1,6 @@
 ﻿using HKW.HKWTOML.Attributes;
 
-namespace HKW.HKWTOML.Tests;
+namespace HKW.HKWTOML.Benchmark;
 
 public static class ExampleStaticObject
 {

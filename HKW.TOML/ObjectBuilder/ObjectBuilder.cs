@@ -1,6 +1,6 @@
-﻿using HKW.HKWUtils.Extensions;
+﻿using System.Text;
+using HKW.HKWUtils.Extensions;
 using HKWTOML.Utils;
-using System.Text;
 
 namespace HKW.HKWTOML.ObjectBuilder;
 
@@ -13,13 +13,13 @@ public partial class ObjectBuilder
     /// 所有类
     /// <para>(类名称, 类值)</para>
     /// </summary>
-    private readonly Dictionary<string, ObjectData> _objectValues = new();
+    private readonly Dictionary<string, ObjectData> _objectValues = [];
 
     /// <summary>
     /// 所有数组名称
     /// <para>(数组值类型名称, 数组名称)</para>
     /// </summary>
-    private readonly Dictionary<string, string> _arrayTypeNames = new();
+    private readonly Dictionary<string, string> _arrayTypeNames = [];
 
     /// <summary>
     /// 设置
@@ -90,6 +90,8 @@ public partial class ObjectBuilder
     /// <returns>生成的数据</returns>
     private string Generate(TomlTable table, string rootClassName)
     {
+        if (table.Count == 0)
+            return string.Empty;
         // 初始化列表名称
         InitializeData();
 
@@ -98,6 +100,8 @@ public partial class ObjectBuilder
 
         // 生成数据
         var sb = new StringBuilder();
+        // 首个类不是匿名类
+        _objectValues.Values.First().IsAnonymous = false;
         foreach (var tomlClass in _objectValues.Values)
             sb.AppendLine(tomlClass.ToString());
         return sb.ToString();
@@ -181,13 +185,15 @@ public partial class ObjectBuilder
         if (_options.AddTomlRequiredAttribute)
             tomlClass.Values[name].Attributes.Add(_options.TomlRequiredAttribute);
         if (_options.AddTomlPropertyOrderAttribute)
-            tomlClass.Values[name].Attributes.Add(
-                string.Format(_options.TomlPropertyOrderAttributeFormat, index++)
-            );
+            tomlClass
+                .Values[name]
+                .Attributes.Add(string.Format(_options.TomlPropertyOrderAttributeFormat, index++));
         if (_options.AddTomlPropertyNameAttribute)
-            tomlClass.Values[name].Attributes.Add(
-                string.Format(_options.TomlPropertyNameAttributeFormat, originalName)
-            );
+            tomlClass
+                .Values[name]
+                .Attributes.Add(
+                    string.Format(_options.TomlPropertyNameAttributeFormat, originalName)
+                );
         if (isAnonymousClass)
             return;
         if (_options.AddComment)
@@ -234,10 +240,8 @@ public partial class ObjectBuilder
             if (string.IsNullOrWhiteSpace(tomlClass.ParentName))
                 tomlClass.Values.TryAdd(name, new(_options, name, className));
             else
-                _objectValues[tomlClass.FullName].Values.TryAdd(
-                    name,
-                    new(_options, name, className)
-                );
+                _objectValues[tomlClass.FullName]
+                    .Values.TryAdd(name, new(_options, name, className));
             // 解析类
             ParseTable(className, tomlClass.Name, node.AsTomlTable);
         }

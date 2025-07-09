@@ -1,6 +1,6 @@
-﻿using HKW.HKWTOML.Deserializer;
+﻿using System.Text.Json.Serialization;
+using HKW.HKWTOML.Deserializer;
 using HKW.HKWTOML.Serializer;
-using System.Text.Json.Serialization;
 
 namespace HKW.HKWTOML.Interfaces;
 

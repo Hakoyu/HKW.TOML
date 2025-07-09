@@ -15,7 +15,7 @@ namespace HKW.HKWTOML;
 /// Toml数组
 /// </summary>
 [DebuggerDisplay("Count = {ChildrenCount}")]
-[DebuggerTypeProxy(typeof(HKWUtils.DebugViews.CollectionDebugView))]
+[DebuggerTypeProxy(typeof(HKWUtils.DebugViews.ICollectionDebugView))]
 public class TomlArray : TomlNode, IEnumerable<TomlNode>
 {
     /// <inheritdoc/>

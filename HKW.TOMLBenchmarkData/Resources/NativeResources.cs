@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace HKW.HKWTOML.Tests.Resources;
+namespace HKW.HKWTOML.Benchmark.Resources;
 
 /// <summary>
 /// 本地资源
@@ -12,7 +12,7 @@ internal class NativeResources
     /// <summary>
     /// 资源根目录
     /// </summary>
-    public const string ResourcePath = "HKW.HKWTOML.Tests.Resources";
+    public const string ResourcePath = "HKW.HKWTOML.Benchmark.Resources";
 
     public const string JsonData = $"{ResourcePath}.BenchmarkData.json";
 

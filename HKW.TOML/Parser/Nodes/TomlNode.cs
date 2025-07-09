@@ -72,7 +72,7 @@ public abstract class TomlNode : IEnumerable
     /// <summary>
     /// 注释
     /// </summary>
-    public virtual string Comment { get; set; } = null!;
+    public virtual string Comment { get; set; } = string.Empty;
 
     /// <summary>
     /// 层级

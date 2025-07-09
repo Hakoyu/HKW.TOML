@@ -116,13 +116,13 @@ public class ObjectBuilderOptions
     /// 类添加的特性
     /// <para>注意: 不要加 "[]"</para>
     /// </summary>
-    public HashSet<string> ObjectAttributes { get; set; } = new();
+    public HashSet<string> ObjectAttributes { get; set; } = [];
 
     /// <summary>
     /// 属性添加的特性
     /// <para>注意: 不要加 "[]"</para>
     /// </summary>
-    public HashSet<string> PropertyAttributes { get; set; } = new();
+    public HashSet<string> PropertyAttributes { get; set; } = [];
 
     #endregion Attribute
 
@@ -147,7 +147,7 @@ public class ObjectBuilderOptions
     /// <summary>
     /// 为所有非匿名类添加的继承
     /// </summary>
-    public HashSet<string> MultipleInheritance { get; set; } = new();
+    public HashSet<string> MultipleInheritance { get; set; } = [];
 
     /// <summary>
     /// 为所有非匿名类添加 <see cref="ITomlObjectComment"/> 接口
