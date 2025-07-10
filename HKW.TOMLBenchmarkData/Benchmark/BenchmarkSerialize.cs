@@ -35,38 +35,38 @@ public class BenchmarkSerialize
     [GlobalSetup]
     public void Initialize() { }
 
-    //[Benchmark]
-    //[IterationCount(10)]
-    //public object? Net_JsonSerialize()
-    //{
-    //    return System.Text.Json.JsonSerializer.SerializeToNode(Obj);
-    //}
+    [Benchmark]
+    [IterationCount(10)]
+    public object? Net_JsonSerialize()
+    {
+        return System.Text.Json.JsonSerializer.SerializeToNode(Obj);
+    }
 
-    //[Benchmark]
-    //[IterationCount(10)]
-    //public object? Newtonsoft_JsonSerialize()
-    //{
-    //    return Newtonsoft.Json.Linq.JObject.FromObject(Obj);
-    //}
+    [Benchmark]
+    [IterationCount(10)]
+    public object? Newtonsoft_JsonSerialize()
+    {
+        return Newtonsoft.Json.Linq.JObject.FromObject(Obj);
+    }
 
     [Benchmark]
     [IterationCount(10)]
     public object? HKW_TomlSerialize()
     {
-        return TOMLSerializer.Serialize(Obj);
+        return TomlSerializer.Serialize(Obj);
     }
 
-    //[Benchmark]
-    //[IterationCount(10)]
-    //public object? Tomlet_TomlSerialize()
-    //{
-    //    return TomletMain.DocumentFrom(Obj);
-    //}
+    [Benchmark]
+    [IterationCount(10)]
+    public object? Tomlet_TomlSerialize()
+    {
+        return TomletMain.DocumentFrom(Obj);
+    }
 
-    //[Benchmark]
-    //[IterationCount(10)]
-    //public object? Tomlyn_TomlSerialize()
-    //{
-    //    return Tomlyn.Toml.FromModel(Obj);
-    //}
+    [Benchmark]
+    [IterationCount(10)]
+    public object? Tomlyn_TomlSerialize()
+    {
+        return Tomlyn.Toml.FromModel(Obj);
+    }
 }

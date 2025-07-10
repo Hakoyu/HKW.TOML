@@ -1,7 +1,7 @@
 #region TOML Official Site
 
 // https://toml.io
-// Original project
+// 原始项目
 // https://github.com/dezhidki/Tommy
 
 #endregion
@@ -48,9 +48,14 @@ public class TomlParser : IDisposable
     public bool ForceASCII { get; set; }
 
     /// <summary>
-    /// 文本写入器
+    /// 文本读取器
     /// </summary>
     private readonly TextReader _reader;
+
+    /// <summary>
+    /// 空字符
+    /// </summary>
+    private const char NULL_CHAR = '\0';
 
     /// <summary>
     /// 当前状态
@@ -72,7 +77,7 @@ public class TomlParser : IDisposable
     /// <summary>
     /// 从文本读取器解析
     /// </summary>
-    /// <param name="reader">文明读取器</param>
+    /// <param name="reader">文本读取器</param>
     public TomlParser(TextReader reader)
     {
         _reader = reader;
@@ -118,7 +123,7 @@ public class TomlParser : IDisposable
                 )
                 {
                     if (noneParsed)
-                        ConsumeCharacter();
+                        ConsumeChar();
                     continue;
                 }
             }
@@ -142,7 +147,7 @@ public class TomlParser : IDisposable
                 )
                 {
                     if (tableParsed)
-                        ConsumeCharacter();
+                        ConsumeChar();
                     continue;
                 }
             }
@@ -151,15 +156,15 @@ public class TomlParser : IDisposable
                 if (ParseSkipToNextLine(c) is bool skipPased)
                 {
                     if (skipPased)
-                        ConsumeCharacter();
+                        ConsumeChar();
                     continue;
                 }
             }
-            ConsumeCharacter();
+            ConsumeChar();
         }
 
         if (_currentState != ParseState.None && _currentState != ParseState.SkipToNextLine)
-            AddError("Unexpected end of file!");
+            AddError("意外的文件结尾！");
 
         if (_syntaxErrors.Count > 0)
             throw new TomlParseException(rootTable, _syntaxErrors);
@@ -167,19 +172,13 @@ public class TomlParser : IDisposable
         return rootTable;
     }
 
-    private void ConsumeCharacter()
-    {
-        _reader.Read();
-        _column++;
-    }
-
     /// <summary>
-    /// 解析空字符
+    /// 解析空状态
     /// </summary>
     /// <param name="c">字符</param>
-    /// <param name="rootTable">原始表格</param>
+    /// <param name="rootTable">根表格</param>
     /// <param name="isFirstComment">是首个注释</param>
-    /// <param name="latestComment">末尾注释</param>
+    /// <param name="latestComment">最新注释</param>
     /// <returns>消耗字符并跳过为 <see langword="true"/> 只跳过为 <see langword="false"/> 不操作为 <see langword="null"/></returns>
     private bool? ParseNone(
         char c,
@@ -188,13 +187,13 @@ public class TomlParser : IDisposable
         ref StringBuilder latestComment
     )
     {
-        // Skip white space
+        // 跳过空白字符
         if (TomlSyntax.IsWhiteSpace(c))
             return true;
 
         if (TomlSyntax.IsNewLine(c))
         {
-            // Check if there are any comments and so far no items being declared
+            // 检查是否有注释，并且到目前为止没有声明任何项目
             if (latestComment is not null && isFirstComment)
             {
                 rootTable.Comment = latestComment.ToString().TrimEnd();
@@ -208,7 +207,7 @@ public class TomlParser : IDisposable
             return true;
         }
 
-        // Start of a comment; ignore until newline
+        // 注释开始；忽略直到换行符
         if (c is TomlSyntax.COMMENT_SYMBOL)
         {
             latestComment ??= new StringBuilder();
@@ -217,7 +216,7 @@ public class TomlParser : IDisposable
             return false;
         }
 
-        // Encountered a non-comment value. The comment must belong to it (ignore possible newlines)!
+        // 遇到非注释值。注释必须属于它（忽略可能的换行符）！
         isFirstComment = false;
 
         if (c is TomlSyntax.TABLE_START_SYMBOL)
@@ -233,7 +232,7 @@ public class TomlParser : IDisposable
         }
         else
         {
-            AddError($"Unexpected character \"{c}\"");
+            AddError($"意外的字符 \"{c}\"");
             return false;
         }
     }
@@ -242,8 +241,8 @@ public class TomlParser : IDisposable
     /// 解析键值对
     /// </summary>
     /// <param name="currentTable">当前表格</param>
-    /// <param name="keyParts">键列表</param>
-    /// <param name="latestComment">最后注释</param>
+    /// <param name="keyParts">键部分列表</param>
+    /// <param name="latestComment">最新注释</param>
     /// <returns>跳过为 <see langword="true"/> 不跳过为 <see langword="false"/></returns>
     private bool ParseKeyValuePair(
         TomlTable currentTable,
@@ -259,7 +258,7 @@ public class TomlParser : IDisposable
             keyParts.Clear();
 
             if (_currentState != ParseState.None)
-                AddError("Failed to parse key-value pair!");
+                AddError("解析键值对失败！");
             return true;
         }
 
@@ -276,11 +275,11 @@ public class TomlParser : IDisposable
     /// 解析表格
     /// </summary>
     /// <param name="c">字符</param>
-    /// <param name="rootTable">原始表格</param>
+    /// <param name="rootTable">根表格</param>
     /// <param name="currentTable">当前表格</param>
-    /// <param name="keyParts">键列表</param>
+    /// <param name="keyParts">键部分列表</param>
     /// <param name="isArrayTable">是数组表格</param>
-    /// <param name="latestComment">末尾注释</param>
+    /// <param name="latestComment">最新注释</param>
     /// <returns>消耗字符并跳过为 <see langword="true"/> 只跳过为 <see langword="false"/> 不操作为 <see langword="null"/></returns>
     private bool? ParseTable(
         char c,
@@ -293,10 +292,10 @@ public class TomlParser : IDisposable
     {
         if (keyParts.Count is 0)
         {
-            // We have array table
+            // 我们有数组表格
             if (c is TomlSyntax.TABLE_START_SYMBOL)
             {
-                // Consume the character
+                // 消耗字符
                 ConsumeChar();
                 isArrayTable = true;
             }
@@ -309,7 +308,7 @@ public class TomlParser : IDisposable
 
             if (keyParts.Count is 0)
             {
-                AddError("Table name is emtpy.");
+                AddError("表格名称为空。");
                 isArrayTable = false;
                 latestComment = null!;
                 keyParts.Clear();
@@ -322,12 +321,12 @@ public class TomlParser : IDisposable
         {
             if (isArrayTable)
             {
-                // Consume the ending bracket so we can peek the next character
+                // 消耗结束括号，以便我们可以查看下一个字符
                 ConsumeChar();
                 var nextChar = _reader.Peek();
                 if (nextChar < 0 || (char)nextChar != TomlSyntax.TABLE_END_SYMBOL)
                 {
-                    AddError($"Array table {".".Join(keyParts)} has only one closing bracket.");
+                    AddError($"数组表格 {".".Join(keyParts)} 只有一个结束括号。");
                     keyParts.Clear();
                     isArrayTable = false;
                     latestComment = null!;
@@ -349,8 +348,8 @@ public class TomlParser : IDisposable
             if (currentTable == null)
             {
                 if (_currentState != ParseState.None)
-                    AddError("Error creating table array!");
-                // Reset a node to root in order to try and continue parsing
+                    AddError("创建表格数组时出错！");
+                // 将节点重置为根节点，以便尝试继续解析
                 currentTable = rootTable;
                 return false;
             }
@@ -361,7 +360,7 @@ public class TomlParser : IDisposable
 
         if (keyParts.Count is not 0)
         {
-            AddError($"Unexpected character \"{c}\"");
+            AddError($"意外的字符 \"{c}\"");
             keyParts.Clear();
             isArrayTable = false;
             latestComment = null!;
@@ -370,7 +369,7 @@ public class TomlParser : IDisposable
     }
 
     /// <summary>
-    /// 跳过下一行
+    /// 解析跳过到下一行
     /// </summary>
     /// <param name="c">字符</param>
     /// <returns>消耗字符并跳过为 <see langword="true"/> 只跳过为 <see langword="false"/> 不操作为 <see langword="null"/></returns>
@@ -394,14 +393,14 @@ public class TomlParser : IDisposable
             return true;
         }
 
-        AddError($"Unexpected character \"{c}\" at the end of the line.");
+        AddError($"在行尾遇到意外字符 \"{c}\"。");
         return null;
     }
 
     private bool AddError(string message, bool skipLine = true)
     {
         _syntaxErrors.Add(new TomlSyntaxException(message, _currentState, _line, _column));
-        // Skip the whole _line in hope that it was only a single faulty value (and non-multiline one at that)
+        // 跳过整行，希望这只是一个单一的错误值（而且不是多行的）
         if (skipLine)
         {
             _reader.ReadLine();
@@ -423,18 +422,17 @@ public class TomlParser : IDisposable
         return _reader.Read();
     }
 
-    #region Key-Value pair parsing
+    #region 键值对解析
 
-    /**
-     * Reads a single key-value pair.
-     * Assumes the cursor is at the first character that belong to the pair (including possible whitespace).
-     * Consumes all characters that belong to the key and the value (ignoring possible trailing whitespace at the end).
-     *
-     * CreateClassExample:
-     * foo = "bar"  ==> foo = "bar"
-     * ^                           ^
-     */
-
+    /// <summary>
+    /// 读取单个键值对。
+    /// 假设光标位于属于该对的第一个字符（包括可能的空白字符）。
+    /// 消耗属于键和值的所有字符（忽略末尾可能的尾随空白字符）。
+    ///
+    /// 示例：
+    /// foo = "bar"  ==> foo = "bar"
+    /// ^                           ^
+    /// </summary>
     private TomlNode? ReadKeyValuePair(List<string> keyParts)
     {
         int cur;
@@ -446,7 +444,7 @@ public class TomlParser : IDisposable
             {
                 if (keyParts.Count != 0)
                 {
-                    AddError("Encountered extra characters in key definition!");
+                    AddError("在键定义中遇到额外字符！");
                     return null;
                 }
 
@@ -468,23 +466,22 @@ public class TomlParser : IDisposable
                 return ReadValue();
             }
 
-            AddError($"Unexpected character \"{c}\" in key name.");
+            AddError($"在键名中遇到意外字符 \"{c}\"。");
             return null;
         }
 
         return null;
     }
 
-    /**
-     * Reads a single value.
-     * Assumes the cursor is at the first character that belongs to the value (including possible starting whitespace).
-     * Consumes all characters belonging to the value (ignoring possible trailing whitespace at the end).
-     *
-     * CreateClassExample:
-     * "Test"  ==> "Test"
-     * ^                 ^
-     */
-
+    /// <summary>
+    /// 读取单个值。
+    /// 假设光标位于属于值的第一个字符（包括可能的起始空白字符）。
+    /// 消耗属于值的所有字符（忽略末尾可能的尾随空白字符）。
+    ///
+    /// 示例：
+    /// "Test"  ==> "Test"
+    /// ^                 ^
+    /// </summary>
     private TomlNode? ReadValue(bool skipNewlines = false)
     {
         int cur;
@@ -500,7 +497,7 @@ public class TomlParser : IDisposable
 
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                AddError("No value found!");
+                AddError("未找到值！");
                 return null;
             }
 
@@ -513,7 +510,7 @@ public class TomlParser : IDisposable
                     continue;
                 }
 
-                AddError("Encountered a newline when expecting a value!");
+                AddError("期望值时遇到换行符！");
                 return null;
             }
 
@@ -521,7 +518,7 @@ public class TomlParser : IDisposable
             {
                 var isMultiline = IsTripleQuote(c, out var excess);
 
-                // Error occurred in triple quote parsing
+                // 三引号解析时发生错误
                 if (_currentState is ParseState.None)
                     return null;
 
@@ -550,20 +547,19 @@ public class TomlParser : IDisposable
         return null!;
     }
 
-    /**
-     * Reads a single key tomlFile.
-     * Assumes the cursor is at the first character belonging to the key (with possible trailing whitespace if `skipWhitespace = true`).
-     * Consumes all the characters until the `until` character is met (but does not consume the character itself).
-     *
-     * CreateClassExample 1:
-     * foo.bar  ==>  foo.bar           (`skipWhitespace = false`, `until = ' '`)
-     * ^                    ^
-     *
-     * CreateClassExample 2:
-     * [ foo . bar ] ==>  [ foo . bar ]     (`skipWhitespace = true`, `until = ']'`)
-     * ^                             ^
-     */
-
+    /// <summary>
+    /// 读取单个键名。
+    /// 假设光标位于属于键的第一个字符（如果 `skipWhitespace = true`，则可能有尾随空白字符）。
+    /// 消耗所有字符，直到遇到 `until` 字符为止（但不消耗该字符本身）。
+    ///
+    /// 示例 1：
+    /// foo.bar  ==>  foo.bar           (`skipWhitespace = false`, `until = ' '`)
+    /// ^                    ^
+    ///
+    /// 示例 2：
+    /// [ foo . bar ] ==>  [ foo . bar ]     (`skipWhitespace = true`, `until = ']'`)
+    /// ^                             ^
+    /// </summary>
     private bool ReadKeyName(ref List<string> parts, char until)
     {
         var buffer = new StringBuilder();
@@ -574,14 +570,14 @@ public class TomlParser : IDisposable
         {
             var c = (char)cur;
 
-            // Reached the final character
+            // 到达最终字符
             if (c == until)
                 break;
 
             if (TomlSyntax.IsWhiteSpace(c))
             {
                 prevWasSpace = true;
-                ConsumeCharacter();
+                ConsumeChar();
                 continue;
             }
 
@@ -591,28 +587,28 @@ public class TomlParser : IDisposable
             if (c is TomlSyntax.SUBKEY_SEPARATOR)
             {
                 if (buffer.Length == 0 && quoted is false)
-                    return AddError($"Found an extra subkey separator in {".".Join(parts)}...");
+                    return AddError($"在 {".".Join(parts)}... 中发现额外的子键分隔符");
 
                 parts.Add(buffer.ToString());
                 buffer.Length = 0;
                 quoted = false;
                 prevWasSpace = false;
-                ConsumeCharacter();
+                ConsumeChar();
                 continue;
             }
 
             if (prevWasSpace)
-                return AddError("Invalid spacing in key name");
+                return AddError("键名中的空格无效");
 
             if (TomlSyntax.IsQuoted(c))
             {
                 if (quoted)
-                    return AddError("Expected a subkey separator but got extra data instead!");
+                    return AddError("期望子键分隔符，但得到了额外数据！");
 
                 if (buffer.Length != 0)
-                    return AddError("Encountered a quote in the middle of subkey name!");
+                    return AddError("在子键名中间遇到引号！");
 
-                // Consume the quote character and read the key tomlFile
+                // 消耗引号字符并读取键名
                 _column++;
                 buffer.Append(ReadQuotedValueSingleLine((char)_reader.Read()));
                 quoted = true;
@@ -622,16 +618,16 @@ public class TomlParser : IDisposable
             if (TomlSyntax.IsBareKey(c))
             {
                 buffer.Append(c);
-                ConsumeCharacter();
+                ConsumeChar();
                 continue;
             }
 
-            // If we see an invalid symbol, let the next parser handle it
+            // 如果我们看到无效符号，让下一个解析器处理它
             break;
         }
 
         if (buffer.Length == 0 && quoted is false)
-            return AddError($"Found an extra subkey separator in {".".Join(parts)}...");
+            return AddError($"在 {".".Join(parts)}... 中发现额外的子键分隔符");
 
         parts.Add(buffer.ToString());
 
@@ -640,17 +636,16 @@ public class TomlParser : IDisposable
 
     #endregion
 
-    #region Non-string value parsing
+    #region 非字符串值解析
 
-    /**
-     * Reads the whole raw value until the first non-value character is encountered.
-     * Assumes the cursor start position at the first value character and consumes all characters that may be related to the value.
-     * CreateClassExample:
-     *
-     * 1_0_0_0  ==>  1_0_0_0
-     * ^                    ^
-     */
-
+    /// <summary>
+    /// 读取整个原始值，直到遇到第一个非值字符。
+    /// 假设光标起始位置在第一个值字符处，并消耗所有可能与值相关的字符。
+    ///
+    /// 示例：
+    /// 1_0_0_0  ==>  1_0_0_0
+    /// ^                    ^
+    /// </summary>
     private string ReadRawValue()
     {
         var result = new StringBuilder();
@@ -668,23 +663,22 @@ public class TomlParser : IDisposable
             ConsumeChar();
         }
 
-        // Replace trim with manual space counting?
+        // 用手动空格计数替换 trim？
         return result.ToString().Trim();
     }
 
-    /**
-     * Reads and parses a non-string, non-composite TOML value.
-     * Assumes the cursor at the first character that is related to the value (with possible spaces).
-     * Consumes all the characters that are related to the value.
-     *
-     * CreateClassExample
-     * 1_0_0_0 # This is a comment
-     * <newline>
-     *     ==>  1_0_0_0 # This is a comment
-     *     ^                                                  ^
-     * </newline>
-     **/
-
+    /// <summary>
+    /// 读取并解析非字符串、非复合的 TOML 值。
+    /// 假设光标位于与值相关的第一个字符（可能有空格）。
+    /// 消耗与值相关的所有字符。
+    ///
+    /// 示例：
+    /// 1_0_0_0 # 这是一个注释
+    /// &lt;newline&gt;
+    ///     ==>  1_0_0_0 # 这是一个注释
+    ///     ^                                                  ^
+    /// &lt;/newline&gt;
+    /// </summary>
     private TomlNode ReadTomlValue()
     {
         var value = ReadRawValue();
@@ -719,7 +713,7 @@ public class TomlParser : IDisposable
         if (node is not null)
             return node;
 
-        // Normalize by removing space separator
+        // 通过移除空格分隔符进行规范化
         value = value.Replace(TomlSyntax.RFC3339EmptySeparator, TomlSyntax.ISO861Separator);
         if (
             StringUtils.TryParseDateTime<DateTime>(
@@ -775,22 +769,21 @@ public class TomlParser : IDisposable
         )
             return new TomlDateTimeOffset(dateTimeOffsetResult) { SecondsPrecision = precision };
 
-        AddError($"Value \"{value}\" is not a valid TOML value!");
+        AddError($"值 \"{value}\" 不是有效的 TOML 值！");
         return null!;
     }
 
-    /**
-     * Reads an array value.
-     * Assumes the cursor is at the start of the array definition. Reads all character until the array closing bracket.
-     *
-     * CreateClassExample:
-     * [1, 2, 3]  ==>  [1, 2, 3]
-     * ^                        ^
-     */
-
+    /// <summary>
+    /// 读取数组值。
+    /// 假设光标位于数组定义的开始。读取所有字符直到数组结束括号。
+    ///
+    /// 示例：
+    /// [1, 2, 3]  ==>  [1, 2, 3]
+    /// ^                        ^
+    /// </summary>
     private TomlArray? ReadArray()
     {
-        // Consume the start of array character
+        // 消耗数组开始字符
         ConsumeChar();
         var result = new TomlArray();
         TomlNode? currentValue = null;
@@ -826,7 +819,7 @@ public class TomlParser : IDisposable
             {
                 if (currentValue == null)
                 {
-                    AddError("Encountered multiple value separators");
+                    AddError("遇到多个值分隔符");
                     return null;
                 }
 
@@ -839,14 +832,14 @@ public class TomlParser : IDisposable
 
             if (expectValue is false)
             {
-                AddError("Missing separator between values");
+                AddError("值之间缺少分隔符");
                 return null;
             }
             currentValue = ReadValue(true);
             if (currentValue == null)
             {
                 if (_currentState != ParseState.None)
-                    AddError("Failed to determine and parse a value!");
+                    AddError("无法确定和解析值！");
                 return null;
             }
             expectValue = false;
@@ -857,15 +850,14 @@ public class TomlParser : IDisposable
         return result;
     }
 
-    /**
-     * Reads an inline table.
-     * Assumes the cursor is at the start of the table definition. Reads all character until the table closing bracket.
-     *
-     * CreateClassExample:
-     * { Test = "foo", value = 1 }  ==>  { Test = "foo", value = 1 }
-     * ^                                                            ^
-     */
-
+    /// <summary>
+    /// 读取内联表格。
+    /// 假设光标位于表格定义的开始。读取所有字符直到表格结束括号。
+    ///
+    /// 示例：
+    /// { Test = "foo", value = 1 }  ==>  { Test = "foo", value = 1 }
+    /// ^                                                            ^
+    /// </summary>
     private TomlTable? ReadInlineTable()
     {
         ConsumeChar();
@@ -886,13 +878,13 @@ public class TomlParser : IDisposable
 
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                AddError("Incomplete inline table definition!");
+                AddError("内联表格定义不完整！");
                 return null;
             }
 
             if (TomlSyntax.IsNewLine(c))
             {
-                AddError("Inline tables are only allowed to be on single line");
+                AddError("内联表格只能在单行上");
                 return null;
             }
 
@@ -906,7 +898,7 @@ public class TomlParser : IDisposable
             {
                 if (currentValue == null)
                 {
-                    AddError("Encountered multiple value separators in inline table!");
+                    AddError("在内联表格中遇到多个值分隔符！");
                     return null;
                 }
 
@@ -925,7 +917,7 @@ public class TomlParser : IDisposable
 
         if (separator)
         {
-            AddError("Trailing commas are not allowed in inline tables.");
+            AddError("内联表格中不允许尾随逗号。");
             return null;
         }
 
@@ -937,61 +929,59 @@ public class TomlParser : IDisposable
 
     #endregion
 
-    #region String parsing
+    #region 字符串解析
 
-    /**
-     * Checks if the string value a multiline string (i.ex. a triple quoted string).
-     * Assumes the cursor is at the first quote character. Consumes the least amount of characters needed to determine if the string is multiline.
-     *
-     * If the result is false, returns the consumed character through the `excess` variable.
-     *
-     * CreateClassExample 1:
-     * """Test"""  ==>  """Test"""
-     * ^                   ^
-     *
-     * CreateClassExample 2:
-     * "Test"  ==>  "Test"         (doesn't return the first quote)
-     * ^             ^
-     *
-     * CreateClassExample 3:
-     * ""  ==>  ""        (returns the extra `"` through the `excess` variable)
-     * ^          ^
-     */
-
+    /// <summary>
+    /// 检查字符串值是否为多行字符串（即三引号字符串）。
+    /// 假设光标位于第一个引号字符。消耗确定字符串是否为多行所需的最少字符数。
+    ///
+    /// 如果结果为 false，则通过 `excess` 变量返回消耗的字符。
+    ///
+    /// 示例 1：
+    /// """Test"""  ==>  """Test"""
+    /// ^                   ^
+    ///
+    /// 示例 2：
+    /// "Test"  ==>  "Test"         （不返回第一个引号）
+    /// ^             ^
+    ///
+    /// 示例 3：
+    /// ""  ==>  ""        （通过 `excess` 变量返回额外的 `"`）
+    /// ^          ^
+    /// </summary>
     private bool IsTripleQuote(char quote, out char excess)
     {
-        // Copypasta, but it's faster...
+        // 复制粘贴，但更快...
 
         int cur;
-        // Consume the first quote
+        // 消耗第一个引号
         ConsumeChar();
         if ((cur = _reader.Peek()) < 0)
         {
-            excess = '\0';
-            return AddError("Unexpected end of file!");
+            excess = NULL_CHAR;
+            return AddError("意外的文件结尾！");
         }
 
         if ((char)cur != quote)
         {
-            excess = '\0';
+            excess = NULL_CHAR;
             return false;
         }
 
-        // Consume the second quote
+        // 消耗第二个引号
         excess = (char)ConsumeChar();
         if ((cur = _reader.Peek()) < 0 || (char)cur != quote)
             return false;
 
-        // Consume the final quote
+        // 消耗最后一个引号
         ConsumeChar();
-        excess = '\0';
+        excess = NULL_CHAR;
         return true;
     }
 
-    /**
-     * A convenience method to process a single character within a quote.
-     */
-
+    /// <summary>
+    /// 处理引号内单个字符的便利方法。
+    /// </summary>
     private bool ProcessQuotedValueCharacter(
         char quote,
         bool isNonLiteral,
@@ -1001,7 +991,7 @@ public class TomlParser : IDisposable
     )
     {
         if (TomlSyntax.MustBeEscaped(c))
-            return AddError($"The character U+{(int)c:X8} must be escaped in a string!");
+            return AddError($"字符 U+{(int)c:X8} 必须在字符串中进行转义！");
 
         if (escaped)
         {
@@ -1015,29 +1005,28 @@ public class TomlParser : IDisposable
         if (isNonLiteral && c is TomlSyntax.ESCAPE_SYMBOL)
             escaped = true;
         if (c is TomlSyntax.NEWLINE_CHARACTER)
-            return AddError("Encountered newline in single line string!");
+            return AddError("在单行字符串中遇到换行符！");
 
         sb.Append(c);
         return false;
     }
 
-    /**
-     * Reads a single-_line string.
-     * Assumes the cursor is at the first character that belongs to the string.
-     * Consumes all characters that belong to the string (including the closing quote).
-     *
-     * CreateClassExample:
-     * "Test"  ==>  "Test"
-     * ^                 ^
-     */
-
-    private string ReadQuotedValueSingleLine(char quote, char initialData = '\0')
+    /// <summary>
+    /// 读取单行字符串。
+    /// 假设光标位于属于字符串的第一个字符。
+    /// 消耗属于字符串的所有字符（包括结束引号）。
+    ///
+    /// 示例：
+    /// "Test"  ==>  "Test"
+    /// ^                 ^
+    /// </summary>
+    private string ReadQuotedValueSingleLine(char quote, char initialData = NULL_CHAR)
     {
         var isNonLiteral = quote is TomlSyntax.BASI_STRING_SYMBOL;
         var sb = new StringBuilder();
         var escaped = false;
 
-        if (initialData != '\0')
+        if (initialData != NULL_CHAR)
         {
             var shouldReturn = ProcessQuotedValueCharacter(
                 quote,
@@ -1064,7 +1053,7 @@ public class TomlParser : IDisposable
         var readDone = false;
         while ((cur = _reader.Read()) >= 0)
         {
-            // Consume the character
+            // 消耗字符
             _column++;
             var c = (char)cur;
             readDone = ProcessQuotedValueCharacter(quote, isNonLiteral, c, sb, ref escaped);
@@ -1078,7 +1067,7 @@ public class TomlParser : IDisposable
 
         if (readDone is false)
         {
-            AddError("Unclosed string.");
+            AddError("未闭合的字符串。");
             return null!;
         }
 
@@ -1090,16 +1079,15 @@ public class TomlParser : IDisposable
         return null!;
     }
 
-    /**
-     * Reads a multiline string.
-     * Assumes the cursor is at the first character that belongs to the string.
-     * Consumes all characters that belong to the string and the three closing quotes.
-     *
-     * CreateClassExample:
-     * """Test"""  ==>  """Test"""
-     * ^                       ^
-     */
-
+    /// <summary>
+    /// 读取多行字符串。
+    /// 假设光标位于属于字符串的第一个字符。
+    /// 消耗属于字符串的所有字符和三个结束引号。
+    ///
+    /// 示例：
+    /// """Test"""  ==>  """Test"""
+    /// ^                       ^
+    /// </summary>
     private string ReadQuotedValueMultiLine(char quote)
     {
         var isBasic = quote is TomlSyntax.BASI_STRING_SYMBOL;
@@ -1115,10 +1103,10 @@ public class TomlParser : IDisposable
             var c = (char)cur;
             if (TomlSyntax.MustBeEscaped(c, true))
             {
-                AddError($"The character U+{(int)c:X8} must be escaped!");
+                AddError($"字符 U+{(int)c:X8} 必须进行转义！");
                 return null!;
             }
-            // Trim the first newline
+            // 修剪第一个换行符
             if (first && TomlSyntax.IsNewLine(c))
             {
                 if (TomlSyntax.IsLineBreak(c))
@@ -1129,8 +1117,8 @@ public class TomlParser : IDisposable
             }
 
             first = false;
-            //?TODO: Reuse ProcessQuotedValueCharacter
-            // Skip the current character if it is going to be escaped later
+            //TODO: 重用 ProcessQuotedValueCharacter
+            // 如果当前字符稍后会被转义，则跳过它
             if (escaped)
             {
                 sb.Append(c);
@@ -1138,7 +1126,7 @@ public class TomlParser : IDisposable
                 continue;
             }
 
-            // If we are currently skipping empty spaces, skip
+            // 如果我们当前正在跳过空格，跳过
             if (skipWhitespace)
             {
                 if (TomlSyntax.IsEmptySpace(c))
@@ -1153,7 +1141,7 @@ public class TomlParser : IDisposable
 
                 if (skipWhitespaceLineSkipped is false)
                 {
-                    AddError("Non-whitespace character after trim marker.");
+                    AddError("修剪标记后的非空白字符。");
                     return null!;
                 }
 
@@ -1161,41 +1149,41 @@ public class TomlParser : IDisposable
                 skipWhitespace = false;
             }
 
-            // If we encounter an escape sequence...
+            // 如果我们遇到转义序列...
             if (isBasic && c is TomlSyntax.ESCAPE_SYMBOL)
             {
                 var next = _reader.Peek();
                 var nc = (char)next;
                 if (next >= 0)
                 {
-                    // ...and the next char is empty space, we must skip all whitespaces
+                    // ...而下一个字符是空格，我们必须跳过所有空白字符
                     if (TomlSyntax.IsEmptySpace(nc))
                     {
                         skipWhitespace = true;
                         continue;
                     }
 
-                    // ...and we have \" or \, skip the character
+                    // ...我们有 \" 或 \，跳过字符
                     if (nc == quote || nc is TomlSyntax.ESCAPE_SYMBOL)
                         escaped = true;
                 }
             }
 
-            // Count the consecutive quotes
+            // 计算连续的引号
             if (c == quote)
                 quotesEncountered++;
             else
                 quotesEncountered = 0;
 
-            // If the are three quotes, count them as closing quotes
+            // 如果有三个引号，将它们算作结束引号
             if (quotesEncountered == 3)
                 break;
 
             sb.Append(c);
         }
 
-        // TOML actually allows to have five ending quotes like
-        // """"" => "" belong to the string + """ is the actual ending
+        // TOML 实际上允许有五个结束引号，如
+        // """"" => "" 属于字符串 + """ 是实际的结尾
         quotesEncountered = 0;
         while ((cur = _reader.Peek()) >= 0)
         {
@@ -1209,7 +1197,7 @@ public class TomlParser : IDisposable
                 break;
         }
 
-        // Remove last two quotes (third one wasn't included by default)
+        // 移除最后两个引号（第三个默认不包括）
         sb.Length -= 2;
         if (isBasic is false)
             return sb.ToString();
@@ -1221,7 +1209,7 @@ public class TomlParser : IDisposable
 
     #endregion
 
-    #region Node creation
+    #region 节点创建
 
     private bool InsertNode(TomlNode node, TomlNode root, List<string> path)
     {
@@ -1233,9 +1221,7 @@ public class TomlParser : IDisposable
                 if (latestNode.TryGetNode(subkey, out var currentNode))
                 {
                     if (currentNode.HasValue)
-                        return AddError(
-                            $"The key {".".Join(path)} already has a value assigned to it!"
-                        );
+                        return AddError($"键 {".".Join(path)} 已经有分配给它的值！");
                 }
                 else
                 {
@@ -1245,13 +1231,11 @@ public class TomlParser : IDisposable
 
                 latestNode = currentNode;
                 if (latestNode is TomlTable { IsInline: true })
-                    return AddError(
-                        $"Cannot assign {".".Join(path)} because it will edit an immutable table."
-                    );
+                    return AddError($"无法分配 {".".Join(path)}，因为它将编辑不可变表格。");
             }
 
         if (latestNode.HasKey(path[^1]))
-            return AddError($"The key {".".Join(path)} is already defined!");
+            return AddError($"键 {".".Join(path)} 已经定义！");
         latestNode[path[^1]] = node;
         node.CollapseLevel = path.Count - 1;
         return true;
@@ -1274,9 +1258,7 @@ public class TomlParser : IDisposable
 
                     if (arr.IsTableArray is false)
                     {
-                        AddError(
-                            $"The array {".".Join(path)} cannot be redefined as an array table!"
-                        );
+                        AddError($"数组 {".".Join(path)} 无法重新定义为数组表格！");
                         return null!;
                     }
 
@@ -1293,9 +1275,7 @@ public class TomlParser : IDisposable
 
                 if (node is TomlTable { IsInline: true })
                 {
-                    AddError(
-                        $"Cannot create table {".".Join(path)} because it will edit an immutable table."
-                    );
+                    AddError($"无法创建表格 {".".Join(path)}，因为它将编辑不可变表格。");
                     return null!;
                 }
 
@@ -1303,7 +1283,7 @@ public class TomlParser : IDisposable
                 {
                     if (node is not TomlArray { IsTableArray: true } array)
                     {
-                        AddError($"The key {".".Join(path)} has a value assigned to it!");
+                        AddError($"键 {".".Join(path)} 有分配给它的值！");
                         return null!;
                     }
 
@@ -1315,15 +1295,13 @@ public class TomlParser : IDisposable
                 {
                     if (arrayTable && !node.IsTomlArray)
                     {
-                        AddError(
-                            $"The table {".".Join(path)} cannot be redefined as an array table!"
-                        );
+                        AddError($"表格 {".".Join(path)} 无法重新定义为数组表格！");
                         return null!;
                     }
 
                     if (node is TomlTable { isImplicit: false })
                     {
-                        AddError($"The table {".".Join(path)} is defined multiple times!");
+                        AddError($"表格 {".".Join(path)} 被多次定义！");
                         return null!;
                     }
                 }
@@ -1354,14 +1332,14 @@ public class TomlParser : IDisposable
 
     #endregion
 
-    #region Misc parsing
+    #region 其他解析
 
     private string ParseComment()
     {
         ConsumeChar();
         var commentLine = _reader.ReadLine()?.Trim() ?? string.Empty;
         if (commentLine.Any(ch => TomlSyntax.MustBeEscaped(ch)))
-            AddError("Comment must not contain control characters other than tab.", false);
+            AddError("注释不能包含除制表符以外的控制字符。", false);
         return commentLine;
     }
 

@@ -7,7 +7,7 @@ namespace HKW.HKWTOML.Serializer;
 /// <summary>
 /// Toml序列化设置
 /// </summary>
-public class TOMLSerializerOptions
+public class TomlSerializerOptions
 {
     /// <summary>
     /// 允许非公有属性

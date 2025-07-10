@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using HKW.HKWUtils;
 
 namespace HKW.HKWTOML;
 
@@ -19,8 +20,26 @@ namespace HKW.HKWTOML;
 /// </summary>
 [DebuggerDisplay("Count = {ChildrenCount}")]
 [DebuggerTypeProxy(typeof(HKWUtils.DebugViews.ICollectionDebugView))]
-public class TomlTable : TomlNode, IDictionary<string, TomlNode>
+public class TomlTable
+    : TomlNode,
+        IDictionary<string, TomlNode>,
+        IDictionaryWrapper<string, TomlNode, IDictionary<string, TomlNode>>
 {
+    /// <inheritdoc/>
+    public TomlTable()
+    {
+        RawTable = new Dictionary<string, TomlNode>();
+    }
+
+    /// <inheritdoc/>
+    /// <param name="rawDictionary">原始字典</param>
+    /// <exception cref="ArgumentNullException">dictionary is null</exception>
+    public TomlTable(IDictionary<string, TomlNode> rawDictionary)
+    {
+        ArgumentNullException.ThrowIfNull(rawDictionary, nameof(rawDictionary));
+        RawTable = rawDictionary;
+    }
+
     #region TomlNode
     /// <inheritdoc/>
     public new IEnumerator<KeyValuePair<string, TomlNode>> GetEnumerator() =>
@@ -48,8 +67,10 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     /// <summary>
     /// 原始表格
     /// </summary>
-    public Dictionary<string, TomlNode> RawTable { get; private set; } =
-        new(new TomlTableComparer());
+    public IDictionary<string, TomlNode> RawTable { get; }
+
+    /// <inheritdoc/>
+    public IDictionary<string, TomlNode> BaseDictionary => RawTable;
 
     /// <inheritdoc/>
     public override TomlNode this[string key]
@@ -69,10 +90,10 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
     public override int ChildrenCount => RawTable.Count;
 
     /// <inheritdoc/>
-    public override IEnumerable<TomlNode> Children => RawTable.Values;
+    public override ICollection<string> Keys => RawTable.Keys;
 
     /// <inheritdoc/>
-    public override IEnumerable<string> Keys => RawTable.Keys;
+    public override ICollection<TomlNode> Children => RawTable.Values;
 
     /// <inheritdoc/>
     ICollection<string> IDictionary<string, TomlNode>.Keys =>
@@ -356,40 +377,4 @@ public class TomlTable : TomlNode, IDictionary<string, TomlNode>
         ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Remove(item);
 
     #endregion
-
-    /// <summary>
-    /// 键获取 HashCode 使用的默认 <see cref="StringComparison"/>
-    /// <para>
-    /// 改变后在新对象生效
-    /// </para>
-    /// </summary>
-    [DefaultValue(StringComparison.OrdinalIgnoreCase)]
-    public static StringComparison DefaultKeyHashCodeComparison { get; set; } =
-        StringComparison.OrdinalIgnoreCase;
-
-    /// <summary>
-    /// 键比较器
-    /// </summary>
-    public StringComparison KeyComparison
-    {
-        get => ((TomlTableComparer)RawTable.Comparer).KeyComparison;
-        set => ((TomlTableComparer)RawTable.Comparer).KeyComparison = value;
-    }
-
-    internal class TomlTableComparer : IEqualityComparer<string>
-    {
-        public StringComparison KeyComparison { get; set; } = StringComparison.CurrentCulture;
-
-        public StringComparison KeyHashCodeComparison { get; } = DefaultKeyHashCodeComparison;
-
-        public bool Equals(string? x, string? y)
-        {
-            return StringComparer.FromComparison(KeyComparison).Equals(x, y);
-        }
-
-        public int GetHashCode([DisallowNull] string obj)
-        {
-            return obj.GetHashCode(KeyHashCodeComparison);
-        }
-    }
 }

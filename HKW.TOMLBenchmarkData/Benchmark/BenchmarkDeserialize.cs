@@ -38,24 +38,24 @@ public class BenchmarkDeserialize
             PropertyNameCaseInsensitive = true
         };
 
-    [Benchmark]
-    [IterationCount(10)]
-    public object? Net_JsonDeserialize()
-    {
-        return System.Text.Json.JsonSerializer.Deserialize<BenchmarkObject>(
-            BenchmarkParse.JsonData,
-            options
-        );
-    }
+    //[Benchmark]
+    //[IterationCount(10)]
+    //public object? Net_JsonDeserialize()
+    //{
+    //    return System.Text.Json.JsonSerializer.Deserialize<BenchmarkObject>(
+    //        BenchmarkParse.JsonData,
+    //        options
+    //    );
+    //}
 
-    [Benchmark]
-    [IterationCount(10)]
-    public object? Newtonsoft_JsonDeserialize()
-    {
-        return Newtonsoft.Json.JsonConvert.DeserializeObject<BenchmarkObject>(
-            BenchmarkParse.JsonData
-        );
-    }
+    //[Benchmark]
+    //[IterationCount(10)]
+    //public object? Newtonsoft_JsonDeserialize()
+    //{
+    //    return Newtonsoft.Json.JsonConvert.DeserializeObject<BenchmarkObject>(
+    //        BenchmarkParse.JsonData
+    //    );
+    //}
 
     static TomlTable _hkwToml = TOML.Parse(BenchmarkParse.TomlData);
 
@@ -63,14 +63,14 @@ public class BenchmarkDeserialize
     [IterationCount(10)]
     public object? HKW_TomlDeserialize()
     {
-        return HKWTOML.Deserializer.TOMLDeserializer.Deserialize<BenchmarkObject>(_hkwToml);
+        return Deserializer.TomlDeserializer.Deserialize<BenchmarkObject>(_hkwToml);
     }
 
-    [Benchmark]
-    [IterationCount(10)]
-    public object? Tomlet_TomlDeserialize()
-    {
-        return Tomlet.TomletMain.To<BenchmarkObject>(BenchmarkParse.TomlData);
-    }
+    //[Benchmark]
+    //[IterationCount(10)]
+    //public object? Tomlet_TomlDeserialize()
+    //{
+    //    return Tomlet.TomletMain.To<BenchmarkObject>(BenchmarkParse.TomlData);
+    //}
 }
 #pragma warning restore CA1822 // 将成员标记为 static

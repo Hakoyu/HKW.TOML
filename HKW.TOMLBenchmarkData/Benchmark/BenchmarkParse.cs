@@ -20,26 +20,19 @@ public class BenchmarkParse
     [GlobalSetup]
     public void Initialize() { }
 
-    [Benchmark]
-    [IterationCount(10)]
-    public object? Net_JsonParse()
-    {
-        return JsonNode.Parse(JsonData);
-    }
+    //[Benchmark]
+    //[IterationCount(10)]
+    //public object? Net_JsonParse()
+    //{
+    //    return JsonNode.Parse(JsonData);
+    //}
 
-    [Benchmark]
-    [IterationCount(10)]
-    public object? Newtonsoft_JsonParse()
-    {
-        return JObject.Parse(JsonData);
-    }
-
-    [Benchmark]
-    [IterationCount(10)]
-    public object? SimdJson_JsonParse()
-    {
-        return SimdJsonSharp.SimdJson.MinifyJson(JsonData);
-    }
+    //[Benchmark]
+    //[IterationCount(10)]
+    //public object? Newtonsoft_JsonParse()
+    //{
+    //    return JObject.Parse(JsonData);
+    //}
 
     [Benchmark]
     [IterationCount(10)]
@@ -48,27 +41,18 @@ public class BenchmarkParse
         return TOML.Parse(TomlData);
     }
 
-    [Benchmark]
-    [IterationCount(10)]
-    public object? Tomlyn_TomlParse()
-    {
-        return Tomlyn.Toml.Parse(TomlData);
-    }
-
-    [Benchmark]
-    [IterationCount(10)]
-    public object? Tomlet_TomlParse()
-    {
-        var parser = new Tomlet.TomlParser();
-        return parser.Parse(TomlData);
-    }
-
-    // ERROR
     //[Benchmark]
     //[IterationCount(10)]
-    //public object? Tommy_TomlParse()
+    //public object? Tomlyn_TomlParse()
     //{
-    //    using var sr = new StreamReader(TomlData);
-    //    return Tommy.TOML.Parse(sr);
+    //    return Tomlyn.Toml.Parse(TomlData);
+    //}
+
+    //[Benchmark]
+    //[IterationCount(10)]
+    //public object? Tomlet_TomlParse()
+    //{
+    //    var parser = new Tomlet.TomlParser();
+    //    return parser.Parse(TomlData);
     //}
 }

@@ -17,7 +17,7 @@ namespace HKW.HKWTOML.Serializer;
 /// 要序列化静态类请使用 Serialize(typeof(StaticObject))
 /// </para>
 /// </summary>
-public class TOMLSerializer
+public class TomlSerializer
 {
     #region Serialize
 
@@ -27,9 +27,9 @@ public class TOMLSerializer
     /// <param name="source">源</param>
     /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
-    public static TomlTable? Serialize(object source, TOMLSerializerOptions? options = null)
+    public static TomlTable? Serialize(object source, TomlSerializerOptions? options = null)
     {
-        var serializer = new TOMLSerializer(options);
+        var serializer = new TomlSerializer(options);
         var result = serializer.Serialize(source);
         serializer._propertiesCache.Clear();
         serializer._attributeDictionaryCache.Clear();
@@ -44,7 +44,7 @@ public class TOMLSerializer
     /// <returns>Toml表格数据</returns>
     public static async Task<TomlTable?> SerializeAsync(
         object source,
-        TOMLSerializerOptions? options = null
+        TomlSerializerOptions? options = null
     )
     {
         return await Task.Run(() => Serialize(source, options));
@@ -54,7 +54,7 @@ public class TOMLSerializer
     /// <summary>
     /// Toml序列化设置
     /// </summary>
-    private readonly TOMLSerializerOptions _options;
+    private readonly TomlSerializerOptions _options;
 
     /// <summary>
     /// 是默认设置
@@ -73,7 +73,7 @@ public class TOMLSerializer
 
     /// <inheritdoc/>
     /// <param name="options">设置</param>
-    private TOMLSerializer(TOMLSerializerOptions? options)
+    private TomlSerializer(TomlSerializerOptions? options)
     {
         if (options is null)
             _isDefaultOptions = true;

@@ -8,6 +8,7 @@
 
 using System.Diagnostics;
 using System.Text;
+using HKW.HKWUtils;
 
 namespace HKW.HKWTOML;
 
@@ -16,15 +17,37 @@ namespace HKW.HKWTOML;
 /// </summary>
 [DebuggerDisplay("Count = {ChildrenCount}")]
 [DebuggerTypeProxy(typeof(HKWUtils.DebugViews.ICollectionDebugView))]
-public class TomlArray : TomlNode, IEnumerable<TomlNode>
+public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList<TomlNode>>
 {
+    /// <inheritdoc/>
+    public TomlArray()
+    {
+        RawArray = [];
+    }
+
+    /// <inheritdoc/>
+    /// <param name="nodes">节点</param>
+    public TomlArray(IEnumerable<TomlNode> nodes)
+        : this()
+    {
+        AddRange(nodes);
+    }
+
+    /// <inheritdoc/>
+    /// <param name="rawArray">原始数组</param>
+    public TomlArray(IList<TomlNode> rawArray)
+    {
+        ArgumentNullException.ThrowIfNull(rawArray, nameof(rawArray));
+        RawArray = rawArray;
+    }
+
     /// <inheritdoc/>
     public new IEnumerator<TomlNode> GetEnumerator() => RawArray.GetEnumerator();
 
     /// <summary>
     /// 原始值
     /// </summary>
-    public List<TomlNode> RawArray { get; private set; } = new();
+    public IList<TomlNode> RawArray { get; }
 
     /// <inheritdoc/>
     public override bool HasValue { get; } = true;
@@ -69,10 +92,24 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
     public override IEnumerable<TomlNode> Children => RawArray.AsEnumerable();
 
     /// <inheritdoc/>
+    public IList<TomlNode> BaseList => RawArray;
+
+    /// <inheritdoc/>
     public override void Add(TomlNode node) => RawArray.Add(node);
 
     /// <inheritdoc/>
-    public override void AddRange(IEnumerable<TomlNode> nodes) => RawArray.AddRange(nodes);
+    public override void AddRange(IEnumerable<TomlNode> nodes)
+    {
+        if (RawArray is List<TomlNode> list)
+        {
+            list.AddRange(nodes);
+        }
+        else
+        {
+            foreach (var tomlNode in nodes)
+                Add(tomlNode);
+        }
+    }
 
     /// <inheritdoc/>
     public override void Delete(TomlNode node) => RawArray.Remove(node);
@@ -162,12 +199,54 @@ public class TomlArray : TomlNode, IEnumerable<TomlNode>
         }
     }
 
+    #region IList
     /// <inheritdoc/>
-    public TomlArray() { }
+    public int Count => ((ICollection<TomlNode>)RawArray).Count;
 
     /// <inheritdoc/>
-    public TomlArray(IEnumerable<TomlNode> nodes)
+    public bool IsReadOnly => ((ICollection<TomlNode>)RawArray).IsReadOnly;
+
+    /// <inheritdoc/>
+    public int IndexOf(TomlNode item)
     {
-        RawArray.AddRange(nodes);
+        return ((IList<TomlNode>)RawArray).IndexOf(item);
     }
+
+    /// <inheritdoc/>
+    public void Insert(int index, TomlNode item)
+    {
+        ((IList<TomlNode>)RawArray).Insert(index, item);
+    }
+
+    /// <inheritdoc/>
+    public void RemoveAt(int index)
+    {
+        ((IList<TomlNode>)RawArray).RemoveAt(index);
+    }
+
+    /// <inheritdoc/>
+    public void Clear()
+    {
+        ((ICollection<TomlNode>)RawArray).Clear();
+    }
+
+    /// <inheritdoc/>
+    public bool Contains(TomlNode item)
+    {
+        return ((ICollection<TomlNode>)RawArray).Contains(item);
+    }
+
+    /// <inheritdoc/>
+    public void CopyTo(TomlNode[] array, int arrayIndex)
+    {
+        ((ICollection<TomlNode>)RawArray).CopyTo(array, arrayIndex);
+    }
+
+    /// <inheritdoc/>
+    public bool Remove(TomlNode item)
+    {
+        return ((ICollection<TomlNode>)RawArray).Remove(item);
+    }
+
+    #endregion
 }

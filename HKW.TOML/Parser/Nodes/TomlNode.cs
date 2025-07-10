@@ -124,12 +124,12 @@ public abstract class TomlNode : IEnumerable
     /// <summary>
     /// 转换为列表
     /// </summary>
-    public virtual List<TomlNode> AsList => AsTomlArray.RawArray;
+    public virtual IList<TomlNode> AsList => AsTomlArray.RawArray;
 
     /// <summary>
     /// 转换为字典
     /// </summary>
-    public virtual Dictionary<string, TomlNode> AsDictionary => AsTomlTable.RawTable;
+    public virtual IDictionary<string, TomlNode> AsDictionary => AsTomlTable.RawTable;
 
     #endregion
 
@@ -210,7 +210,7 @@ public abstract class TomlNode : IEnumerable
     }
 
     /// <summary>
-    /// 子
+    /// 子成员
     /// </summary>
     public virtual IEnumerable<TomlNode> Children
     {

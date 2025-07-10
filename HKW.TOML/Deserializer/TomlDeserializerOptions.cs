@@ -7,7 +7,7 @@ namespace HKW.HKWTOML.Deserializer;
 /// <summary>
 /// Toml反序列化设置
 /// </summary>
-public class TOMLDeserializerOptions
+public class TomlDeserializerOptions
 {
     /// <summary>
     /// 允许非公有属性
@@ -20,12 +20,6 @@ public class TOMLDeserializerOptions
     /// </summary>
     [DefaultValue(false)]
     public bool AllowStaticProperty { get; set; } = false;
-
-    /// <summary>
-    /// 键比较
-    /// </summary>
-    [DefaultValue(StringComparison.CurrentCulture)]
-    public StringComparison KeyComparison { get; set; } = StringComparison.CurrentCulture;
 
     /// <summary>
     /// 枚举转换时忽略大小写
