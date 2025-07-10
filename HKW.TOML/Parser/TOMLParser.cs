@@ -1117,7 +1117,6 @@ public class TomlParser : IDisposable
             }
 
             first = false;
-            //TODO: 重用 ProcessQuotedValueCharacter
             // 如果当前字符稍后会被转义，则跳过它
             if (escaped)
             {

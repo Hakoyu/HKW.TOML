@@ -44,9 +44,9 @@ internal class Program
         //    );
         //    length += toml?.GetHashCode() ?? 1;
         //}
-        var benchmark2 = BenchmarkRunner.Run<BenchmarkDeserialize>();
+        //var benchmark2 = BenchmarkRunner.Run<BenchmarkDeserialize>();
         //var benchmark1 = BenchmarkRunner.Run<BenchmarkSerialize>();
-        //var benchmark3 = BenchmarkRunner.Run<BenchmarkParse>();
+        var benchmark3 = BenchmarkRunner.Run<BenchmarkParse>();
 
 #endif
     }
