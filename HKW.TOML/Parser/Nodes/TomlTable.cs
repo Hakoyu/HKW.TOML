@@ -235,10 +235,9 @@ public class TomlTable
     /// <param name="tomlFile">Toml文件</param>
     public async Task SaveToFileAsync(string tomlFile)
     {
-        await Task.Run(() =>
-        {
-            SaveToFile(tomlFile);
-        });
+        tomlFile = TOML.AddTOMLExtension(tomlFile);
+        using var sw = new StreamWriter(tomlFile);
+        await WriteToAsync(sw, null!, false);
     }
 
     /// <summary>
@@ -263,14 +262,26 @@ public class TomlTable
     /// <returns></returns>
     public async Task<string> ToTomlStringAsync()
     {
-        return await Task.Run(() =>
+        using var ms = new MemoryStream();
+        using (var sw = new StreamWriter(ms, leaveOpen: true))
         {
-            return ToTomlString();
-        });
+            await WriteToAsync(sw, null!, false);
+        }
+        ms.Position = 0;
+        using var sr = new StreamReader(ms);
+        return await sr.ReadToEndAsync();
     }
     #endregion
     /// <inheritdoc/>
-    public override void WriteTo(TextWriter tw, string tomlFile) => WriteTo(tw, tomlFile, true);
+    public override void WriteTo(TextWriter tw, string? tomlFile) => WriteTo(tw, tomlFile, true);
+
+    /// <summary>
+    /// 异步写入至
+    /// </summary>
+    /// <param name="tw"></param>
+    /// <param name="tomlFile"></param>
+    /// <returns></returns>
+    public Task WriteToAsync(TextWriter tw, string? tomlFile) => WriteToAsync(tw, tomlFile, true);
 
     /// <summary>
     /// 写入至
@@ -278,7 +289,7 @@ public class TomlTable
     /// <param name="tw">文本写入器</param>
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="writeSectionName">写入章节名</param>
-    internal void WriteTo(TextWriter tw, string tomlFile, bool writeSectionName)
+    internal void WriteTo(TextWriter tw, string? tomlFile, bool writeSectionName)
     {
         // The table is inline table
         if (IsInline && tomlFile is not null)
@@ -310,7 +321,7 @@ public class TomlTable
             tw.Write(TomlSyntax.ARRAY_END_SYMBOL);
             tw.WriteLine();
         }
-        else if (string.IsNullOrWhiteSpace(Comment) is false) // Add some spacing between the first node and the comment
+        else if (string.IsNullOrWhiteSpace(Comment) is false)
         {
             tw.WriteLine();
         }
@@ -345,36 +356,109 @@ public class TomlTable
         }
     }
 
+    /// <summary>
+    /// 异步写入至
+    /// </summary>
+    /// <param name="tw">文本写入器</param>
+    /// <param name="tomlFile">Toml文件</param>
+    /// <param name="writeSectionName">写入章节名</param>
+    internal async Task WriteToAsync(TextWriter tw, string? tomlFile, bool writeSectionName)
+    {
+        if (IsInline && tomlFile is not null)
+        {
+            await tw.WriteLineAsync(ToInlineToml());
+            return;
+        }
+
+        var collapsedItems = CollectCollapsedItems();
+
+        if (collapsedItems.Count is 0)
+            return;
+
+        var hasRealValues = !collapsedItems.All(n =>
+            n.Value is TomlTable { IsInline: false } or TomlArray { IsTableArray: true }
+        );
+
+        if (string.IsNullOrWhiteSpace(Comment) is false)
+            await Comment.AsCommentAsync(tw);
+
+        if (
+            tomlFile is not null
+            && (hasRealValues || string.IsNullOrWhiteSpace(Comment) is false)
+            && writeSectionName
+        )
+        {
+            await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
+            await tw.WriteAsync(tomlFile);
+            await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
+            await tw.WriteLineAsync();
+        }
+        else if (string.IsNullOrWhiteSpace(Comment) is false)
+        {
+            await tw.WriteLineAsync();
+        }
+
+        var namePrefix = tomlFile is null ? string.Empty : $"{tomlFile}.";
+        var first = true;
+
+        foreach (var collapsedItem in collapsedItems)
+        {
+            var key = collapsedItem.Key;
+            if (collapsedItem.Value is TomlArray { IsTableArray: true } array)
+            {
+                if (first is false)
+                    await tw.WriteLineAsync();
+                first = false;
+                collapsedItem.Value.WriteTo(tw, $"{namePrefix}{key}");
+                continue;
+            }
+            else if (collapsedItem.Value is TomlTable { IsInline: false } table)
+            {
+                if (first is false)
+                    await tw.WriteLineAsync();
+                first = false;
+                await table.WriteToAsync(tw, $"{namePrefix}{key}", true);
+                continue;
+            }
+
+            first = false;
+            if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment) is false)
+                collapsedItem.Value.Comment.AsComment(tw);
+            await tw.WriteAsync(key);
+            await tw.WriteAsync(' ');
+            await tw.WriteAsync(TomlSyntax.KEY_VALUE_SEPARATOR);
+            await tw.WriteAsync(' ');
+
+            collapsedItem.Value.WriteTo(tw, $"{namePrefix}{key}");
+        }
+    }
+
     #region IDictionary
     /// <inheritdoc/>
-    public bool ContainsKey(string key) =>
-        ((IDictionary<string, TomlNode>)RawTable).ContainsKey(key);
+    public bool ContainsKey(string key) => RawTable.ContainsKey(key);
 
     /// <inheritdoc/>
-    public bool Remove(string key) => ((IDictionary<string, TomlNode>)RawTable).Remove(key);
+    public bool Remove(string key) => RawTable.Remove(key);
 
     /// <inheritdoc/>
     public bool TryGetValue(string key, [MaybeNullWhen(false)] out TomlNode value) =>
-        ((IDictionary<string, TomlNode>)RawTable).TryGetValue(key, out value);
+        RawTable.TryGetValue(key, out value);
 
     /// <inheritdoc/>
-    public void Add(KeyValuePair<string, TomlNode> item) =>
-        ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Add(item);
+    public void Add(KeyValuePair<string, TomlNode> item) => RawTable.Add(item);
 
     /// <inheritdoc/>
-    public void Clear() => ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Clear();
+    public void Clear() => RawTable.Clear();
 
     /// <inheritdoc/>
-    public bool Contains(KeyValuePair<string, TomlNode> item) =>
-        ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Contains(item);
+    public bool Contains(KeyValuePair<string, TomlNode> item) => RawTable.Contains(item);
 
     /// <inheritdoc/>
     public void CopyTo(KeyValuePair<string, TomlNode>[] array, int arrayIndex) =>
-        ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).CopyTo(array, arrayIndex);
+        RawTable.CopyTo(array, arrayIndex);
 
     /// <inheritdoc/>
-    public bool Remove(KeyValuePair<string, TomlNode> item) =>
-        ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Remove(item);
+    public bool Remove(KeyValuePair<string, TomlNode> item) => RawTable.Remove(item);
 
     #endregion
 }

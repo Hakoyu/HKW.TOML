@@ -6,7 +6,6 @@ using BenchmarkDotNet.Running;
 using HKW.HKWTOML.Benchmark.Benchmark;
 using HKW.HKWTOML.ObjectBuilder;
 using HKW.HKWTOML.Serializer;
-using Microsoft.Extensions.ObjectPool;
 
 namespace HKW.HKWTOML.Benchmark;
 
@@ -23,6 +22,7 @@ internal class Program
         //var parser = new Tomlet.TomlParser();
         //var toml = parser.Parse(BenchmarkParse.TomlData);
         var toml = TOML.Parse(TomlExample.ExampleData);
+        toml.WriteToAsync(Console.Out, null!).GetAwaiter().GetResult();
         //Console.WriteLine(TOMLAsClasses.Generate(toml, "BenchmarkObject"));
         //var text = TOMLSerializer.Serialize(BenchmarkSerialize.Obj);
         //var toml = TOMLSerializer.Serialize(obj);

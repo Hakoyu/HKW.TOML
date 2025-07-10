@@ -42,12 +42,12 @@ public class TomlSerializer
     /// <param name="source">源</param>
     /// <param name="options">序列化设置</param>
     /// <returns>Toml表格数据</returns>
-    public static async Task<TomlTable?> SerializeAsync(
+    public static Task<TomlTable?> SerializeAsync(
         object source,
         TomlSerializerOptions? options = null
     )
     {
-        return await Task.Run(() => Serialize(source, options));
+        return Task.FromResult(Serialize(source, options));
     }
     #endregion
 

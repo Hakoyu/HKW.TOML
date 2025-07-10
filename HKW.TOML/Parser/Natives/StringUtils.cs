@@ -110,8 +110,27 @@ internal static class StringUtils
     /// <param name="tw">文本写入器</param>
     public static void AsComment(this string self, TextWriter tw)
     {
-        foreach (var line in self.Split(TomlSyntax.NEWLINE_CHARACTER))
+        var array = self.Split(TomlSyntax.NEWLINE_CHARACTER);
+        for (int i = 0; i < array.Length; i++)
+        {
+            string? line = array[i];
             tw.WriteLine($"{TomlSyntax.COMMENT_SYMBOL} {line.Trim()}");
+        }
+    }
+
+    /// <summary>
+    /// 异步转换为注释
+    /// </summary>
+    /// <param name="self">文本</param>
+    /// <param name="tw">文本写入器</param>
+    public static async Task AsCommentAsync(this string self, TextWriter tw)
+    {
+        var array = self.Split(TomlSyntax.NEWLINE_CHARACTER);
+        for (int i = 0; i < array.Length; i++)
+        {
+            string? line = array[i];
+            await tw.WriteLineAsync($"{TomlSyntax.COMMENT_SYMBOL} {line.Trim()}");
+        }
     }
 
     /// <summary>

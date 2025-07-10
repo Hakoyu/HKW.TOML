@@ -65,9 +65,9 @@ public static class TOML
     /// </summary>
     /// <param name="reader">读取器</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static async Task<TomlTable> ParseAsync(TextReader reader)
+    public static Task<TomlTable> ParseAsync(TextReader reader)
     {
-        return await Task.Run(() => Parse(reader));
+        return Task.FromResult(Parse(reader));
     }
 
     /// <summary>
@@ -75,9 +75,9 @@ public static class TOML
     /// </summary>
     /// <param name="tomlData">Toml数据</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static async Task<TomlTable> ParseAsync(string tomlData)
+    public static Task<TomlTable> ParseAsync(string tomlData)
     {
-        return await Task.Run(() => Parse(tomlData));
+        return Task.FromResult(Parse(tomlData));
     }
 
     /// <summary>
@@ -85,9 +85,9 @@ public static class TOML
     /// </summary>
     /// <param name="tomlFile">Toml文件</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static async Task<TomlTable> ParseFromFileAsync(string tomlFile)
+    public static Task<TomlTable> ParseFromFileAsync(string tomlFile)
     {
-        return await Task.Run(() => ParseFromFile(tomlFile));
+        return Task.FromResult(ParseFromFile(tomlFile));
     }
 
     /// <summary>
