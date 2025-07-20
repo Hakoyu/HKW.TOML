@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>2.2.2</Version>
+    <Version>2.2.3</Version>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -10,11 +10,12 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PathMap>$(SolutionDir)=$(MSBuildProjectName.Replace(" ", "_"))/</PathMap>
     <RepositoryUrl>https://github.com/Hakoyu/HKW.TOML</RepositoryUrl>
     <Authors>HKW</Authors>
     <Company>HKW</Company>
-    <Description>HKW.TOML is TOML reader, writer, deserializer, serializer and generate classes for C#.</Description>
     <RootNamespace>HKW.HKWTOML</RootNamespace>
+    <Description>HKW.TOML is TOML reader, writer, deserializer, serializer and generate classes for C#.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HKW.FastMember" Version="1.2.1" />
-    <PackageReference Include="HKW.Utils" Version="1.3.13" />
+    <PackageReference Include="HKW.FastMember" Version="1.2.4" />
+    <PackageReference Include="HKW.Utils" Version="1.3.14" />
   </ItemGroup>
 
 </Project>

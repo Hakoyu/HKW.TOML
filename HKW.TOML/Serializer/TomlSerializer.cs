@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using HKW.FastMember;
 using HKW.HKWTOML.Attributes;
 using HKW.HKWTOML.Exceptions;
@@ -164,7 +166,7 @@ public class TomlSerializer
     /// <param name="accessor">访问器</param>
     /// <param name="propertyInfo">属性信息</param>
     /// <param name="iTomlObject"></param>
-    /// <returns></returns>
+    /// <returns>(属性名称,Toml节点)</returns>
     private (string name, TomlNode node)? SerializeProperty(
         ObjectAccessor accessor,
         PropertyInfo propertyInfo,
@@ -188,7 +190,11 @@ public class TomlSerializer
                 propertyInfo.GetAttributeDictionary();
         }
         // 检测是否有隐藏特性
-        if (attributeDictionary.Contains<TomlIgnoreAttribute>())
+        if (
+            attributeDictionary.Contains<TomlIgnoreAttribute>()
+            || attributeDictionary.Contains<IgnoreDataMemberAttribute>()
+            || attributeDictionary.Contains<JsonIgnoreAttribute>()
+        )
             return null;
 
         // 获取属性的值
