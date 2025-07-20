@@ -248,7 +248,7 @@ public class TomlSerializer
             TomlNode node when source is TomlNode => node,
             IDictionary dictionary when source is IDictionary => SerializeDictionary(dictionary),
             IEnumerable list when source is IEnumerable => SerializeList(list),
-            _ when type.IsClass => SerializeTomlTable(source, type),
+            _ when type.IsClass || type.IsInterface => SerializeTomlTable(source, type),
             // 其他类型
             _
                 => throw new NotSupportedException(
