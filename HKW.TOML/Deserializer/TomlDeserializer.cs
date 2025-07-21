@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using HKW.FastMember;
 using HKW.HKWTOML.Attributes;
 using HKW.HKWTOML.Exceptions;
 using HKW.HKWTOML.Interfaces;
 using HKW.HKWUtils.Extensions;
-using HKWTOML.Utils;
 
 namespace HKW.HKWTOML.Deserializer;
 
@@ -362,9 +363,7 @@ public class TomlDeserializer
         {
             if (_options.AllowStaticProperty is false)
                 throw new TomlDeserializeException(
-                    "目标是静态对象但选项中AllowStaticProperty为false"
-                        + Environment.NewLine
-                        + "如果要反序列化静态对象请将选项中的AllowStaticProperty设置为true"
+                    "如果要反序列化静态对象请将选项中的 AllowStaticProperty 设置为 true"
                 );
             type = staticType;
         }
@@ -398,8 +397,10 @@ public class TomlDeserializer
             iTomlClass.PropertyComments ??= [];
         }
 
-        foreach (var propertyInfo in type.GetProperties(_propertyBindingFlags))
+        var properties = type.GetPropertiesWithoutIgnore(_propertyBindingFlags);
+        for (var i = 0; i < properties.Length; i++)
         {
+            var propertyInfo = properties[i];
             try
             {
                 if (DeserializeProperty(accessor, propertyInfo, table, iTomlClass) is false)
@@ -532,10 +533,6 @@ public class TomlDeserializer
         ITomlObjectComment? iTomlClassComment
     )
     {
-        // 检测是否为隐藏属性
-        if (propertyInfo.IsDefined<TomlIgnoreAttribute>())
-            return true;
-
         // 跳过ITomlClassComment生成的接口
         if (iTomlClassComment is not null)
         {

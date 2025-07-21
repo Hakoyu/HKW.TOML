@@ -1,9 +1,29 @@
 ﻿using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using HKW.HKWTOML.Attributes;
 
-namespace HKWTOML.Utils;
+namespace HKW.HKWTOML;
 
 internal static class TomlUtils
 {
+    public static PropertyInfo[] GetPropertiesWithoutIgnore(
+        this Type type,
+        BindingFlags bindingAttr
+    )
+    {
+        return type.GetProperties(bindingAttr)
+            .Where(p =>
+                (
+                    Attribute.IsDefined(p, typeof(TomlIgnoreAttribute))
+                    || Attribute.IsDefined(p, typeof(IgnoreDataMemberAttribute))
+                    || Attribute.IsDefined(p, typeof(JsonIgnoreAttribute))
+                )
+                    is false
+            )
+            .ToArray();
+    }
+
     /// <summary>
     /// 是静态
     /// </summary>

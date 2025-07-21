@@ -9,7 +9,6 @@ using HKW.HKWTOML.Interfaces;
 using HKW.HKWUtils;
 using HKW.HKWUtils.Collections;
 using HKW.HKWUtils.Extensions;
-using HKWTOML.Utils;
 
 namespace HKW.HKWTOML.Serializer;
 
@@ -129,7 +128,9 @@ public class TomlSerializer
         if (_propertiesCache.TryGetValue(type, out var properties) is false)
         {
             if (_options.PropertiesOrderMode is PropertiesOrderMode.None)
-                _propertiesCache[type] = properties = type.GetProperties(_propertyBindingFlags);
+                _propertiesCache[type] = properties = type.GetPropertiesWithoutIgnore(
+                    _propertyBindingFlags
+                );
             else
                 _propertiesCache[type] = properties = [.. GetObjectProperties(type)];
         }
@@ -189,13 +190,6 @@ public class TomlSerializer
             _attributeDictionaryCache[propertyInfo] = attributeDictionary =
                 propertyInfo.GetAttributeDictionary();
         }
-        // 检测是否有隐藏特性
-        if (
-            attributeDictionary.Contains<TomlIgnoreAttribute>()
-            || attributeDictionary.Contains<IgnoreDataMemberAttribute>()
-            || attributeDictionary.Contains<JsonIgnoreAttribute>()
-        )
-            return null;
 
         // 获取属性的值
         if (accessor[propertyInfo.Name] is not object value)
@@ -312,7 +306,7 @@ public class TomlSerializer
     /// <returns>经过排序后的属性</returns>
     private IEnumerable<PropertyInfo> GetObjectProperties(Type type)
     {
-        var properties = type.GetProperties(_propertyBindingFlags);
+        var properties = type.GetPropertiesWithoutIgnore(_propertyBindingFlags);
         // 使用自定义比较器排序
         if (_options.PropertiesOrderComparer is not null)
         {
