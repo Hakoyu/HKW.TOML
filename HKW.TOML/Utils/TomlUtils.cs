@@ -9,19 +9,32 @@ internal static class TomlUtils
 {
     public static PropertyInfo[] GetPropertiesWithoutIgnore(
         this Type type,
-        BindingFlags bindingAttr
+        BindingFlags bindingAttr,
+        bool mustCanWrite
     )
     {
-        return type.GetProperties(bindingAttr)
-            .Where(p =>
-                (
-                    Attribute.IsDefined(p, typeof(TomlIgnoreAttribute))
-                    || Attribute.IsDefined(p, typeof(IgnoreDataMemberAttribute))
-                    || Attribute.IsDefined(p, typeof(JsonIgnoreAttribute))
+        return mustCanWrite
+            ? type.GetProperties(bindingAttr)
+                .Where(static p =>
+                    (
+                        Attribute.IsDefined(p, typeof(TomlIgnoreAttribute))
+                        || Attribute.IsDefined(p, typeof(IgnoreDataMemberAttribute))
+                        || Attribute.IsDefined(p, typeof(JsonIgnoreAttribute))
+                    )
+                        is false
+                    && p.CanWrite
                 )
-                    is false
-            )
-            .ToArray();
+                .ToArray()
+            : type.GetProperties(bindingAttr)
+                .Where(static p =>
+                    (
+                        Attribute.IsDefined(p, typeof(TomlIgnoreAttribute))
+                        || Attribute.IsDefined(p, typeof(IgnoreDataMemberAttribute))
+                        || Attribute.IsDefined(p, typeof(JsonIgnoreAttribute))
+                    )
+                        is false
+                )
+                .ToArray();
     }
 
     /// <summary>

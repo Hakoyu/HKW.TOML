@@ -7,7 +7,7 @@ using HKW.HKWTOML.Serializer;
 using System.Reflection;
 #endif
 
-namespace HKWTOML;
+namespace HKW.HKWTOML;
 
 internal class HKWToml
 {
@@ -93,6 +93,8 @@ internal class HKWToml
         [TomlPropertyOrder(5)]
         [TomlPropertyName("duration")]
         public List<string> Duration { get; set; }
+
+        public string CantWrite { get; } = "No set property";
     }
 #endif
 }
