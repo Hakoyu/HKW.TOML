@@ -397,7 +397,7 @@ public class TomlDeserializer
             iTomlClass.PropertyComments ??= [];
         }
 
-        var properties = type.GetPropertiesWithoutIgnore(_propertyBindingFlags, false);
+        var properties = type.GetPropertiesWithoutIgnore(_propertyBindingFlags, true);
         for (var i = 0; i < properties.Length; i++)
         {
             var propertyInfo = properties[i];

@@ -10,7 +10,7 @@ internal static class TomlUtils
     public static PropertyInfo[] GetPropertiesWithoutIgnore(
         this Type type,
         BindingFlags bindingAttr,
-        bool mustCanWrite
+        bool mustCanWrite = false
     )
     {
         return mustCanWrite

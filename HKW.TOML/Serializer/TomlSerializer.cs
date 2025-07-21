@@ -129,8 +129,7 @@ public class TomlSerializer
         {
             if (_options.PropertiesOrderMode is PropertiesOrderMode.None)
                 _propertiesCache[type] = properties = type.GetPropertiesWithoutIgnore(
-                    _propertyBindingFlags,
-                    true
+                    _propertyBindingFlags
                 );
             else
                 _propertiesCache[type] = properties = [.. GetObjectProperties(type)];
@@ -307,7 +306,7 @@ public class TomlSerializer
     /// <returns>经过排序后的属性</returns>
     private IEnumerable<PropertyInfo> GetObjectProperties(Type type)
     {
-        var properties = type.GetPropertiesWithoutIgnore(_propertyBindingFlags, true);
+        var properties = type.GetPropertiesWithoutIgnore(_propertyBindingFlags);
         // 使用自定义比较器排序
         if (_options.PropertiesOrderComparer is not null)
         {
