@@ -37,7 +37,7 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
     /// <param name="rawArray">原始数组</param>
     public TomlArray(IList<TomlNode> rawArray)
     {
-        ArgumentNullException.ThrowIfNull(rawArray, nameof(rawArray));
+        ArgumentNullException.ThrowIfNull(rawArray);
         RawArray = rawArray;
     }
 
@@ -201,51 +201,51 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
 
     #region IList
     /// <inheritdoc/>
-    public int Count => ((ICollection<TomlNode>)RawArray).Count;
+    public int Count => RawArray.Count;
 
     /// <inheritdoc/>
-    public bool IsReadOnly => ((ICollection<TomlNode>)RawArray).IsReadOnly;
+    public bool IsReadOnly => RawArray.IsReadOnly;
 
     /// <inheritdoc/>
     public int IndexOf(TomlNode item)
     {
-        return ((IList<TomlNode>)RawArray).IndexOf(item);
+        return RawArray.IndexOf(item);
     }
 
     /// <inheritdoc/>
     public void Insert(int index, TomlNode item)
     {
-        ((IList<TomlNode>)RawArray).Insert(index, item);
+        RawArray.Insert(index, item);
     }
 
     /// <inheritdoc/>
     public void RemoveAt(int index)
     {
-        ((IList<TomlNode>)RawArray).RemoveAt(index);
+        RawArray.RemoveAt(index);
     }
 
     /// <inheritdoc/>
     public void Clear()
     {
-        ((ICollection<TomlNode>)RawArray).Clear();
+        RawArray.Clear();
     }
 
     /// <inheritdoc/>
     public bool Contains(TomlNode item)
     {
-        return ((ICollection<TomlNode>)RawArray).Contains(item);
+        return RawArray.Contains(item);
     }
 
     /// <inheritdoc/>
     public void CopyTo(TomlNode[] array, int arrayIndex)
     {
-        ((ICollection<TomlNode>)RawArray).CopyTo(array, arrayIndex);
+        RawArray.CopyTo(array, arrayIndex);
     }
 
     /// <inheritdoc/>
     public bool Remove(TomlNode item)
     {
-        return ((ICollection<TomlNode>)RawArray).Remove(item);
+        return RawArray.Remove(item);
     }
 
     #endregion

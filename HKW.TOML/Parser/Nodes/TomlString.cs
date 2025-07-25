@@ -42,7 +42,7 @@ public class TomlString : TomlNode
     /// <summary>
     /// 值
     /// </summary>
-    public string Value { get; set; } = string.Empty;
+    public string Value { get; set; }
 
     /// <inheritdoc/>
     public override string ToString() => Value;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HKW.HKWTOML.Parser;
+//namespace HKW.HKWTOML.Parser;
 
 /// <summary>
 /// TOML 字典解析

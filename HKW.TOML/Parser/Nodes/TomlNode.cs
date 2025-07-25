@@ -187,6 +187,7 @@ public abstract class TomlNode : IEnumerable
     /// </summary>
     public virtual int ChildrenCount => 0;
 
+#pragma warning disable S3237,S108 // "value" contextual keyword should be used
     /// <summary>
     /// 使用键获取值(用于Toml表格)
     /// </summary>
@@ -208,6 +209,7 @@ public abstract class TomlNode : IEnumerable
         get => null!;
         set { }
     }
+#pragma warning restore S3237 // "value" contextual keyword should be used
 
     /// <summary>
     /// 子成员
@@ -436,7 +438,7 @@ public abstract class TomlNode : IEnumerable
         if (value.IsTomlInteger)
             return value.AsTomlInteger.Value;
         else
-            return (double)value.AsTomlFloat.Value;
+            return value.AsTomlFloat.Value;
     }
 
     /// <summary>

@@ -89,8 +89,23 @@ public class TomlParser : IDisposable
     /// </summary>
     public void Dispose()
     {
+        Dispose(true);
         GC.SuppressFinalize(this);
-        _reader?.Dispose();
+    }
+
+    /// <inheritdoc/>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _reader?.Dispose();
+        }
+    }
+
+    /// <inheritdoc/>
+    ~TomlParser()
+    {
+        Dispose(false);
     }
 
     /// <summary>
@@ -115,50 +130,45 @@ public class TomlParser : IDisposable
         {
             var c = (char)currentChar;
 
-            if (_currentState is ParseState.None)
+            if (
+                _currentState is ParseState.None
+                && ParseNone(c, rootTable, ref isFirstComment, ref latestComment) is bool noneParsed
+            )
             {
-                if (
-                    ParseNone(c, rootTable, ref isFirstComment, ref latestComment)
-                    is bool noneParsed
+                if (noneParsed)
+                    ConsumeChar();
+                continue;
+            }
+            if (
+                _currentState is ParseState.KeyValuePair
+                && ParseKeyValuePair(currentTable, keyParts, ref latestComment)
+            )
+                continue;
+            if (
+                _currentState is ParseState.Table
+                && ParseTable(
+                    c,
+                    rootTable,
+                    ref currentTable,
+                    keyParts,
+                    ref isArrayTable,
+                    ref latestComment
                 )
-                {
-                    if (noneParsed)
-                        ConsumeChar();
-                    continue;
-                }
-            }
-            if (_currentState is ParseState.KeyValuePair)
-            {
-                if (ParseKeyValuePair(currentTable, keyParts, ref latestComment))
-                    continue;
-            }
-            if (_currentState is ParseState.Table)
-            {
-                if (
-                    ParseTable(
-                        c,
-                        rootTable,
-                        ref currentTable,
-                        keyParts,
-                        ref isArrayTable,
-                        ref latestComment
-                    )
                     is bool tableParsed
-                )
-                {
-                    if (tableParsed)
-                        ConsumeChar();
-                    continue;
-                }
-            }
-            if (_currentState is ParseState.SkipToNextLine)
+            )
             {
-                if (ParseSkipToNextLine(c) is bool skipPased)
-                {
-                    if (skipPased)
-                        ConsumeChar();
-                    continue;
-                }
+                if (tableParsed)
+                    ConsumeChar();
+                continue;
+            }
+            if (
+                _currentState is ParseState.SkipToNextLine
+                && ParseSkipToNextLine(c) is bool skipPased
+            )
+            {
+                if (skipPased)
+                    ConsumeChar();
+                continue;
             }
             ConsumeChar();
         }

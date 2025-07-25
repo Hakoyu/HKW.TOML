@@ -343,8 +343,10 @@ public class TomlDeserializer
 
         if (_options.AllowStaticProperty)
             _propertyBindingFlags |= BindingFlags.Static;
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
         if (_options.AllowNonPublicProperty)
             _propertyBindingFlags |= BindingFlags.NonPublic;
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
     }
 
     #region Deserialize Value
@@ -356,7 +358,7 @@ public class TomlDeserializer
     /// <param name="table">Toml表格</param>
     private void Deserialize(object? target, Type type, TomlTable table)
     {
-        ArgumentNullException.ThrowIfNull(target, nameof(target));
+        ArgumentNullException.ThrowIfNull(target);
 
         // 检查是否为静态类
         if (target is Type staticType && staticType.IsSealed && staticType.IsAbstract)
@@ -371,12 +373,11 @@ public class TomlDeserializer
         DeserializeTable(target, type, table);
 
         // 检查缺失的必要属性
-        if (_options.MissingPequiredProperties.Count != 0)
+        if (_options.MissingPequiredProperties.Count != 0 && _isDefaultOptions)
         {
-            if (_isDefaultOptions)
-                throw new TomlDeserializeException(
-                    "反序列化时缺少必需属性" + Environment.NewLine + "请向反序列化器传递选项以获取缺少的必需属性。"
-                );
+            throw new TomlDeserializeException(
+                "反序列化时缺少必需属性" + Environment.NewLine + "请向反序列化器传递选项以获取缺少的必需属性。"
+            );
         }
     }
 
@@ -397,7 +398,7 @@ public class TomlDeserializer
             iTomlClass.PropertyComments ??= [];
         }
 
-        var properties = type.GetPropertiesWithoutIgnore(_propertyBindingFlags, true);
+        var properties = type.GetPropertiesWithoutIgnore(_propertyBindingFlags);
         for (var i = 0; i < properties.Length; i++)
         {
             var propertyInfo = properties[i];
@@ -426,14 +427,12 @@ public class TomlDeserializer
     /// 反序列化字典
     /// </summary>
     /// <param name="table">Toml表格</param>
-    /// <param name="nestedTarget">内部目标</param>
-    private static bool DeserializeDictionary(TomlTable table, object nestedTarget)
+    /// <param name="dictionary">字典</param>
+    private static void DeserializeDictionary(TomlTable table, IDictionary dictionary)
     {
-        if (nestedTarget is not IDictionary dictionary)
-            return false;
+        dictionary.Clear();
         foreach (var item in table)
             dictionary.Add(item.Key, item.Value);
-        return true;
     }
 
     /// <summary>
@@ -470,10 +469,8 @@ public class TomlDeserializer
             return;
         }
 
-        // 获取类型代码
-        var typeCode = Type.GetTypeCode(elementType);
         foreach (var node in array)
-            DeserializeArrayValue(list, node, elementType, typeCode);
+            DeserializeArrayValue(list, node, elementType);
     }
 
     /// <summary>
@@ -482,13 +479,7 @@ public class TomlDeserializer
     /// <param name="list">列表</param>
     /// <param name="node">值</param>
     /// <param name="elementType">列表值类型</param>
-    /// <param name="typeCode">类型代码</param>
-    private void DeserializeArrayValue(
-        IList list,
-        TomlNode node,
-        Type elementType,
-        TypeCode typeCode
-    )
+    private void DeserializeArrayValue(IList list, TomlNode node, Type elementType)
     {
         var typeAccessor = TypeAccessor.Create(elementType);
         if (node.IsTomlTable)
@@ -498,8 +489,11 @@ public class TomlDeserializer
                 return;
 
             // 如果是字典, 则填入内容
-            if (DeserializeDictionary(node.AsTomlTable, nestedTarget))
-                return;
+            if (nestedTarget is IDictionary dictionary)
+            {
+                DeserializeDictionary(node.AsTomlTable, dictionary);
+            }
+
             list.Add(nestedTarget);
 
             DeserializeTable(nestedTarget, nestedTarget.GetType(), node.AsTomlTable);
@@ -509,12 +503,13 @@ public class TomlDeserializer
             // 如果是Toml数组,则检测是否为IList类型
             if (typeAccessor.CreateNew() is not IList nestedTarget)
                 return;
+
             list.Add(nestedTarget);
             DeserializeArray(elementType, nestedTarget, node.AsTomlArray);
         }
         else
         {
-            list.Add(GetNodeVale(node, typeCode));
+            list.Add(GetNodeVale(node, Type.GetTypeCode(elementType)));
         }
     }
 
@@ -587,25 +582,37 @@ public class TomlDeserializer
 
         if (node.IsTomlTable)
         {
-            // 如果值是Toml表格,则创建一个新的对象
-            if (typeAccessor.CreateNew() is not object nestedTarget)
+            var sourceObject = accessor[propertyInfo.Name];
+            if (propertyInfo.CanWrite)
+            {
+                sourceObject ??= typeAccessor.CreateNew();
+                SetPropertyValue(accessor, propertyInfo, sourceObject);
+            }
+            else if (sourceObject is null)
                 return;
 
-            // 如果是字典, 则填入内容
-            if (DeserializeDictionary(node.AsTomlTable, nestedTarget))
+            if (sourceObject is IDictionary dictionary)
+            {
+                DeserializeDictionary(node.AsTomlTable, dictionary);
                 return;
-            SetPropertyValue(accessor, propertyInfo, nestedTarget);
+            }
 
-            // 递归Toml表格
-            DeserializeTable(nestedTarget, propertyType, node.AsTomlTable);
+            DeserializeTable(sourceObject, propertyType, node.AsTomlTable);
         }
         else if (node.IsTomlArray)
         {
-            // 如果是Toml数组,则检测是否为IList类型
-            if (typeAccessor.CreateNew() is not IList nestedTarget)
+            if (typeof(IList).IsAssignableFrom(propertyType) is false)
                 return;
-            SetPropertyValue(accessor, propertyInfo, nestedTarget);
-            DeserializeArray(propertyType, nestedTarget, node.AsTomlArray);
+            var list = (IList)accessor[propertyInfo.Name];
+            if (propertyInfo.CanWrite)
+            {
+                list ??= (IList)typeAccessor.CreateNew();
+                SetPropertyValue(accessor, propertyInfo, list);
+            }
+            else if (list is null)
+                return;
+            list.Clear();
+            DeserializeArray(propertyType, list, node.AsTomlArray);
         }
         else if (propertyType.IsEnum)
         {
@@ -613,7 +620,7 @@ public class TomlDeserializer
             var value = GetEnumValue(propertyType, node);
             SetPropertyValue(accessor, propertyInfo, value);
         }
-        else
+        else if (propertyInfo.CanWrite)
         {
             // 获取属性值
             var value = GetNodeVale(node, Type.GetTypeCode(propertyType));
@@ -707,6 +714,9 @@ public class TomlDeserializer
     /// <param name="value">值</param>
     private void SetPropertyValue(ObjectAccessor accessor, PropertyInfo propertyInfo, object? value)
     {
+        if (propertyInfo.CanWrite is false)
+            return;
+
         if (_options.AllowStaticProperty && propertyInfo.IsStatic())
             propertyInfo.SetValue(accessor.Source, value);
         else

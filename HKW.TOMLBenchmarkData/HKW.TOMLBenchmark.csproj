@@ -9,6 +9,7 @@
     <IsTestProject>true</IsTestProject>
     <RootNamespace>HKW.HKWTOML.Benchmark</RootNamespace>
     <OutputType>Exe</OutputType>
+    <SonarQubeExclude>True</SonarQubeExclude>
   </PropertyGroup>
 
   <ItemGroup>

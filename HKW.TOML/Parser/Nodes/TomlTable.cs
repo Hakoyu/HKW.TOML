@@ -36,7 +36,7 @@ public class TomlTable
     /// <exception cref="ArgumentNullException">dictionary is null</exception>
     public TomlTable(IDictionary<string, TomlNode> rawDictionary)
     {
-        ArgumentNullException.ThrowIfNull(rawDictionary, nameof(rawDictionary));
+        ArgumentNullException.ThrowIfNull(rawDictionary);
         RawTable = rawDictionary;
     }
 
@@ -96,17 +96,16 @@ public class TomlTable
     public override ICollection<TomlNode> Children => RawTable.Values;
 
     /// <inheritdoc/>
-    ICollection<string> IDictionary<string, TomlNode>.Keys =>
-        ((IDictionary<string, TomlNode>)RawTable).Keys;
+    ICollection<string> IDictionary<string, TomlNode>.Keys => RawTable.Keys;
 
     /// <inheritdoc/>
-    public ICollection<TomlNode> Values => ((IDictionary<string, TomlNode>)RawTable).Values;
+    public ICollection<TomlNode> Values => RawTable.Values;
 
     /// <inheritdoc/>
-    public int Count => ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).Count;
+    public int Count => RawTable.Count;
 
     /// <inheritdoc/>
-    public bool IsReadOnly => ((ICollection<KeyValuePair<string, TomlNode>>)RawTable).IsReadOnly;
+    public bool IsReadOnly => RawTable.IsReadOnly;
 
     /// <inheritdoc/>
     public override bool HasKey(string key) => RawTable.ContainsKey(key);
@@ -272,16 +271,6 @@ public class TomlTable
         return await sr.ReadToEndAsync();
     }
     #endregion
-    /// <inheritdoc/>
-    public override void WriteTo(TextWriter tw, string? tomlFile) => WriteTo(tw, tomlFile, true);
-
-    /// <summary>
-    /// 异步写入至
-    /// </summary>
-    /// <param name="tw"></param>
-    /// <param name="tomlFile"></param>
-    /// <returns></returns>
-    public Task WriteToAsync(TextWriter tw, string? tomlFile) => WriteToAsync(tw, tomlFile, true);
 
     /// <summary>
     /// 写入至
@@ -289,7 +278,7 @@ public class TomlTable
     /// <param name="tw">文本写入器</param>
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="writeSectionName">写入章节名</param>
-    internal void WriteTo(TextWriter tw, string? tomlFile, bool writeSectionName)
+    internal void WriteTo(TextWriter tw, string? tomlFile, bool writeSectionName = true)
     {
         // The table is inline table
         if (IsInline && tomlFile is not null)
@@ -362,7 +351,7 @@ public class TomlTable
     /// <param name="tw">文本写入器</param>
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="writeSectionName">写入章节名</param>
-    internal async Task WriteToAsync(TextWriter tw, string? tomlFile, bool writeSectionName)
+    internal async Task WriteToAsync(TextWriter tw, string? tomlFile, bool writeSectionName = true)
     {
         if (IsInline && tomlFile is not null)
         {
@@ -404,7 +393,7 @@ public class TomlTable
         foreach (var collapsedItem in collapsedItems)
         {
             var key = collapsedItem.Key;
-            if (collapsedItem.Value is TomlArray { IsTableArray: true } array)
+            if (collapsedItem.Value is TomlArray { IsTableArray: true })
             {
                 if (first is false)
                     await tw.WriteLineAsync();
@@ -423,7 +412,7 @@ public class TomlTable
 
             first = false;
             if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment) is false)
-                collapsedItem.Value.Comment.AsComment(tw);
+                await collapsedItem.Value.Comment.AsCommentAsync(tw);
             await tw.WriteAsync(key);
             await tw.WriteAsync(' ');
             await tw.WriteAsync(TomlSyntax.KEY_VALUE_SEPARATOR);

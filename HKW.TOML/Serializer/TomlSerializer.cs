@@ -31,7 +31,7 @@ public class TomlSerializer
     public static TomlTable? Serialize(object source, TomlSerializerOptions? options = null)
     {
         var serializer = new TomlSerializer(options);
-        var result = serializer.Serialize(source);
+        var result = serializer.SerializeObject(source);
         serializer._propertiesCache.Clear();
         serializer._attributeDictionaryCache.Clear();
         return result;
@@ -60,7 +60,7 @@ public class TomlSerializer
     /// <summary>
     /// 是默认设置
     /// </summary>
-    private readonly bool _isDefaultOptions = false;
+    //private readonly bool _isDefaultOptions = false;
 
     /// <summary>
     /// 属性标识符
@@ -76,14 +76,16 @@ public class TomlSerializer
     /// <param name="options">设置</param>
     private TomlSerializer(TomlSerializerOptions? options)
     {
-        if (options is null)
-            _isDefaultOptions = true;
+        //if (options is null)
+        //    _isDefaultOptions = true;
         _options = options ?? new();
 
         if (_options.AllowStaticProperty)
             _propertyBindingFlags |= BindingFlags.Static;
+#pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
         if (_options.AllowNonPublicProperty)
             _propertyBindingFlags |= BindingFlags.NonPublic;
+#pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
     }
 
     #region SerializeObject
@@ -93,7 +95,7 @@ public class TomlSerializer
     /// </summary>
     /// <param name="source">源头</param>
     /// <returns>Toml表格数据</returns>
-    private TomlTable Serialize(object source)
+    private TomlTable SerializeObject(object source)
     {
         Type type;
         // 检查是否为静态类

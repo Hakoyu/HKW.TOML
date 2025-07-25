@@ -235,7 +235,7 @@ internal static class StringUtils
             static string CodePoint(int next, string txt, ref int num, int size)
             {
                 if (next + size >= txt.Length)
-                    throw new Exception("Undefined escape sequence!");
+                    throw new TomlException("Undefined escape sequence!");
                 num += size;
                 return char.ConvertFromUtf32(Convert.ToInt32(txt.Substring(next + 1, size), 16));
             }
@@ -253,7 +253,7 @@ internal static class StringUtils
                     '\\' => "\\",
                     'u' => CodePoint(next, txt, ref num, 4),
                     'U' => CodePoint(next, txt, ref num, 8),
-                    var _ => throw new Exception("Undefined escape sequence!")
+                    _ => throw new TomlException("Undefined escape sequence!")
                 }
             );
             i = num + 2;
