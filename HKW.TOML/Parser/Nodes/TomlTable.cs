@@ -278,7 +278,7 @@ public class TomlTable
     /// <param name="tw">文本写入器</param>
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="writeSectionName">写入章节名</param>
-    internal void WriteTo(TextWriter tw, string? tomlFile, bool writeSectionName = true)
+    public void WriteTo(TextWriter tw, string? tomlFile, bool writeSectionName = true)
     {
         // The table is inline table
         if (IsInline && tomlFile is not null)
@@ -351,7 +351,7 @@ public class TomlTable
     /// <param name="tw">文本写入器</param>
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="writeSectionName">写入章节名</param>
-    internal async Task WriteToAsync(TextWriter tw, string? tomlFile, bool writeSectionName = true)
+    public async Task WriteToAsync(TextWriter tw, string? tomlFile, bool writeSectionName = true)
     {
         if (IsInline && tomlFile is not null)
         {
