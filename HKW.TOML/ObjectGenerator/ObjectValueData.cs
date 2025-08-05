@@ -32,7 +32,7 @@ internal class ObjectValueData
     /// <summary>
     /// 设置
     /// </summary>
-    private readonly ObjectBuilderOptions _options;
+    private readonly TomlObjectGeneratorOptions _options;
 
     /// <summary>
     /// 构造
@@ -40,7 +40,7 @@ internal class ObjectValueData
     /// <param name="options">设置</param>
     /// <param name="name">名称</param>
     /// <param name="typeName">类型名称</param>
-    public ObjectValueData(ObjectBuilderOptions options, string name, string typeName)
+    public ObjectValueData(TomlObjectGeneratorOptions options, string name, string typeName)
     {
         _options = options;
         Name = name;
@@ -53,7 +53,7 @@ internal class ObjectValueData
     /// <param name="options">设置</param>
     /// <param name="name">名称</param>
     /// <param name="node">类值(推断类型名称)</param>
-    public ObjectValueData(ObjectBuilderOptions options, string name, TomlNode node)
+    public ObjectValueData(TomlObjectGeneratorOptions options, string name, TomlNode node)
         : this(options, name, options.GetConvertName(node, TomlType.GetTypeCode(node))) { }
 
     /// <summary>

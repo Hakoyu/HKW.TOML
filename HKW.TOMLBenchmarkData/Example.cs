@@ -20,7 +20,7 @@ public static class Example
 
             # Array with supported datetime formats.
             times = [
-            	2021-11-09T15:16:17+01:00,  # datetime with timezone.
+            	2021-11-09T15:16:17+01:00,  # datetime w键值对末尾注释键值对ith timezone.
             	2021-11-09T15:16:17Z,       # UTC datetime.
             	2021-11-09T15:16:17,        # local datetime.
             	2021-11-09,                 # local date.

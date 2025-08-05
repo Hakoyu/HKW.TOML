@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 namespace HKW.HKWTOML.Tests;
 
 [TestClass]
-public class TomlDeserializerTest
+public class TomlDeserializerTests
 {
     [TestMethod]
     public void Deserialize()

@@ -6,7 +6,7 @@ namespace HKW.HKWTOML.ObjectBuilder;
 /// <summary>
 /// 对象构造器
 /// </summary>
-public partial class ObjectBuilder
+public partial class TomlObjectGenerator
 {
     /// <summary>
     /// 所有类
@@ -23,9 +23,9 @@ public partial class ObjectBuilder
     /// <summary>
     /// 设置
     /// </summary>
-    private readonly ObjectBuilderOptions _options = new();
+    private readonly TomlObjectGeneratorOptions _options = new();
 
-    private ObjectBuilder(ObjectBuilderOptions? options)
+    private TomlObjectGenerator(TomlObjectGeneratorOptions? options)
     {
         _options = options ?? new();
     }
@@ -37,7 +37,7 @@ public partial class ObjectBuilder
     /// <param name="tomlFile">toml文件</param>
     /// <param name="options">设置</param>
     /// <returns>生成的数据</returns>
-    public static string BuildFromFile(string tomlFile, ObjectBuilderOptions? options = null)
+    public static string BuildFromFile(string tomlFile, TomlObjectGeneratorOptions? options = null)
     {
         var toml = TOML.ParseFromFile(tomlFile);
         var rootClassName = Path.GetFileNameWithoutExtension(tomlFile);
@@ -54,7 +54,7 @@ public partial class ObjectBuilder
     public static string BuildFromFile(
         string tomlFile,
         string rootClassName = "",
-        ObjectBuilderOptions? options = null
+        TomlObjectGeneratorOptions? options = null
     )
     {
         var toml = TOML.ParseFromFile(tomlFile);
@@ -73,10 +73,10 @@ public partial class ObjectBuilder
     public static string Generate(
         TomlTable table,
         string rootClassName,
-        ObjectBuilderOptions? options = null
+        TomlObjectGeneratorOptions? options = null
     )
     {
-        var asClasses = new ObjectBuilder(options);
+        var asClasses = new TomlObjectGenerator(options);
         return asClasses.Generate(table, rootClassName);
     }
     #endregion
@@ -153,7 +153,7 @@ public partial class ObjectBuilder
 
             // 检测关键词
             if (TomlUtils.CsharpKeywords.Contains(name))
-                throw new Exception($"Used CsharpKeywords \"{name}\" in \"{className}\"");
+                throw new TomlException($"Used CsharpKeywords \"{name}\" in \"{className}\"");
             // 解析表格的值
             ParseTableValue(tomlClass, name, node);
             ChackOptions(isAnonymousClass, name, kv.Key, ref index, node, tomlClass);
@@ -211,7 +211,7 @@ public partial class ObjectBuilder
     {
         // 检测关键字
         if (TomlUtils.CsharpKeywords.Contains(className))
-            throw new Exception($"Used CsharpKeywords \"{className}\"");
+            throw new TomlException($"Used CsharpKeywords \"{className}\"");
         // 获取已存在的类
         if (_objectValues.TryGetValue(className, out var tomlClass) is false)
         {
@@ -387,8 +387,9 @@ public partial class ObjectBuilder
     {
         // 获取匿名类名称
         var anonymousClassName = string.Format(_options.AnonymousClassNameFormat, name);
-        foreach (var item in array)
+        for (var i = 0; i < array.Count; i++)
         {
+            var item = array[i];
             var table = item.AsTomlTable;
             ParseTable(anonymousClassName, string.Empty, table);
         }

@@ -271,7 +271,17 @@ public class TomlParser : IDisposable
             return true;
         }
 
-        keyValuePair.Comment = latestComment?.ToString()?.TrimEnd()!;
+        if (
+            latestComment?.ToString()?.TrimEnd() is string comment
+            && string.IsNullOrWhiteSpace(comment)
+        )
+        {
+            if (string.IsNullOrWhiteSpace(keyValuePair.Comment))
+                keyValuePair.Comment = comment;
+            else
+                keyValuePair.Comment =
+                    $"{comment}{TomlSyntax.NEWLINE_CHARACTER}{keyValuePair.Comment}";
+        }
         var inserted = InsertNode(keyValuePair, currentTable, keyParts);
         latestComment = null;
         keyParts.Clear();
@@ -545,12 +555,15 @@ public class TomlParser : IDisposable
                 };
             }
 
-            return c switch
+            var node = c switch
             {
                 TomlSyntax.INLINE_TABLE_START_SYMBOL => ReadInlineTable(),
                 TomlSyntax.ARRAY_START_SYMBOL => ReadArray(),
                 var _ => ReadTomlValue()
             };
+            if (node is not null && _reader.Peek() == TomlSyntax.COMMENT_SYMBOL)
+                node.Comment = ParseEndComment();
+            return node;
         }
 
         return null;
@@ -797,6 +810,7 @@ public class TomlParser : IDisposable
         var result = new TomlArray();
         TomlNode? currentValue = null;
         var expectValue = true;
+        string? latestComment = null;
 
         int cur;
         while ((cur = _reader.Peek()) >= 0)
@@ -811,7 +825,23 @@ public class TomlParser : IDisposable
 
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                _reader.ReadLine();
+                if (latestComment is null)
+                {
+                    latestComment = ParseComment();
+                }
+                else if (result.Count > 0)
+                {
+                    var comment = ParseComment();
+                    if (string.IsNullOrWhiteSpace(comment) is false)
+                    {
+                        var node = result[^1];
+                        if (string.IsNullOrWhiteSpace(node.Comment))
+                            node.Comment = comment;
+                        else
+                            node.Comment = $"{node.Comment}{TomlSyntax.NEWLINE_CHARACTER}{comment}";
+                    }
+                }
+
                 AdvanceLine(1);
                 continue;
             }
@@ -819,7 +849,10 @@ public class TomlParser : IDisposable
             if (TomlSyntax.IsWhiteSpace(c) || TomlSyntax.IsNewLine(c))
             {
                 if (TomlSyntax.IsLineBreak(c))
+                {
+                    latestComment = null;
                     AdvanceLine();
+                }
                 ConsumeChar();
                 continue;
             }
@@ -831,10 +864,13 @@ public class TomlParser : IDisposable
                     AddError("遇到多个值分隔符");
                     return null;
                 }
+                if (string.IsNullOrWhiteSpace(latestComment) is false)
+                    currentValue.Comment = latestComment;
 
                 result.Add(currentValue);
                 currentValue = null;
                 expectValue = true;
+                latestComment = string.Empty;
                 ConsumeChar();
                 continue;
             }
@@ -1353,5 +1389,26 @@ public class TomlParser : IDisposable
         return commentLine;
     }
 
+    private string ParseEndComment()
+    {
+        ConsumeChar();
+        var sb = new StringBuilder();
+        int cur;
+        while ((cur = _reader.Peek()) >= 0)
+        {
+            var c = (char)cur;
+            // 遇到换行符时停止
+            if (TomlSyntax.IsNewLine(c))
+                break;
+            else if (TomlSyntax.MustBeEscaped(c))
+            {
+                AddError("注释不能包含除制表符以外的控制字符。", false);
+                break;
+            }
+            sb.Append(c);
+            ConsumeChar();
+        }
+        return sb.ToString();
+    }
     #endregion
 }

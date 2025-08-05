@@ -48,13 +48,13 @@ internal class ObjectData
     /// <summary>
     /// 设置
     /// </summary>
-    private readonly ObjectBuilderOptions _options;
+    private readonly TomlObjectGeneratorOptions _options;
 
     /// <inheritdoc/>
     /// <param name="options">设置</param>
     /// <param name="name">名称</param>
     /// <param name="parentName">父类名称</param>
-    public ObjectData(ObjectBuilderOptions options, string name, string? parentName)
+    public ObjectData(TomlObjectGeneratorOptions options, string name, string? parentName)
     {
         _options = options;
         Name = name;

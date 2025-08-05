@@ -8,7 +8,7 @@ using HKW.HKWTOML.Benchmark;
 namespace HKW.HKWTOML.Tests;
 
 [TestClass]
-public class TomlParseTest
+public class TomlParseTests
 {
     [TestMethod]
     public void Parse()

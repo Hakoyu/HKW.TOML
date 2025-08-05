@@ -21,7 +21,9 @@ internal class Program
         //BenchmarkDeserialize.Test();
         //var parser = new Tomlet.TomlParser();
         //var toml = parser.Parse(BenchmarkParse.TomlData);
-        var toml = TOML.Parse(Example.TomlExampleData);
+        //using var sr = new StringReader(Example.TomlExampleBeautifulData);
+        //var t = Tommy.TOML.Parse(sr);
+        var toml = TOML.Parse(Example.TomlExampleBeautifulData);
         toml.WriteToAsync(Console.Out, null!).GetAwaiter().GetResult();
         //Console.WriteLine(TOMLAsClasses.Generate(toml, "BenchmarkObject"));
         //var text = TOMLSerializer.Serialize(BenchmarkSerialize.Obj);

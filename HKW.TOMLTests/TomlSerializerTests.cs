@@ -10,7 +10,7 @@ using HKW.HKWTOML.Serializer;
 namespace HKW.HKWTOML.Tests;
 
 [TestClass]
-public class TomlSerializerTest
+public class TomlSerializerTests
 {
     [TestMethod]
     public void Serialize()

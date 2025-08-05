@@ -6,7 +6,7 @@ namespace HKW.HKWTOML.ObjectBuilder;
 /// <summary>
 /// Toml转换为类设置
 /// </summary>
-public class ObjectBuilderOptions
+public class TomlObjectGeneratorOptions
 {
     /// <summary>
     /// 合并int和float
