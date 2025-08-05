@@ -206,7 +206,7 @@ public class TomlSerializer
 
         // 设置注释
         if (iTomlObject is not null)
-            node.Comment = GetObjectComment(iTomlObject, propertyInfo.Name);
+            node.Comment = GetObjectComment(iTomlObject, name);
         return (name, node);
     }
 

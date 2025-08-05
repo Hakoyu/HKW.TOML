@@ -271,6 +271,12 @@ public class TomlTable
         return await sr.ReadToEndAsync();
     }
     #endregion
+    /// <summary>
+    /// 写入至
+    /// </summary>
+    /// <param name="tw">文本写入器</param>
+    /// <param name="tomlFile">Toml文件</param>
+    public override void WriteTo(TextWriter tw, string tomlFile) => WriteTo(tw, tomlFile, true);
 
     /// <summary>
     /// 写入至
@@ -278,9 +284,8 @@ public class TomlTable
     /// <param name="tw">文本写入器</param>
     /// <param name="tomlFile">Toml文件</param>
     /// <param name="writeSectionName">写入章节名</param>
-    public void WriteTo(TextWriter tw, string? tomlFile, bool writeSectionName = true)
+    internal void WriteTo(TextWriter tw, string tomlFile, bool writeSectionName)
     {
-        // The table is inline table
         if (IsInline && tomlFile is not null)
         {
             tw.WriteLine(ToInlineToml());
@@ -350,8 +355,16 @@ public class TomlTable
     /// </summary>
     /// <param name="tw">文本写入器</param>
     /// <param name="tomlFile">Toml文件</param>
+    public override Task WriteToAsync(TextWriter tw, string tomlFile) =>
+        WriteToAsync(tw, tomlFile, true);
+
+    /// <summary>
+    /// 异步写入至
+    /// </summary>
+    /// <param name="tw">文本写入器</param>
+    /// <param name="tomlFile">Toml文件</param>
     /// <param name="writeSectionName">写入章节名</param>
-    public async Task WriteToAsync(TextWriter tw, string? tomlFile, bool writeSectionName = true)
+    internal async Task WriteToAsync(TextWriter tw, string tomlFile, bool writeSectionName)
     {
         if (IsInline && tomlFile is not null)
         {
@@ -393,20 +406,16 @@ public class TomlTable
         foreach (var collapsedItem in collapsedItems)
         {
             var key = collapsedItem.Key;
-            if (collapsedItem.Value is TomlArray { IsTableArray: true })
+            if (
+                collapsedItem.Value
+                is TomlArray { IsTableArray: true }
+                    or TomlTable { IsInline: false }
+            )
             {
                 if (first is false)
                     await tw.WriteLineAsync();
                 first = false;
-                collapsedItem.Value.WriteTo(tw, $"{namePrefix}{key}");
-                continue;
-            }
-            else if (collapsedItem.Value is TomlTable { IsInline: false } table)
-            {
-                if (first is false)
-                    await tw.WriteLineAsync();
-                first = false;
-                await table.WriteToAsync(tw, $"{namePrefix}{key}", true);
+                await collapsedItem.Value.WriteToAsync(tw, $"{namePrefix}{key}");
                 continue;
             }
 
@@ -418,7 +427,7 @@ public class TomlTable
             await tw.WriteAsync(TomlSyntax.KEY_VALUE_SEPARATOR);
             await tw.WriteAsync(' ');
 
-            collapsedItem.Value.WriteTo(tw, $"{namePrefix}{key}");
+            await collapsedItem.Value.WriteToAsync(tw, $"{namePrefix}{key}");
         }
     }
 

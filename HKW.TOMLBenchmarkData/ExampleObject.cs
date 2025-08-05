@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HKW.HKWTOML.Attributes;
 using HKW.HKWTOML.Interfaces;
+using Newtonsoft.Json;
 
 namespace HKW.HKWTOML.Benchmark;
 
@@ -166,6 +167,7 @@ public class CharactersClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("star-trek")]
+    [JsonProperty("star-trek")]
     public List<StarTrekAnonymousClass> StarTrek { get; set; }
 }
 

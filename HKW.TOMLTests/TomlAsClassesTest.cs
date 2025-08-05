@@ -14,19 +14,21 @@ public class TomlAsClassesTest
     [TestMethod]
     public void AsClasses()
     {
-        var table = TOML.Parse(TomlExample.ExampleData);
-        string classString = ObjectBuilder.ObjectBuilder.Generate(
-            table,
-            "ExampleObject",
-            new()
-            {
-                AddComment = true,
-                AddITomlClassCommentInterface = true,
-                AddTomlPropertyOrderAttribute = true,
-                AddTomlPropertyNameAttribute = true,
-                RemoveKeyWordSeparator = true,
-            }
-        );
-        Assert.AreEqual(TomlExample.ClassData, classString);
+        var table = TOML.Parse(Example.TomlExampleData);
+        string classString = ObjectBuilder
+            .ObjectBuilder.Generate(
+                table,
+                "ExampleObject",
+                new()
+                {
+                    AddComment = true,
+                    AddITomlClassCommentInterface = true,
+                    AddTomlPropertyOrderAttribute = true,
+                    AddTomlPropertyNameAttribute = true,
+                    RemoveKeyWordSeparator = true,
+                }
+            )
+            .Trim();
+        Assert.AreEqual(Example.ClassData, classString);
     }
 }

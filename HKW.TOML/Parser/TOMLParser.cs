@@ -72,7 +72,7 @@ public class TomlParser : IDisposable
     /// </summary>
     private int _column;
 
-    private List<TomlSyntaxException> _syntaxErrors = null!;
+    private readonly List<TomlSyntaxException> _syntaxErrors = [];
 
     /// <summary>
     /// 从文本读取器解析
@@ -115,14 +115,13 @@ public class TomlParser : IDisposable
     /// <exception cref="TomlParseException">解析错误</exception>
     public TomlTable Parse()
     {
-        _syntaxErrors = [];
         _line = _column = 1;
         var rootTable = new TomlTable();
         var currentTable = rootTable;
         _currentState = ParseState.None;
         var keyParts = new List<string>();
         var isArrayTable = false;
-        StringBuilder latestComment = null!;
+        StringBuilder? latestComment = null;
         var isFirstComment = true;
 
         int currentChar;
@@ -194,7 +193,7 @@ public class TomlParser : IDisposable
         char c,
         TomlTable rootTable,
         ref bool isFirstComment,
-        ref StringBuilder latestComment
+        ref StringBuilder? latestComment
     )
     {
         // 跳过空白字符
@@ -207,7 +206,7 @@ public class TomlParser : IDisposable
             if (latestComment is not null && isFirstComment)
             {
                 rootTable.Comment = latestComment.ToString().TrimEnd();
-                latestComment = null!;
+                latestComment = null;
                 isFirstComment = false;
             }
 
@@ -257,14 +256,14 @@ public class TomlParser : IDisposable
     private bool ParseKeyValuePair(
         TomlTable currentTable,
         List<string> keyParts,
-        ref StringBuilder latestComment
+        ref StringBuilder? latestComment
     )
     {
         var keyValuePair = ReadKeyValuePair(keyParts);
 
-        if (keyValuePair == null)
+        if (keyValuePair is null)
         {
-            latestComment = null!;
+            latestComment = null;
             keyParts.Clear();
 
             if (_currentState != ParseState.None)
@@ -274,7 +273,7 @@ public class TomlParser : IDisposable
 
         keyValuePair.Comment = latestComment?.ToString()?.TrimEnd()!;
         var inserted = InsertNode(keyValuePair, currentTable, keyParts);
-        latestComment = null!;
+        latestComment = null;
         keyParts.Clear();
         if (inserted)
             _currentState = ParseState.SkipToNextLine;
@@ -297,7 +296,7 @@ public class TomlParser : IDisposable
         ref TomlTable currentTable,
         List<string> keyParts,
         ref bool isArrayTable,
-        ref StringBuilder latestComment
+        ref StringBuilder? latestComment
     )
     {
         if (keyParts.Count is 0)
@@ -320,7 +319,7 @@ public class TomlParser : IDisposable
             {
                 AddError("表格名称为空。");
                 isArrayTable = false;
-                latestComment = null!;
+                latestComment = null;
                 keyParts.Clear();
             }
 
@@ -339,12 +338,12 @@ public class TomlParser : IDisposable
                     AddError($"数组表格 {".".Join(keyParts)} 只有一个结束括号。");
                     keyParts.Clear();
                     isArrayTable = false;
-                    latestComment = null!;
+                    latestComment = null;
                     return false;
                 }
             }
 
-            currentTable = CreateTable(rootTable, keyParts, isArrayTable);
+            currentTable = CreateTable(rootTable, keyParts, isArrayTable)!;
             if (currentTable is not null)
             {
                 currentTable.IsInline = false;
@@ -353,9 +352,9 @@ public class TomlParser : IDisposable
 
             keyParts.Clear();
             isArrayTable = false;
-            latestComment = null!;
+            latestComment = null;
 
-            if (currentTable == null)
+            if (currentTable is null)
             {
                 if (_currentState != ParseState.None)
                     AddError("创建表格数组时出错！");
@@ -373,7 +372,7 @@ public class TomlParser : IDisposable
             AddError($"意外的字符 \"{c}\"");
             keyParts.Clear();
             isArrayTable = false;
-            latestComment = null!;
+            latestComment = null;
         }
         return null;
     }
@@ -554,7 +553,7 @@ public class TomlParser : IDisposable
             };
         }
 
-        return null!;
+        return null;
     }
 
     /// <summary>
@@ -689,10 +688,10 @@ public class TomlParser : IDisposable
     ///     ^                                                  ^
     /// &lt;/newline&gt;
     /// </summary>
-    private TomlNode ReadTomlValue()
+    private TomlNode? ReadTomlValue()
     {
         var value = ReadRawValue();
-        TomlNode node = value switch
+        TomlNode? node = value switch
         {
             var v when TomlSyntax.IsBoolean(v) => bool.Parse(v),
             var v when TomlSyntax.IsNaN(v) => double.NaN,
@@ -718,7 +717,7 @@ public class TomlParser : IDisposable
                 {
                     IntegerBase = (TomlInteger.Base)numberBase
                 },
-            var _ => null!
+            var _ => null
         };
         if (node is not null)
             return node;
@@ -780,7 +779,7 @@ public class TomlParser : IDisposable
             return new TomlDateTimeOffset(dateTimeOffsetResult) { SecondsPrecision = precision };
 
         AddError($"值 \"{value}\" 不是有效的 TOML 值！");
-        return null!;
+        return null;
     }
 
     /// <summary>
@@ -827,7 +826,7 @@ public class TomlParser : IDisposable
 
             if (c is TomlSyntax.ITEM_SEPARATOR)
             {
-                if (currentValue == null)
+                if (currentValue is null)
                 {
                     AddError("遇到多个值分隔符");
                     return null;
@@ -846,7 +845,7 @@ public class TomlParser : IDisposable
                 return null;
             }
             currentValue = ReadValue(true);
-            if (currentValue == null)
+            if (currentValue is null)
             {
                 if (_currentState != ParseState.None)
                     AddError("无法确定和解析值！");
@@ -906,7 +905,7 @@ public class TomlParser : IDisposable
 
             if (c is TomlSyntax.ITEM_SEPARATOR)
             {
-                if (currentValue == null)
+                if (currentValue is null)
                 {
                     AddError("在内联表格中遇到多个值分隔符！");
                     return null;
@@ -1030,7 +1029,7 @@ public class TomlParser : IDisposable
     /// "Test"  ==>  "Test"
     /// ^                 ^
     /// </summary>
-    private string ReadQuotedValueSingleLine(char quote, char initialData = NULL_CHAR)
+    private string? ReadQuotedValueSingleLine(char quote, char initialData = NULL_CHAR)
     {
         var isNonLiteral = quote is TomlSyntax.BASI_STRING_SYMBOL;
         var sb = new StringBuilder();
@@ -1046,14 +1045,14 @@ public class TomlParser : IDisposable
                 ref escaped
             );
             if (_currentState is ParseState.None)
-                return null!;
+                return null;
             if (shouldReturn)
                 if (isNonLiteral)
                 {
                     if (sb.ToString().TryUnescape(out var res, out var ex))
                         return res;
                     AddError(ex.Message);
-                    return null!;
+                    return null;
                 }
                 else
                     return sb.ToString();
@@ -1070,7 +1069,7 @@ public class TomlParser : IDisposable
             if (readDone)
             {
                 if (_currentState is ParseState.None)
-                    return null!;
+                    return null;
                 break;
             }
         }
@@ -1078,7 +1077,7 @@ public class TomlParser : IDisposable
         if (readDone is false)
         {
             AddError("未闭合的字符串。");
-            return null!;
+            return null;
         }
 
         if (isNonLiteral is false)
@@ -1086,7 +1085,7 @@ public class TomlParser : IDisposable
         if (sb.ToString().TryUnescape(out var unescaped, out var unescapedEx))
             return unescaped;
         AddError(unescapedEx.Message);
-        return null!;
+        return null;
     }
 
     /// <summary>
@@ -1098,7 +1097,7 @@ public class TomlParser : IDisposable
     /// """Test"""  ==>  """Test"""
     /// ^                       ^
     /// </summary>
-    private string ReadQuotedValueMultiLine(char quote)
+    private string? ReadQuotedValueMultiLine(char quote)
     {
         var isBasic = quote is TomlSyntax.BASI_STRING_SYMBOL;
         var sb = new StringBuilder();
@@ -1114,7 +1113,7 @@ public class TomlParser : IDisposable
             if (TomlSyntax.MustBeEscaped(c, true))
             {
                 AddError($"字符 U+{(int)c:X8} 必须进行转义！");
-                return null!;
+                return null;
             }
             // 修剪第一个换行符
             if (first && TomlSyntax.IsNewLine(c))
@@ -1151,7 +1150,7 @@ public class TomlParser : IDisposable
                 if (skipWhitespaceLineSkipped is false)
                 {
                     AddError("修剪标记后的非空白字符。");
-                    return null!;
+                    return null;
                 }
 
                 skipWhitespaceLineSkipped = false;
@@ -1213,7 +1212,7 @@ public class TomlParser : IDisposable
         if (sb.ToString().TryUnescape(out var res, out var ex))
             return res;
         AddError(ex.Message);
-        return null!;
+        return null;
     }
 
     #endregion
@@ -1224,6 +1223,7 @@ public class TomlParser : IDisposable
     {
         var latestNode = root;
         if (path.Count > 1)
+        {
             for (var index = 0; index < path.Count - 1; index++)
             {
                 var subkey = path[index];
@@ -1242,6 +1242,7 @@ public class TomlParser : IDisposable
                 if (latestNode is TomlTable { IsInline: true })
                     return AddError($"无法分配 {".".Join(path)}，因为它将编辑不可变表格。");
             }
+        }
 
         if (latestNode.HasKey(path[^1]))
             return AddError($"键 {".".Join(path)} 已经定义！");
@@ -1250,10 +1251,10 @@ public class TomlParser : IDisposable
         return true;
     }
 
-    private TomlTable CreateTable(TomlNode root, List<string> path, bool arrayTable)
+    private TomlTable? CreateTable(TomlNode root, List<string> path, bool arrayTable)
     {
         if (path.Count is 0)
-            return null!;
+            return null;
         var latestNode = root;
         for (var index = 0; index < path.Count; index++)
         {
@@ -1268,7 +1269,7 @@ public class TomlParser : IDisposable
                     if (arr.IsTableArray is false)
                     {
                         AddError($"数组 {".".Join(path)} 无法重新定义为数组表格！");
-                        return null!;
+                        return null;
                     }
 
                     if (index == path.Count - 1)
@@ -1285,7 +1286,7 @@ public class TomlParser : IDisposable
                 if (node is TomlTable { IsInline: true })
                 {
                     AddError($"无法创建表格 {".".Join(path)}，因为它将编辑不可变表格。");
-                    return null!;
+                    return null;
                 }
 
                 if (node.HasValue)
@@ -1293,7 +1294,7 @@ public class TomlParser : IDisposable
                     if (node is not TomlArray { IsTableArray: true } array)
                     {
                         AddError($"键 {".".Join(path)} 有分配给它的值！");
-                        return null!;
+                        return null;
                     }
 
                     latestNode = array[array.ChildrenCount - 1];
@@ -1305,13 +1306,13 @@ public class TomlParser : IDisposable
                     if (arrayTable && !node.IsTomlArray)
                     {
                         AddError($"表格 {".".Join(path)} 无法重新定义为数组表格！");
-                        return null!;
+                        return null;
                     }
 
                     if (node is TomlTable { isImplicit: false })
                     {
                         AddError($"表格 {".".Join(path)} 被多次定义！");
-                        return null!;
+                        return null;
                     }
                 }
             }

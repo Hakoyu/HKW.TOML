@@ -183,7 +183,7 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
                 tw.WriteLine();
 
                 if (string.IsNullOrWhiteSpace(Comment) is false)
-                    Comment?.AsComment(tw);
+                    Comment.AsComment(tw);
                 tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
                 tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
                 tw.Write(name);
@@ -196,6 +196,61 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
 
             // Don't write section since it's already written here
             tbl.WriteTo(tw, name, false);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override async Task WriteToAsync(TextWriter tw, string name = null!)
+    {
+        // If it's a normal array, write it as usual
+        if (IsTableArray is false)
+        {
+            await tw.WriteLineAsync(ToString(IsMultiline));
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Comment) is false)
+        {
+            await tw.WriteLineAsync();
+            await Comment.AsCommentAsync(tw);
+        }
+        await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
+        await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
+        await tw.WriteAsync(name);
+        await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
+        await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
+        await tw.WriteLineAsync();
+
+        var first = true;
+
+        foreach (var tomlNode in RawArray)
+        {
+            if (tomlNode is not TomlTable tbl)
+                throw new TomlFormatException(
+                    "The array is marked as array table but contains non-table nodes!"
+                );
+
+            // Ensure it's parsed as a section
+            tbl.IsInline = false;
+
+            if (first is false)
+            {
+                await tw.WriteLineAsync();
+
+                if (string.IsNullOrWhiteSpace(Comment) is false)
+                    await Comment.AsCommentAsync(tw);
+                await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
+                await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
+                await tw.WriteAsync(name);
+                await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
+                await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
+                await tw.WriteLineAsync();
+            }
+
+            first = false;
+
+            // Don't write section since it's already written here
+            await tbl.WriteToAsync(tw, name, false);
         }
     }
 

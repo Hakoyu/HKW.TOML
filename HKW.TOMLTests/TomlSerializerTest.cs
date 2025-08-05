@@ -13,11 +13,26 @@ namespace HKW.HKWTOML.Tests;
 public class TomlSerializerTest
 {
     [TestMethod]
-    public void Deserialize()
+    public void Serialize()
     {
-        TomlTable table = TOML.Parse(TomlExample.ExampleData);
-        ExampleObject example = TomlDeserializer.Deserialize<ExampleObject>(table);
-        TomlTable serializeTable = TomlSerializer.Serialize(example);
+        var example = TomlDeserializer.Deserialize<ExampleObject>(Example.TomlExampleData);
+        var serializeTable = TomlSerializer.Serialize(example);
+        var table = TOML.Parse(Example.TomlExampleData);
+        var serializeTableString = serializeTable!.ToTomlString();
+        var tableString = table.ToTomlString();
+        Assert.AreEqual(serializeTableString, tableString);
+        //Console.WriteLine(serializeTable.ToTomlString());
+    }
+
+    [TestMethod]
+    public void SerializeAsync()
+    {
+        var example = TomlDeserializer.Deserialize<ExampleObject>(Example.TomlExampleData);
+        var serializeTable = TomlSerializer.SerializeAsync(example).GetAwaiter().GetResult();
+        var table = TOML.Parse(Example.TomlExampleData);
+        var serializeTableString = serializeTable!.ToTomlString();
+        var tableString = table.ToTomlString();
+        Assert.AreEqual(serializeTableString, tableString);
         //Console.WriteLine(serializeTable.ToTomlString());
     }
 }

@@ -305,6 +305,14 @@ public abstract class TomlNode : IEnumerable
     public virtual void WriteTo(TextWriter tw, string name = null!) => tw.WriteLine(ToInlineToml());
 
     /// <summary>
+    /// 异步写入至
+    /// </summary>
+    /// <param name="tw">文本写入流</param>
+    /// <param name="name">名称</param>
+    public virtual Task WriteToAsync(TextWriter tw, string name = null!) =>
+        tw.WriteLineAsync(ToInlineToml());
+
+    /// <summary>
     /// 转换为行内Toml格式字符串
     /// </summary>
     /// <returns>Toml格式字符串</returns>

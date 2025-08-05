@@ -273,15 +273,13 @@ internal static partial class TomlSyntax
 
     [GeneratedRegex(
         @"^0(?<base>x|b|o)(?!_)(_?[0-9A-F])*$",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled,
-        "zh-CN"
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
     )]
     private static partial Regex BasedIntegerPatternRegexGenerater();
 
     [GeneratedRegex(
         @"^(\+|-)?(?!_)(0|(?!0)(_?\d)+)(((e(\+|-)?(?!_)(_?\d)+)?)|(\.(?!_)(_?\d)+(e(\+|-)?(?!_)(_?\d)+)?))$",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled,
-        "zh-CN"
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
     )]
     private static partial Regex FloatPatternRegexGenerater();
 
