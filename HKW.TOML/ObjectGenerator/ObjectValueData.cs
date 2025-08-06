@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 
-namespace HKW.HKWTOML.ObjectBuilder;
+namespace HKW.HKWTOML.ObjectGenerator;
 
 /// <summary>
 /// toml类值

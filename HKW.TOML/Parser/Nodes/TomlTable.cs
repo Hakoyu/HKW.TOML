@@ -327,17 +327,17 @@ public class TomlTable
                     or TomlTable { IsInline: false }
             )
             {
-                if (alignmentPairs.Count > 0)
-                {
-                    for (var i = 0; i < alignmentPairs.Count; i++)
-                        WriteNode(tw, alignmentPairs[i].pair, alignmentPairs[i].toml, maxLength);
-
-                    alignmentPairs.Clear();
-                    maxLength = 1;
-                }
+                TryWriteNodes(tw, alignmentPairs, maxLength);
+                maxLength = 1;
                 if (first is false)
                     tw.WriteLine();
                 collapsedItem.Value.WriteTo(tw, $"{namePrefix}{key}");
+            }
+            else if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment))
+            {
+                TryWriteNodes(tw, alignmentPairs, maxLength);
+                maxLength = 1;
+                WriteNode(tw, collapsedItem, collapsedItem.Value.ToInlineToml(), null);
             }
             else
             {
@@ -351,11 +351,26 @@ public class TomlTable
             WriteNode(tw, alignmentPairs[i].pair, alignmentPairs[i].toml, maxLength);
     }
 
+    private static void TryWriteNodes(
+        TextWriter tw,
+        List<(KeyValuePair<string, TomlNode> pair, string toml)> alignmentPairs,
+        int maxLength
+    )
+    {
+        if (alignmentPairs.Count > 0)
+        {
+            for (var i = 0; i < alignmentPairs.Count; i++)
+                WriteNode(tw, alignmentPairs[i].pair, alignmentPairs[i].toml, maxLength);
+
+            alignmentPairs.Clear();
+        }
+    }
+
     private static void WriteNode(
         TextWriter tw,
         KeyValuePair<string, TomlNode> collapsedItem,
         string toml,
-        int maxLength
+        int? maxLength
     )
     {
         if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.PrecedingComment) is false)
@@ -365,11 +380,16 @@ public class TomlTable
         tw.Write(TomlSyntax.KEY_VALUE_SEPARATOR);
         tw.Write(' ');
         tw.Write(toml);
+
         if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment) is false)
+        {
             collapsedItem.Value.Comment.WriteInlineComment(
                 tw,
-                maxLength - (collapsedItem.Key.Length + toml.Length) + 1
+                maxLength is null
+                    ? 1
+                    : maxLength.Value - (collapsedItem.Key.Length + toml.Length) + 1
             );
+        }
         tw.WriteLine();
     }
 
@@ -400,22 +420,16 @@ public class TomlTable
         if (collapsedItems.Count is 0)
             return;
 
-        var hasRealValues = !collapsedItems.All(n =>
-            n.Value is TomlTable { IsInline: false } or TomlArray { IsTableArray: true }
-        );
-
         if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
             await Comment.WritePrecedingCommentAsync(tw);
 
-        if (
-            tomlFile is not null
-            && (hasRealValues || string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
-            && writeSectionName
-        )
+        if (tomlFile is not null && writeSectionName)
         {
             await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
             await tw.WriteAsync(tomlFile);
             await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
+            if (string.IsNullOrWhiteSpace(Comment.InlineComment) is false)
+                await Comment.WriteInlineCommentAsync(tw);
             await tw.WriteLineAsync();
         }
         else if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
@@ -425,7 +439,8 @@ public class TomlTable
 
         var namePrefix = tomlFile is null ? string.Empty : $"{tomlFile}.";
         var first = true;
-
+        var alignmentPairs = new List<(KeyValuePair<string, TomlNode> pair, string toml)>();
+        var maxLength = 1;
         foreach (var collapsedItem in collapsedItems)
         {
             var key = collapsedItem.Key;
@@ -435,26 +450,67 @@ public class TomlTable
                     or TomlTable { IsInline: false }
             )
             {
+                await TryWriteNodesAsync(tw, alignmentPairs, maxLength);
+                maxLength = 1;
                 if (first is false)
                     await tw.WriteLineAsync();
-                first = false;
                 await collapsedItem.Value.WriteToAsync(tw, $"{namePrefix}{key}");
-                continue;
             }
-
+            else if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment))
+            {
+                await TryWriteNodesAsync(tw, alignmentPairs, maxLength);
+                maxLength = 1;
+                await WriteNodeAsync(tw, collapsedItem, collapsedItem.Value.ToInlineToml(), null);
+            }
+            else
+            {
+                var toml = collapsedItem.Value.ToInlineToml();
+                maxLength = Math.Max(maxLength, key.Length + toml.Length);
+                alignmentPairs.Add((collapsedItem, toml));
+            }
             first = false;
-            if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.PrecedingComment) is false)
-                await collapsedItem.Value.Comment.WritePrecedingCommentAsync(tw);
-            await tw.WriteAsync(key);
-            await tw.WriteAsync(' ');
-            await tw.WriteAsync(TomlSyntax.KEY_VALUE_SEPARATOR);
-            await tw.WriteAsync(' ');
-
-            await collapsedItem.Value.WriteToAsync(tw, $"{namePrefix}{key}");
-
-            if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment) is false)
-                await Comment.WriteInlineCommentAsync(tw);
         }
+        for (var i = 0; i < alignmentPairs.Count; i++)
+            await WriteNodeAsync(tw, alignmentPairs[i].pair, alignmentPairs[i].toml, maxLength);
+    }
+
+    private static async Task TryWriteNodesAsync(
+        TextWriter tw,
+        List<(KeyValuePair<string, TomlNode> pair, string toml)> alignmentPairs,
+        int maxLength
+    )
+    {
+        if (alignmentPairs.Count > 0)
+        {
+            for (var i = 0; i < alignmentPairs.Count; i++)
+                await WriteNodeAsync(tw, alignmentPairs[i].pair, alignmentPairs[i].toml, maxLength);
+
+            alignmentPairs.Clear();
+        }
+    }
+
+    private static async Task WriteNodeAsync(
+        TextWriter tw,
+        KeyValuePair<string, TomlNode> collapsedItem,
+        string toml,
+        int? maxLength
+    )
+    {
+        if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.PrecedingComment) is false)
+            await collapsedItem.Value.Comment.WritePrecedingCommentAsync(tw);
+        await tw.WriteAsync(collapsedItem.Key);
+        await tw.WriteAsync(' ');
+        await tw.WriteAsync(TomlSyntax.KEY_VALUE_SEPARATOR);
+        await tw.WriteAsync(' ');
+        await tw.WriteAsync(toml);
+        if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment) is false)
+            await collapsedItem.Value.Comment.WriteInlineCommentAsync(
+                tw,
+                maxLength is null
+                    ? 1
+                    : maxLength.Value - (collapsedItem.Key.Length + toml.Length) + 1
+            );
+        await tw.WriteLineAsync();
     }
 
     #region IDictionary

@@ -1,7 +1,7 @@
 ﻿using HKW.HKWTOML.Attributes;
 using HKW.HKWTOML.Interfaces;
 
-namespace HKW.HKWTOML.ObjectBuilder;
+namespace HKW.HKWTOML.ObjectGenerator;
 
 /// <summary>
 /// Toml转换为类设置
@@ -172,18 +172,18 @@ public class TomlObjectGeneratorOptions
     /// <para>默认为
     /// <![CDATA[
     /// {0}/// <inheritdoc/>
-    /// {0}public string ClassComment { get; set; } = string.Empty;
+    /// {0}public TomlComment ClassComment { get; set; } = new();
     /// {0}/// <inheritdoc/>
-    /// {0}public Dictionary<string, string> ValueComments { get; set; } = new();
+    /// {0}public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
     ///
     /// ]]>
     /// </para>
     /// </summary>
     public string ITomlClassInterfaceValueFormat { get; set; } =
         @"{0}/// <inheritdoc/>
-{0}public string ObjectComment {{ get; set; }} = string.Empty;
+{0}public TomlComment ObjectComment {{ get; set; }} = new();
 {0}/// <inheritdoc/>
-{0}public Dictionary<string, string> PropertyComments {{ get; set; }} = new();
+{0}public Dictionary<string, TomlComment> PropertyComments {{ get; set; }} = new();
 
 ";
 

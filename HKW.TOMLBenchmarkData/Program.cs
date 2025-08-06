@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using BenchmarkDotNet.Running;
 using HKW.HKWTOML.Benchmark.Benchmark;
-using HKW.HKWTOML.ObjectBuilder;
+using HKW.HKWTOML.ObjectGenerator;
 using HKW.HKWTOML.Serializer;
 
 namespace HKW.HKWTOML.Benchmark;
@@ -25,16 +25,16 @@ internal class Program
         var tomlData = """    
             key1 = 1 # 和行尾注释
             key2 = 11 # 和行尾注释
-            key3 = 111 # 和行尾注释
+            key3 = 111 
             key4 = 1111 # 和行尾注释
             key5 = 11111 # 和行尾注释
             """;
-        var parser = new Tomlet.TomlParser();
-        var tomlet = parser.Parse(Example.TomlExampleData);
-        Console.WriteLine(tomlet.SerializedValue);
-        var tomlyn = Tomlyn.Toml.Parse(Example.TomlExampleData);
-        Console.WriteLine(tomlyn.ToString());
-        var toml = TOML.Parse(Example.TomlExampleData);
+        //var parser = new Tomlet.TomlParser();
+        //var tomlet = parser.Parse(Example.TomlExampleData);
+        //Console.WriteLine(tomlet.SerializedValue);
+        //var tomlyn = Tomlyn.Toml.Parse(Example.TomlExampleData);
+        //Console.WriteLine(tomlyn.ToString());
+        var toml = TOML.Parse(tomlData);
         var str = toml.ToTomlString();
         Console.WriteLine(str);
         //toml.WriteToAsync(Console.Out, null!).GetAwaiter().GetResult();

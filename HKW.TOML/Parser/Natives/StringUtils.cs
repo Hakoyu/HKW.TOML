@@ -157,9 +157,16 @@ internal static class StringUtils
     /// </summary>
     /// <param name="self">文本</param>
     /// <param name="tw">文本写入器</param>
-    public static async Task WriteInlineCommentAsync(this TomlComment self, TextWriter tw)
+    /// <param name="leftSpaceCount">左空格数量</param>
+    public static async Task WriteInlineCommentAsync(
+        this TomlComment self,
+        TextWriter tw,
+        int leftSpaceCount = 1
+    )
     {
-        await tw.WriteAsync($" {TomlSyntax.COMMENT_SYMBOL} {self.InlineComment}");
+        await tw.WriteAsync(
+            $"{new string(' ', leftSpaceCount)}{TomlSyntax.COMMENT_SYMBOL} {self.InlineComment}"
+        );
     }
 
     /// <summary>

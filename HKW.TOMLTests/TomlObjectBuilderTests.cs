@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HKW.HKWTOML.Benchmark;
-using HKW.HKWTOML.ObjectBuilder;
+using HKW.HKWTOML.ObjectGenerator;
 
 namespace HKW.HKWTOML.Tests;
 
@@ -15,8 +15,8 @@ public class TomlObjectBuilderTests
     public void AsClasses()
     {
         var table = TOML.Parse(Example.TomlExampleData);
-        string classString = ObjectBuilder
-            .TomlObjectGenerator.Generate(
+        string classString = TomlObjectGenerator
+            .Generate(
                 table,
                 "ExampleObject",
                 new()

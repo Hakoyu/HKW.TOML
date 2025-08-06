@@ -64,6 +64,7 @@ public static class Example
             # Table with inline tables.
             distros = [ { name = "Arch Linux", packages = "pacman" }, { name = "Void Linux", packages = "xbps" }, { name = "Debian", packages = "apt" } ]
 
+            [servers]
             # Create new table; note the "servers" table is created implicitly.
             [servers.alpha]
             # You can indent as you please, tabs or spaces.
@@ -109,6 +110,7 @@ public static class Example
             	{name = "Debian",     packages = "apt"},
             ]
 
+            [servers]
             # Create new table; note the "servers" table is created implicitly.
             [servers.alpha]
             	# You can indent as you please, tabs or spaces.
@@ -204,9 +206,9 @@ public static class Example
             public class ExampleObject : ITomlObjectComment
             {
                 /// <inheritdoc/>
-                public string ObjectComment { get; set; } = string.Empty;
+                public TomlComment ObjectComment { get; set; } = new();
                 /// <inheritdoc/>
-                public Dictionary<string, string> PropertyComments { get; set; } = new();
+                public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
 
                 /// <summary>
@@ -286,9 +288,9 @@ public static class Example
             public class ServersClass : ITomlObjectComment
             {
                 /// <inheritdoc/>
-                public string ObjectComment { get; set; } = string.Empty;
+                public TomlComment ObjectComment { get; set; } = new();
                 /// <inheritdoc/>
-                public Dictionary<string, string> PropertyComments { get; set; } = new();
+                public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
 
                 /// <summary>
@@ -310,9 +312,9 @@ public static class Example
             public class AlphaClass : ITomlObjectComment
             {
                 /// <inheritdoc/>
-                public string ObjectComment { get; set; } = string.Empty;
+                public TomlComment ObjectComment { get; set; } = new();
                 /// <inheritdoc/>
-                public Dictionary<string, string> PropertyComments { get; set; } = new();
+                public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
 
                 /// <summary>
@@ -336,9 +338,9 @@ public static class Example
             public class BetaClass : ITomlObjectComment
             {
                 /// <inheritdoc/>
-                public string ObjectComment { get; set; } = string.Empty;
+                public TomlComment ObjectComment { get; set; } = new();
                 /// <inheritdoc/>
-                public Dictionary<string, string> PropertyComments { get; set; } = new();
+                public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
 
 
@@ -360,9 +362,9 @@ public static class Example
             public class CharactersClass : ITomlObjectComment
             {
                 /// <inheritdoc/>
-                public string ObjectComment { get; set; } = string.Empty;
+                public TomlComment ObjectComment { get; set; } = new();
                 /// <inheritdoc/>
-                public Dictionary<string, string> PropertyComments { get; set; } = new();
+                public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
 
 
@@ -387,9 +389,9 @@ public static class Example
             public class UndecodedClass : ITomlObjectComment
             {
                 /// <inheritdoc/>
-                public string ObjectComment { get; set; } = string.Empty;
+                public TomlComment ObjectComment { get; set; } = new();
                 /// <inheritdoc/>
-                public Dictionary<string, string> PropertyComments { get; set; } = new();
+                public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
 
 

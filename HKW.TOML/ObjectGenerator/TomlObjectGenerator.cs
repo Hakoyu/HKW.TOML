@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using HKW.HKWUtils.Extensions;
 
-namespace HKW.HKWTOML.ObjectBuilder;
+namespace HKW.HKWTOML.ObjectGenerator;
 
 /// <summary>
 /// 对象构造器

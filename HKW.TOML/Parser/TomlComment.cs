@@ -46,7 +46,10 @@ public class TomlComment
     /// <inheritdoc/>
     public override string ToString()
     {
-        return $"{PrecedingComment}{Environment.NewLine}{InlineComment}";
+        if (string.IsNullOrWhiteSpace(InlineComment))
+            return $"{PrecedingComment}";
+        else
+            return $"{PrecedingComment}{Environment.NewLine}{InlineComment}";
     }
 }
 
