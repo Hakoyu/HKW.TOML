@@ -104,13 +104,14 @@ internal static class StringUtils
     }
 
     /// <summary>
-    /// 转换为注释
+    /// 写入注释
     /// </summary>
     /// <param name="self">文本</param>
     /// <param name="tw">文本写入器</param>
-    public static void AsComment(this string self, TextWriter tw)
+    public static void WritePrecedingComment(this TomlComment self, TextWriter tw)
     {
-        var array = self.Split(TomlSyntax.NEWLINE_CHARACTER);
+        var comment = self.PrecedingComment;
+        var array = comment.Split(TomlSyntax.NEWLINE_CHARACTER);
         for (int i = 0; i < array.Length; i++)
         {
             string? line = array[i];
@@ -119,18 +120,46 @@ internal static class StringUtils
     }
 
     /// <summary>
-    /// 异步转换为注释
+    /// 异步写入注释
     /// </summary>
     /// <param name="self">文本</param>
     /// <param name="tw">文本写入器</param>
-    public static async Task AsCommentAsync(this string self, TextWriter tw)
+    public static async Task WritePrecedingCommentAsync(this TomlComment self, TextWriter tw)
     {
-        var array = self.Split(TomlSyntax.NEWLINE_CHARACTER);
+        var comment = self.PrecedingComment;
+        var array = comment.Split(TomlSyntax.NEWLINE_CHARACTER);
         for (int i = 0; i < array.Length; i++)
         {
             string? line = array[i];
             await tw.WriteLineAsync($"{TomlSyntax.COMMENT_SYMBOL} {line.Trim()}");
         }
+    }
+
+    /// <summary>
+    /// 写入为行内注释
+    /// </summary>
+    /// <param name="self">文本</param>
+    /// <param name="tw">文本写入器</param>
+    /// <param name="leftSpaceCount">左空格数量</param>
+    public static void WriteInlineComment(
+        this TomlComment self,
+        TextWriter tw,
+        int leftSpaceCount = 1
+    )
+    {
+        tw.Write(
+            $"{new string(' ', leftSpaceCount)}{TomlSyntax.COMMENT_SYMBOL} {self.InlineComment}"
+        );
+    }
+
+    /// <summary>
+    /// 异步写入为行内注释
+    /// </summary>
+    /// <param name="self">文本</param>
+    /// <param name="tw">文本写入器</param>
+    public static async Task WriteInlineCommentAsync(this TomlComment self, TextWriter tw)
+    {
+        await tw.WriteAsync($" {TomlSyntax.COMMENT_SYMBOL} {self.InlineComment}");
     }
 
     /// <summary>

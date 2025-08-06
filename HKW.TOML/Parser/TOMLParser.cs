@@ -205,7 +205,7 @@ public class TomlParser : IDisposable
             // 检查是否有注释，并且到目前为止没有声明任何项目
             if (latestComment is not null && isFirstComment)
             {
-                rootTable.Comment = latestComment.ToString().TrimEnd();
+                rootTable.Comment.PrecedingComment = latestComment.ToString().TrimEnd();
                 latestComment = null;
                 isFirstComment = false;
             }
@@ -271,17 +271,9 @@ public class TomlParser : IDisposable
             return true;
         }
 
-        if (
-            latestComment?.ToString()?.TrimEnd() is string comment
-            && string.IsNullOrWhiteSpace(comment)
-        )
-        {
-            if (string.IsNullOrWhiteSpace(keyValuePair.Comment))
-                keyValuePair.Comment = comment;
-            else
-                keyValuePair.Comment =
-                    $"{comment}{TomlSyntax.NEWLINE_CHARACTER}{keyValuePair.Comment}";
-        }
+        keyValuePair.Comment.PrecedingComment =
+            latestComment?.ToString()?.TrimEnd() ?? string.Empty;
+
         var inserted = InsertNode(keyValuePair, currentTable, keyParts);
         latestComment = null;
         keyParts.Clear();
@@ -357,7 +349,7 @@ public class TomlParser : IDisposable
             if (currentTable is not null)
             {
                 currentTable.IsInline = false;
-                currentTable.Comment = latestComment?.ToString()?.TrimEnd()!;
+                currentTable.Comment.PrecedingComment = latestComment?.ToString()?.TrimEnd()!;
             }
 
             keyParts.Clear();
@@ -562,7 +554,7 @@ public class TomlParser : IDisposable
                 var _ => ReadTomlValue()
             };
             if (node is not null && _reader.Peek() == TomlSyntax.COMMENT_SYMBOL)
-                node.Comment = ParseEndComment();
+                node.Comment.InlineComment = ParseInlineComment();
             return node;
         }
 
@@ -831,15 +823,9 @@ public class TomlParser : IDisposable
                 }
                 else if (result.Count > 0)
                 {
-                    var comment = ParseComment();
-                    if (string.IsNullOrWhiteSpace(comment) is false)
-                    {
-                        var node = result[^1];
-                        if (string.IsNullOrWhiteSpace(node.Comment))
-                            node.Comment = comment;
-                        else
-                            node.Comment = $"{node.Comment}{TomlSyntax.NEWLINE_CHARACTER}{comment}";
-                    }
+                    var node = result[^1];
+                    node.Comment.InlineComment = ParseComment();
+                    result.IsMultiline = true;
                 }
 
                 AdvanceLine(1);
@@ -865,7 +851,10 @@ public class TomlParser : IDisposable
                     return null;
                 }
                 if (string.IsNullOrWhiteSpace(latestComment) is false)
-                    currentValue.Comment = latestComment;
+                {
+                    currentValue.Comment.PrecedingComment = latestComment;
+                    result.IsMultiline = true;
+                }
 
                 result.Add(currentValue);
                 currentValue = null;
@@ -1389,7 +1378,7 @@ public class TomlParser : IDisposable
         return commentLine;
     }
 
-    private string ParseEndComment()
+    private string ParseInlineComment()
     {
         ConsumeChar();
         var sb = new StringBuilder();
@@ -1408,7 +1397,7 @@ public class TomlParser : IDisposable
             sb.Append(c);
             ConsumeChar();
         }
-        return sb.ToString();
+        return sb.ToString().Trim();
     }
     #endregion
 }

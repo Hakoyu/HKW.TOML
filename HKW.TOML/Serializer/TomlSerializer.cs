@@ -368,12 +368,12 @@ public class TomlSerializer
     /// </summary>
     /// <param name="iTomlObject">TomlClass接口</param>
     /// <param name="name">键名</param>
-    private static string GetObjectComment(ITomlObjectComment? iTomlObject, string name)
+    private static TomlComment GetObjectComment(ITomlObjectComment? iTomlObject, string name)
     {
         // 检查值注释
         if (iTomlObject?.PropertyComments?.TryGetValue(name, out var comment) is true)
             return comment;
-        return string.Empty;
+        return new();
     }
     #endregion
 }

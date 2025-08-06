@@ -72,7 +72,6 @@ public static class TestDatas
             # 这个值同时有顶部注释        
             key4 = 4 # 和行尾注释
 
-            # 这是一个数组内注释
             array = [
             # 项目1注释
             1,

@@ -394,7 +394,7 @@ public class TomlDeserializer
         var iTomlClass = target as ITomlObjectComment;
         if (iTomlClass is not null)
         {
-            iTomlClass.ObjectComment = table.Comment ?? string.Empty;
+            iTomlClass.ObjectComment = table.Comment;
             iTomlClass.PropertyComments ??= [];
         }
 
@@ -549,7 +549,7 @@ public class TomlDeserializer
         }
 
         // 设置注释
-        iTomlClassComment?.PropertyComments.TryAdd(name, node.Comment ?? string.Empty);
+        iTomlClassComment?.PropertyComments.TryAdd(name, node.Comment);
         DeserializePropertyValue(accessor, node, propertyInfo);
         return true;
     }

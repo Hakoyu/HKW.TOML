@@ -27,7 +27,7 @@ internal class ObjectData
     /// <summary>
     /// 注释
     /// </summary>
-    public string Comment { get; set; } = string.Empty;
+    public TomlComment Comment { get; set; } = new();
 
     /// <summary>
     /// 是匿名类
@@ -76,7 +76,7 @@ internal class ObjectData
         if (IsAnonymous is false)
         {
             if (
-                GetComment(Comment) is string comment
+                GetComment(Comment.ToString()) is string comment
                 && string.IsNullOrWhiteSpace(comment) is false
             )
                 sb.AppendLine(comment);

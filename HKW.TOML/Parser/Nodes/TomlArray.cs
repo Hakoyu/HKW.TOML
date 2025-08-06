@@ -131,14 +131,55 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
         sb.Append(TomlSyntax.ARRAY_START_SYMBOL);
         if (ChildrenCount != 0)
         {
-            var arrayStart = multiline ? $"{Environment.NewLine}  " : " ";
-            var arraySeparator = multiline
-                ? $"{TomlSyntax.ITEM_SEPARATOR}{Environment.NewLine}  "
-                : $"{TomlSyntax.ITEM_SEPARATOR} ";
-            var arrayEnd = multiline ? Environment.NewLine : " ";
-            sb.Append(arrayStart)
-                .Append(arraySeparator.Join(RawArray.Select(n => n.ToInlineToml())))
-                .Append(arrayEnd);
+            if (multiline)
+            {
+                sb.AppendLine();
+                var items = new List<string>();
+                var maxLength = 1;
+                for (var i = 0; i < RawArray.Count; i++)
+                {
+                    var toml = RawArray[i].ToInlineToml();
+                    items.Add(toml);
+                    maxLength = Math.Max(toml.Length, maxLength);
+                }
+                maxLength++;
+                // 自适应注释对齐
+                for (var i = 0; i < items.Count; i++)
+                {
+                    var node = RawArray[i];
+                    if (string.IsNullOrWhiteSpace(node.Comment.PrecedingComment) is false)
+                    {
+                        var array = node.Comment.PrecedingComment.Split(
+                            TomlSyntax.NEWLINE_CHARACTER
+                        );
+                        for (var j = 0; j < array.Length; j++)
+                        {
+                            var line = array[j];
+                            sb.AppendLine($"  {TomlSyntax.COMMENT_SYMBOL} {line.Trim()}");
+                        }
+                    }
+                    sb.Append("  ");
+                    sb.Append(items[i]);
+                    sb.Append(TomlSyntax.ITEM_SEPARATOR);
+                    if (string.IsNullOrWhiteSpace(node.Comment.InlineComment) is false)
+                    {
+                        sb.Append(
+                            $"{new string(' ', maxLength - items[i].Length)}{TomlSyntax.COMMENT_SYMBOL} {node.Comment.InlineComment.Trim()}"
+                        );
+                    }
+                    sb.AppendLine();
+                }
+                sb.AppendLine();
+            }
+            else
+            {
+                var arrayStart = " ";
+                var arraySeparator = $"{TomlSyntax.ITEM_SEPARATOR} ";
+                var arrayEnd = " ";
+                sb.Append(arrayStart)
+                    .Append(arraySeparator.Join(RawArray.Select(n => n.ToInlineToml())))
+                    .Append(arrayEnd);
+            }
         }
         sb.Append(TomlSyntax.ARRAY_END_SYMBOL);
         return sb.ToString();
@@ -154,16 +195,18 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(Comment) is false)
+        if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
         {
             tw.WriteLine();
-            Comment.AsComment(tw);
+            Comment.WritePrecedingComment(tw);
         }
         tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
         tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
         tw.Write(name);
         tw.Write(TomlSyntax.ARRAY_END_SYMBOL);
         tw.Write(TomlSyntax.ARRAY_END_SYMBOL);
+        if (string.IsNullOrWhiteSpace(Comment.InlineComment) is false)
+            Comment.WriteInlineComment(tw);
         tw.WriteLine();
 
         var first = true;
@@ -182,13 +225,15 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
             {
                 tw.WriteLine();
 
-                if (string.IsNullOrWhiteSpace(Comment) is false)
-                    Comment.AsComment(tw);
+                if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
+                    Comment.WritePrecedingComment(tw);
                 tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
                 tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
                 tw.Write(name);
                 tw.Write(TomlSyntax.ARRAY_END_SYMBOL);
                 tw.Write(TomlSyntax.ARRAY_END_SYMBOL);
+                if (string.IsNullOrWhiteSpace(Comment.InlineComment) is false)
+                    Comment.WriteInlineComment(tw);
                 tw.WriteLine();
             }
 
@@ -209,16 +254,18 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(Comment) is false)
+        if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
         {
             await tw.WriteLineAsync();
-            await Comment.AsCommentAsync(tw);
+            await Comment.WritePrecedingCommentAsync(tw);
         }
         await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
         await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
         await tw.WriteAsync(name);
         await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
         await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
+        if (string.IsNullOrWhiteSpace(Comment.InlineComment) is false)
+            await Comment.WriteInlineCommentAsync(tw);
         await tw.WriteLineAsync();
 
         var first = true;
@@ -237,13 +284,15 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
             {
                 await tw.WriteLineAsync();
 
-                if (string.IsNullOrWhiteSpace(Comment) is false)
-                    await Comment.AsCommentAsync(tw);
+                if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
+                    await Comment.WritePrecedingCommentAsync(tw);
                 await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
                 await tw.WriteAsync(TomlSyntax.ARRAY_START_SYMBOL);
                 await tw.WriteAsync(name);
                 await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
                 await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
+                if (string.IsNullOrWhiteSpace(Comment.InlineComment) is false)
+                    await Comment.WriteInlineCommentAsync(tw);
                 await tw.WriteLineAsync();
             }
 

@@ -5,22 +5,9 @@ public static class Example
     //public static string ExampleFile { get; set; } = "..\\..\\..\\Example.toml";
     public static string TomlExampleBeautifulData =>
         """"
-            # This is an example HKWTOML document which shows most of its features.
-
-            # Simple key/value with a string.
-            title = "HKWTOML example \U0001F60A"
-
-            desc = """
-            An example HKWTOML document. \
-            """
-
-            # Array with integers and floats in the various allowed formats.
-            integers = [42, 0x42, 0o42, 0b0110]
-            floats   = [1.42, 1e-02]
-
-            # Array with supported datetime formats.
             times = [
-            	2021-11-09T15:16:17+01:00,  # datetime w键值对末尾注释键值对ith timezone.
+            # time
+            	2021-11-09T15:16:17+01:00,  # datetime with timezone.
             	2021-11-09T15:16:17Z,       # UTC datetime.
             	2021-11-09T15:16:17,        # local datetime.
             	2021-11-09,                 # local date.

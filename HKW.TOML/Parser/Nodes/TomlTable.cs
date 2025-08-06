@@ -297,32 +297,27 @@ public class TomlTable
         if (collapsedItems.Count is 0)
             return;
 
-        var hasRealValues = !collapsedItems.All(n =>
-            n.Value is TomlTable { IsInline: false } or TomlArray { IsTableArray: true }
-        );
+        if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
+            Comment.WritePrecedingComment(tw);
 
-        if (string.IsNullOrWhiteSpace(Comment) is false)
-            Comment.AsComment(tw);
-
-        if (
-            tomlFile is not null
-            && (hasRealValues || string.IsNullOrWhiteSpace(Comment) is false)
-            && writeSectionName
-        )
+        if (tomlFile is not null && writeSectionName)
         {
             tw.Write(TomlSyntax.ARRAY_START_SYMBOL);
             tw.Write(tomlFile);
             tw.Write(TomlSyntax.ARRAY_END_SYMBOL);
+            if (string.IsNullOrWhiteSpace(Comment.InlineComment) is false)
+                Comment.WriteInlineComment(tw);
             tw.WriteLine();
         }
-        else if (string.IsNullOrWhiteSpace(Comment) is false)
+        else if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
         {
             tw.WriteLine();
         }
 
         var namePrefix = tomlFile is null ? string.Empty : $"{tomlFile}.";
         var first = true;
-
+        var alignmentPairs = new List<(KeyValuePair<string, TomlNode> pair, string toml)>();
+        var maxLength = 1;
         foreach (var collapsedItem in collapsedItems)
         {
             var key = collapsedItem.Key;
@@ -332,22 +327,50 @@ public class TomlTable
                     or TomlTable { IsInline: false }
             )
             {
+                if (alignmentPairs.Count > 0)
+                {
+                    for (var i = 0; i < alignmentPairs.Count; i++)
+                        WriteNode(tw, alignmentPairs[i].pair, alignmentPairs[i].toml, maxLength);
+
+                    alignmentPairs.Clear();
+                    maxLength = 1;
+                }
                 if (first is false)
                     tw.WriteLine();
-                first = false;
                 collapsedItem.Value.WriteTo(tw, $"{namePrefix}{key}");
-                continue;
+            }
+            else
+            {
+                var toml = collapsedItem.Value.ToInlineToml();
+                maxLength = Math.Max(maxLength, key.Length + toml.Length);
+                alignmentPairs.Add((collapsedItem, toml));
             }
             first = false;
-            if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment) is false)
-                collapsedItem.Value.Comment.AsComment(tw);
-            tw.Write(key);
-            tw.Write(' ');
-            tw.Write(TomlSyntax.KEY_VALUE_SEPARATOR);
-            tw.Write(' ');
-
-            collapsedItem.Value.WriteTo(tw, $"{namePrefix}{key}");
         }
+        for (var i = 0; i < alignmentPairs.Count; i++)
+            WriteNode(tw, alignmentPairs[i].pair, alignmentPairs[i].toml, maxLength);
+    }
+
+    private static void WriteNode(
+        TextWriter tw,
+        KeyValuePair<string, TomlNode> collapsedItem,
+        string toml,
+        int maxLength
+    )
+    {
+        if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.PrecedingComment) is false)
+            collapsedItem.Value.Comment.WritePrecedingComment(tw);
+        tw.Write(collapsedItem.Key);
+        tw.Write(' ');
+        tw.Write(TomlSyntax.KEY_VALUE_SEPARATOR);
+        tw.Write(' ');
+        tw.Write(toml);
+        if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment) is false)
+            collapsedItem.Value.Comment.WriteInlineComment(
+                tw,
+                maxLength - (collapsedItem.Key.Length + toml.Length) + 1
+            );
+        tw.WriteLine();
     }
 
     /// <summary>
@@ -381,12 +404,12 @@ public class TomlTable
             n.Value is TomlTable { IsInline: false } or TomlArray { IsTableArray: true }
         );
 
-        if (string.IsNullOrWhiteSpace(Comment) is false)
-            await Comment.AsCommentAsync(tw);
+        if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
+            await Comment.WritePrecedingCommentAsync(tw);
 
         if (
             tomlFile is not null
-            && (hasRealValues || string.IsNullOrWhiteSpace(Comment) is false)
+            && (hasRealValues || string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
             && writeSectionName
         )
         {
@@ -395,7 +418,7 @@ public class TomlTable
             await tw.WriteAsync(TomlSyntax.ARRAY_END_SYMBOL);
             await tw.WriteLineAsync();
         }
-        else if (string.IsNullOrWhiteSpace(Comment) is false)
+        else if (string.IsNullOrWhiteSpace(Comment.PrecedingComment) is false)
         {
             await tw.WriteLineAsync();
         }
@@ -420,14 +443,17 @@ public class TomlTable
             }
 
             first = false;
-            if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment) is false)
-                await collapsedItem.Value.Comment.AsCommentAsync(tw);
+            if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.PrecedingComment) is false)
+                await collapsedItem.Value.Comment.WritePrecedingCommentAsync(tw);
             await tw.WriteAsync(key);
             await tw.WriteAsync(' ');
             await tw.WriteAsync(TomlSyntax.KEY_VALUE_SEPARATOR);
             await tw.WriteAsync(' ');
 
             await collapsedItem.Value.WriteToAsync(tw, $"{namePrefix}{key}");
+
+            if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment) is false)
+                await Comment.WriteInlineCommentAsync(tw);
         }
     }
 

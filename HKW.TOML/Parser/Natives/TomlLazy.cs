@@ -53,8 +53,8 @@ internal class TomlLazy : TomlNode
 
         if (parent.IsTomlTable)
         {
-            var key = parent.Keys.FirstOrDefault(
-                s => parent.TryGetNode(s, out var node) && node.Equals(this)
+            var key = parent.Keys.FirstOrDefault(s =>
+                parent.TryGetNode(s, out var node) && node.Equals(this)
             );
             if (key == null)
                 return default(T)!;

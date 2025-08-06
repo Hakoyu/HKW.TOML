@@ -8,11 +8,11 @@ public interface ITomlObjectComment
     /// <summary>
     /// 类注释
     /// </summary>
-    public string ObjectComment { get; set; }
+    public TomlComment ObjectComment { get; set; }
 
     /// <summary>
-    /// 值注释
-    /// <para>(PropertyName, Comment)</para>
+    /// 子项注释
+    /// <para>(PropertyName, TomlComment)</para>
     /// </summary>
-    public Dictionary<string, string> PropertyComments { get; set; }
+    public Dictionary<string, TomlComment> PropertyComments { get; set; }
 }

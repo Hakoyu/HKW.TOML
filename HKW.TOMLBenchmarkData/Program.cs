@@ -19,12 +19,25 @@ internal class Program
         //    TOML.Parse(TomlExample.ExampleData)
         //);
         //BenchmarkDeserialize.Test();
-        //var parser = new Tomlet.TomlParser();
-        //var toml = parser.Parse(BenchmarkParse.TomlData);
+
         //using var sr = new StringReader(Example.TomlExampleBeautifulData);
         //var t = Tommy.TOML.Parse(sr);
-        var toml = TOML.Parse(Example.TomlExampleBeautifulData);
-        toml.WriteToAsync(Console.Out, null!).GetAwaiter().GetResult();
+        var tomlData = """    
+            key1 = 1 # 和行尾注释
+            key2 = 11 # 和行尾注释
+            key3 = 111 # 和行尾注释
+            key4 = 1111 # 和行尾注释
+            key5 = 11111 # 和行尾注释
+            """;
+        var parser = new Tomlet.TomlParser();
+        var tomlet = parser.Parse(Example.TomlExampleData);
+        Console.WriteLine(tomlet.SerializedValue);
+        var tomlyn = Tomlyn.Toml.Parse(Example.TomlExampleData);
+        Console.WriteLine(tomlyn.ToString());
+        var toml = TOML.Parse(Example.TomlExampleData);
+        var str = toml.ToTomlString();
+        Console.WriteLine(str);
+        //toml.WriteToAsync(Console.Out, null!).GetAwaiter().GetResult();
         //Console.WriteLine(TOMLAsClasses.Generate(toml, "BenchmarkObject"));
         //var text = TOMLSerializer.Serialize(BenchmarkSerialize.Obj);
         //var toml = TOMLSerializer.Serialize(obj);

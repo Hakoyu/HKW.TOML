@@ -72,7 +72,7 @@ public abstract class TomlNode : IEnumerable
     /// <summary>
     /// 注释
     /// </summary>
-    public virtual string Comment { get; set; } = string.Empty;
+    public virtual TomlComment Comment { get; set; } = new();
 
     /// <summary>
     /// 层级
@@ -302,7 +302,7 @@ public abstract class TomlNode : IEnumerable
     /// </summary>
     /// <param name="tw">文本写入流</param>
     /// <param name="name">名称</param>
-    public virtual void WriteTo(TextWriter tw, string name = null!) => tw.WriteLine(ToInlineToml());
+    public virtual void WriteTo(TextWriter tw, string name = null!) => tw.Write(ToInlineToml());
 
     /// <summary>
     /// 异步写入至
@@ -310,7 +310,7 @@ public abstract class TomlNode : IEnumerable
     /// <param name="tw">文本写入流</param>
     /// <param name="name">名称</param>
     public virtual Task WriteToAsync(TextWriter tw, string name = null!) =>
-        tw.WriteLineAsync(ToInlineToml());
+        tw.WriteAsync(ToInlineToml());
 
     /// <summary>
     /// 转换为行内Toml格式字符串

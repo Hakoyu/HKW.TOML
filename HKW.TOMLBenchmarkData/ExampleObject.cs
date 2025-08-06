@@ -16,10 +16,10 @@ namespace HKW.HKWTOML.Benchmark;
 public class ExampleObject : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ObjectComment { get; set; } = string.Empty;
+    public TomlComment ObjectComment { get; set; } = new();
 
     /// <inheritdoc/>
-    public Dictionary<string, string> PropertyComments { get; set; } = new();
+    public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
     /// <summary>
     /// Simple key/value with a string.
@@ -91,10 +91,10 @@ public class DistrosAnonymousClass
 public class ServersClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ObjectComment { get; set; } = string.Empty;
+    public TomlComment ObjectComment { get; set; } = new();
 
     /// <inheritdoc/>
-    public Dictionary<string, string> PropertyComments { get; set; } = new();
+    public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
     /// <summary>
     /// Create new table; note the "servers" table is created implicitly.
@@ -115,10 +115,10 @@ public class ServersClass : ITomlObjectComment
 public class AlphaClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ObjectComment { get; set; } = string.Empty;
+    public TomlComment ObjectComment { get; set; } = new();
 
     /// <inheritdoc/>
-    public Dictionary<string, string> PropertyComments { get; set; } = new();
+    public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
     /// <summary>
     /// You can indent as you please, tabs or spaces.
@@ -139,10 +139,10 @@ public class AlphaClass : ITomlObjectComment
 public class BetaClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ObjectComment { get; set; } = string.Empty;
+    public TomlComment ObjectComment { get; set; } = new();
 
     /// <inheritdoc/>
-    public Dictionary<string, string> PropertyComments { get; set; } = new();
+    public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("ip")]
@@ -160,10 +160,10 @@ public class BetaClass : ITomlObjectComment
 public class CharactersClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ObjectComment { get; set; } = string.Empty;
+    public TomlComment ObjectComment { get; set; } = new();
 
     /// <inheritdoc/>
-    public Dictionary<string, string> PropertyComments { get; set; } = new();
+    public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("star-trek")]
@@ -185,10 +185,10 @@ public class StarTrekAnonymousClass
 public class UndecodedClass : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ObjectComment { get; set; } = string.Empty;
+    public TomlComment ObjectComment { get; set; } = new();
 
     /// <inheritdoc/>
-    public Dictionary<string, string> PropertyComments { get; set; } = new();
+    public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("key")]

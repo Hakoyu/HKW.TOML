@@ -62,10 +62,10 @@ public enum TestType
 public class ClassExample1 : ITomlObjectComment
 {
     /// <inheritdoc/>
-    public string ObjectComment { get; set; } = string.Empty;
+    public TomlComment ObjectComment { get; set; } = new();
 
     /// <inheritdoc/>
-    public Dictionary<string, string> PropertyComments { get; set; } = new();
+    public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 
     /// <summary>
     /// Simple key/value with a string.

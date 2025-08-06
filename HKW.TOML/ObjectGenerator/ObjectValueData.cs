@@ -22,7 +22,7 @@ internal class ObjectValueData
     /// <summary>
     /// 注释
     /// </summary>
-    public string Comment { get; set; } = string.Empty;
+    public TomlComment Comment { get; set; } = new();
 
     /// <summary>
     /// 特性
@@ -63,7 +63,10 @@ internal class ObjectValueData
     public override string ToString()
     {
         var valueData = string.Format(_options.PropertyFormat, _options.Indent, TypeName, Name);
-        return GetComment(Comment) + Environment.NewLine + GetAttribute(Attributes) + valueData;
+        return GetComment(Comment.ToString())
+            + Environment.NewLine
+            + GetAttribute(Attributes)
+            + valueData;
     }
 
     /// <summary>
