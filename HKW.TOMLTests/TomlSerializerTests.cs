@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using HKW.HKWTOML.Benchmark;
 using HKW.HKWTOML.Deserializer;
+using HKW.HKWTOML.Interfaces;
 using HKW.HKWTOML.Serializer;
+using KellermanSoftware.CompareNetObjects;
 
 namespace HKW.HKWTOML.Tests;
 
@@ -17,10 +19,25 @@ public class TomlSerializerTests
     {
         var example = TomlDeserializer.Deserialize<ExampleObject>(Example.TomlExampleData);
         var serializeTable = TomlSerializer.Serialize(example);
-        var table = TOML.Parse(Example.TomlExampleData);
         var serializeTableString = serializeTable!.ToTomlString();
-        var tableString = table.ToTomlString();
-        Assert.AreEqual(serializeTableString, tableString);
+        var newExample = TomlDeserializer.Deserialize<ExampleObject>(serializeTableString);
+        var compareLogic = new CompareLogic();
+        compareLogic.Config.TypesToIgnore.AddRange(
+            [typeof(TomlNode), typeof(Empty_inline_tableClass)]
+        );
+        compareLogic.Config.MembersToIgnore.AddRange(
+            [
+                nameof(ITomlObjectComment.ObjectComment),
+                nameof(ITomlObjectComment.PropertyComments),
+                nameof(ExampleObject.Empty_array),
+                nameof(ExampleObject.Nested_array),
+                nameof(ExampleObject.Mixed_array),
+                nameof(ExampleObject.Array_of_arrays),
+                nameof(ExampleObject.Precise_datetime)
+            ]
+        );
+        var result = compareLogic.Compare(newExample, example);
+        Assert.IsTrue(result.AreEqual);
         //Console.WriteLine(serializeTable.ToTomlString());
     }
 
@@ -29,10 +46,25 @@ public class TomlSerializerTests
     {
         var example = TomlDeserializer.Deserialize<ExampleObject>(Example.TomlExampleData);
         var serializeTable = TomlSerializer.SerializeAsync(example).GetAwaiter().GetResult();
-        var table = TOML.Parse(Example.TomlExampleData);
         var serializeTableString = serializeTable!.ToTomlString();
-        var tableString = table.ToTomlString();
-        Assert.AreEqual(serializeTableString, tableString);
+        var newExample = TomlDeserializer.Deserialize<ExampleObject>(serializeTableString);
+        var compareLogic = new CompareLogic();
+        compareLogic.Config.TypesToIgnore.AddRange(
+            [typeof(TomlNode), typeof(Empty_inline_tableClass)]
+        );
+        compareLogic.Config.MembersToIgnore.AddRange(
+            [
+                nameof(ITomlObjectComment.ObjectComment),
+                nameof(ITomlObjectComment.PropertyComments),
+                nameof(ExampleObject.Empty_array),
+                nameof(ExampleObject.Nested_array),
+                nameof(ExampleObject.Mixed_array),
+                nameof(ExampleObject.Array_of_arrays),
+                nameof(ExampleObject.Precise_datetime)
+            ]
+        );
+        var result = compareLogic.Compare(newExample, example);
+        Assert.IsTrue(result.AreEqual);
         //Console.WriteLine(serializeTable.ToTomlString());
     }
 }

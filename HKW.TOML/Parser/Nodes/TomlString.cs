@@ -63,11 +63,14 @@ public class TomlString : TomlNode
         var result = PreferLiteral ? Value : Value.Escape(IsMultiline is false);
         if (IsMultiline)
         {
-            result = result.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
-            if (
-                MultilineTrimFirstLine
-                || MultilineTrimFirstLine is false && result.StartsWith(Environment.NewLine)
-            )
+            // 不转换, 保留原始换行符
+            //var temp = result.Replace("\r\n", "\n");
+            //var lineCount = temp.Count(c => c is '\n');
+            //result = temp.Replace("\n", Environment.NewLine);
+
+            // 自适应多行模式
+            var lineCount = result.Count(c => c is '\n' || c is '\r');
+            if (MultilineTrimFirstLine || lineCount > 0)
                 result = $"{Environment.NewLine}{result}";
         }
         return $"{quotes}{result}{quotes}";

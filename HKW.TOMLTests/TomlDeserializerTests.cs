@@ -18,14 +18,20 @@ public class TomlDeserializerTests
     public void Deserialize()
     {
         var example1 = TomlDeserializer.Deserialize<ExampleObject>(
-            Example.TomlExampleDataWithoutTime
+            Example.TomlExampleDataCompatibleJson
         );
-        var example2 = JsonConvert.DeserializeObject<ExampleObject>(
-            Example.JsonExampleDataWithoutTime
-        );
+        var example2 = JsonConvert.DeserializeObject<ExampleObject>(Example.JsonExampleData);
         var compareLogic = new CompareLogic();
+        compareLogic.Config.TypesToIgnore.Add(typeof(TomlNode));
         compareLogic.Config.MembersToIgnore.AddRange(
-            [nameof(ITomlObjectComment.ObjectComment), nameof(ITomlObjectComment.PropertyComments)]
+            [
+                nameof(ITomlObjectComment.ObjectComment),
+                nameof(ITomlObjectComment.PropertyComments),
+                nameof(ExampleObject.Empty_array),
+                nameof(ExampleObject.Nested_array),
+                nameof(ExampleObject.Mixed_array),
+                nameof(ExampleObject.Array_of_arrays)
+            ]
         );
         var result = compareLogic.Compare(example1, example2);
         Assert.IsTrue(result.AreEqual);
@@ -35,15 +41,21 @@ public class TomlDeserializerTests
     public void DeserializeAsync()
     {
         var example1 = TomlDeserializer
-            .DeserializeAsync<ExampleObject>(Example.TomlExampleDataWithoutTime)
+            .DeserializeAsync<ExampleObject>(Example.TomlExampleDataCompatibleJson)
             .GetAwaiter()
             .GetResult();
-        var example2 = JsonConvert.DeserializeObject<ExampleObject>(
-            Example.JsonExampleDataWithoutTime
-        );
+        var example2 = JsonConvert.DeserializeObject<ExampleObject>(Example.JsonExampleData);
         var compareLogic = new CompareLogic();
+        compareLogic.Config.TypesToIgnore.Add(typeof(TomlNode));
         compareLogic.Config.MembersToIgnore.AddRange(
-            [nameof(ITomlObjectComment.ObjectComment), nameof(ITomlObjectComment.PropertyComments)]
+            [
+                nameof(ITomlObjectComment.ObjectComment),
+                nameof(ITomlObjectComment.PropertyComments),
+                nameof(ExampleObject.Empty_array),
+                nameof(ExampleObject.Nested_array),
+                nameof(ExampleObject.Mixed_array),
+                nameof(ExampleObject.Array_of_arrays)
+            ]
         );
         var result = compareLogic.Compare(example1, example2);
         Assert.IsTrue(result.AreEqual);

@@ -218,7 +218,7 @@ public partial class TomlObjectGenerator
             tomlClass = new(_options, className, parentClassName);
             if (_options.AddComment)
                 tomlClass.Comment = table.Comment;
-            _objectValues.TryAdd(tomlClass.FullName, tomlClass);
+            _objectValues.TryAdd(className, tomlClass);
         }
         return tomlClass;
     }
@@ -239,8 +239,7 @@ public partial class TomlObjectGenerator
             if (string.IsNullOrWhiteSpace(tomlClass.ParentName))
                 tomlClass.Values.TryAdd(name, new(_options, name, className));
             else
-                _objectValues[tomlClass.FullName]
-                    .Values.TryAdd(name, new(_options, name, className));
+                _objectValues[tomlClass.Name].Values.TryAdd(name, new(_options, name, className));
             // 解析类
             ParseTable(className, tomlClass.Name, node.AsTomlTable);
         }

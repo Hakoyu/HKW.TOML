@@ -175,7 +175,6 @@ public class TomlObjectGeneratorOptions
     /// {0}public TomlComment ClassComment { get; set; } = new();
     /// {0}/// <inheritdoc/>
     /// {0}public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
-    ///
     /// ]]>
     /// </para>
     /// </summary>
@@ -184,7 +183,6 @@ public class TomlObjectGeneratorOptions
 {0}public TomlComment ObjectComment {{ get; set; }} = new();
 {0}/// <inheritdoc/>
 {0}public Dictionary<string, TomlComment> PropertyComments {{ get; set; }} = new();
-
 ";
 
     #endregion Inheritance

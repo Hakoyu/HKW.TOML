@@ -9,10 +9,10 @@ using HKW.HKWTOML.ObjectGenerator;
 namespace HKW.HKWTOML.Tests;
 
 [TestClass]
-public class TomlObjectBuilderTests
+public class TomlObjectGeneratorTests
 {
     [TestMethod]
-    public void AsClasses()
+    public void ObjectGenerator()
     {
         var table = TOML.Parse(Example.TomlExampleData);
         string classString = TomlObjectGenerator

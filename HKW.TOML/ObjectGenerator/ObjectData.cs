@@ -4,7 +4,7 @@ using System.Text;
 namespace HKW.HKWTOML.ObjectGenerator;
 
 /// <summary>
-/// Toml构造类
+/// Toml对象数据
 /// </summary>
 [DebuggerDisplay("{Name}, Count = {Values.Count}")]
 internal class ObjectData
@@ -13,11 +13,6 @@ internal class ObjectData
     /// 名称
     /// </summary>
     public string Name { get; set; }
-
-    /// <summary>
-    ///  全名
-    /// </summary>
-    public string FullName { get; set; }
 
     /// <summary>
     /// 父类名称
@@ -58,7 +53,6 @@ internal class ObjectData
     {
         _options = options;
         Name = name;
-        FullName = name + parentName;
         ParentName = parentName ?? string.Empty;
         IsAnonymous = string.IsNullOrWhiteSpace(parentName);
     }

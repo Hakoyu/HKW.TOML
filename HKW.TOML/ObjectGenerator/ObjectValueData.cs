@@ -4,7 +4,7 @@ using System.Text;
 namespace HKW.HKWTOML.ObjectGenerator;
 
 /// <summary>
-/// toml类值
+/// Toml值数据
 /// </summary>
 [DebuggerDisplay("{TypeName}, {Name}")]
 internal class ObjectValueData
@@ -63,10 +63,7 @@ internal class ObjectValueData
     public override string ToString()
     {
         var valueData = string.Format(_options.PropertyFormat, _options.Indent, TypeName, Name);
-        return GetComment(Comment.ToString())
-            + Environment.NewLine
-            + GetAttribute(Attributes)
-            + valueData;
+        return GetComment(Comment.ToString()) + GetAttribute(Attributes) + valueData;
     }
 
     /// <summary>
@@ -80,7 +77,8 @@ internal class ObjectValueData
             return comment;
         var comments = comment.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
         if (comments.Length is 1)
-            return string.Format(_options.CommentFormat, _options.Indent, comments[0]);
+            return string.Format(_options.CommentFormat, _options.Indent, comments[0])
+                + Environment.NewLine;
         var multiLineComment =
             comments[0]
             + Environment.NewLine
@@ -89,7 +87,8 @@ internal class ObjectValueData
                 comments[1..]
                     .Select(s => string.Format(_options.CommentParaFormat, _options.Indent, s))
             );
-        return string.Format(_options.CommentFormat, _options.Indent, multiLineComment);
+        return string.Format(_options.CommentFormat, _options.Indent, multiLineComment)
+            + Environment.NewLine;
     }
 
     /// <summary>

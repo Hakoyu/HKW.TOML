@@ -45,8 +45,7 @@ public class TomlTable
     public new IEnumerator<KeyValuePair<string, TomlNode>> GetEnumerator() =>
         RawTable.GetEnumerator();
 
-    /// <inheritdoc/>
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => RawTable.GetEnumerator();
 
     /// <summary>
     /// 是隐式的
@@ -333,7 +332,11 @@ public class TomlTable
                     tw.WriteLine();
                 collapsedItem.Value.WriteTo(tw, $"{namePrefix}{key}");
             }
-            else if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment))
+            else if (
+                collapsedItem.Value is TomlArray
+                || collapsedItem.Value is TomlTable
+                || string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment)
+            )
             {
                 TryWriteNodes(tw, alignmentPairs, maxLength);
                 maxLength = 1;
@@ -349,6 +352,9 @@ public class TomlTable
         }
         for (var i = 0; i < alignmentPairs.Count; i++)
             WriteNode(tw, alignmentPairs[i].pair, alignmentPairs[i].toml, maxLength);
+
+        if (string.IsNullOrWhiteSpace(Comment.InlineComment) is false)
+            Comment.WriteInlineComment(tw);
     }
 
     private static void TryWriteNodes(
@@ -456,7 +462,11 @@ public class TomlTable
                     await tw.WriteLineAsync();
                 await collapsedItem.Value.WriteToAsync(tw, $"{namePrefix}{key}");
             }
-            else if (string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment))
+            else if (
+                collapsedItem.Value is TomlArray
+                || collapsedItem.Value is TomlTable
+                || string.IsNullOrWhiteSpace(collapsedItem.Value.Comment.InlineComment)
+            )
             {
                 await TryWriteNodesAsync(tw, alignmentPairs, maxLength);
                 maxLength = 1;
@@ -472,6 +482,9 @@ public class TomlTable
         }
         for (var i = 0; i < alignmentPairs.Count; i++)
             await WriteNodeAsync(tw, alignmentPairs[i].pair, alignmentPairs[i].toml, maxLength);
+
+        if (string.IsNullOrWhiteSpace(Comment.InlineComment) is false)
+            await Comment.WriteInlineCommentAsync(tw);
     }
 
     private static async Task TryWriteNodesAsync(

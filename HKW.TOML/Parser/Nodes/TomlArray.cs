@@ -118,7 +118,7 @@ public class TomlArray : TomlNode, IList<TomlNode>, IListWrapper<TomlNode, IList
     public override void Delete(int index) => RawArray.RemoveAt(index);
 
     /// <inheritdoc/>
-    public override string ToString() => ToString(false);
+    public override string ToString() => ToString(IsMultiline);
 
     /// <summary>
     /// 转化为多行字符串

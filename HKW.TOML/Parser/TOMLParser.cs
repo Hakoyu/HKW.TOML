@@ -408,31 +408,6 @@ public class TomlParser : IDisposable
         return null;
     }
 
-    private bool AddError(string message, bool skipLine = true)
-    {
-        _syntaxErrors.Add(new TomlSyntaxException(message, _currentState, _line, _column));
-        // 跳过整行，希望这只是一个单一的错误值（而且不是多行的）
-        if (skipLine)
-        {
-            _reader.ReadLine();
-            AdvanceLine(1);
-        }
-        _currentState = ParseState.None;
-        return false;
-    }
-
-    private void AdvanceLine(int startCol = 0)
-    {
-        _line++;
-        _column = startCol;
-    }
-
-    private int ConsumeChar()
-    {
-        _column++;
-        return _reader.Read();
-    }
-
     #region 键值对解析
 
     /// <summary>
@@ -803,7 +778,6 @@ public class TomlParser : IDisposable
         TomlNode? currentValue = null;
         var expectValue = true;
         string? latestComment = null;
-
         int cur;
         while ((cur = _reader.Peek()) >= 0)
         {
@@ -812,23 +786,14 @@ public class TomlParser : IDisposable
             if (c is TomlSyntax.ARRAY_END_SYMBOL)
             {
                 ConsumeChar();
+                result.Comment.InlineComment = TryParseInlineComment();
                 break;
             }
 
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                if (latestComment is null)
-                {
-                    latestComment = ParseComment();
-                }
-                else if (result.Count > 0)
-                {
-                    var node = result[^1];
-                    node.Comment.InlineComment = ParseComment();
-                    result.IsMultiline = true;
-                }
-
-                AdvanceLine(1);
+                latestComment = ParseComment();
+                AdvanceLine();
                 continue;
             }
 
@@ -850,17 +815,24 @@ public class TomlParser : IDisposable
                     AddError("遇到多个值分隔符");
                     return null;
                 }
-                if (string.IsNullOrWhiteSpace(latestComment) is false)
+                if (latestComment is not null)
                 {
                     currentValue.Comment.PrecedingComment = latestComment;
+                    result.IsMultiline = true;
+                }
+
+                ConsumeChar();
+                var inlineComment = TryParseInlineComment();
+                if (string.IsNullOrWhiteSpace(inlineComment) is false)
+                {
+                    currentValue.Comment.InlineComment = inlineComment;
                     result.IsMultiline = true;
                 }
 
                 result.Add(currentValue);
                 currentValue = null;
                 expectValue = true;
-                latestComment = string.Empty;
-                ConsumeChar();
+                latestComment = null;
                 continue;
             }
 
@@ -881,6 +853,7 @@ public class TomlParser : IDisposable
 
         if (currentValue is not null)
             result.Add(currentValue);
+
         return result;
     }
 
@@ -907,6 +880,7 @@ public class TomlParser : IDisposable
             if (c is TomlSyntax.INLINE_TABLE_END_SYMBOL)
             {
                 ConsumeChar();
+                result.Comment.InlineComment = TryParseInlineComment();
                 break;
             }
 
@@ -1135,19 +1109,32 @@ public class TomlParser : IDisposable
         while ((cur = ConsumeChar()) >= 0)
         {
             var c = (char)cur;
+
+            // 修剪换行符
+            if (TomlSyntax.IsNewLine(c) && skipWhitespace is false)
+            {
+                // 第一个换行符不计数
+                if (first)
+                {
+                    first = false;
+                    ReadLineBreak(ref c);
+                }
+                else
+                {
+                    AdvanceLine();
+                    var lineBreak = ReadLineBreak(ref c);
+                    if (lineBreak is null)
+                        break;
+                    else
+                        sb.Append(lineBreak);
+                }
+                continue;
+            }
+
             if (TomlSyntax.MustBeEscaped(c, true))
             {
                 AddError($"字符 U+{(int)c:X8} 必须进行转义！");
                 return null;
-            }
-            // 修剪第一个换行符
-            if (first && TomlSyntax.IsNewLine(c))
-            {
-                if (TomlSyntax.IsLineBreak(c))
-                    first = false;
-                else
-                    AdvanceLine();
-                continue;
             }
 
             first = false;
@@ -1159,7 +1146,7 @@ public class TomlParser : IDisposable
                 continue;
             }
 
-            // 如果我们当前正在跳过空格，跳过
+            // 如果当前正在跳过空格，跳过
             if (skipWhitespace)
             {
                 if (TomlSyntax.IsEmptySpace(c))
@@ -1367,7 +1354,55 @@ public class TomlParser : IDisposable
 
     #endregion
 
-    #region 其他解析
+    #region 其他
+
+    private bool AddError(string message, bool skipLine = true)
+    {
+        _syntaxErrors.Add(new TomlSyntaxException(message, _currentState, _line, _column));
+        // 跳过整行，希望这只是一个单一的错误值（而且不是多行的）
+        if (skipLine)
+        {
+            _reader.ReadLine();
+            AdvanceLine(1);
+        }
+        _currentState = ParseState.None;
+        return false;
+    }
+
+    private void AdvanceLine(int startCol = 0)
+    {
+        _line++;
+        _column = startCol;
+    }
+
+    private int ConsumeChar()
+    {
+        _column++;
+        return _reader.Read();
+    }
+
+    private string? ReadLineBreak(ref char c)
+    {
+        int cur;
+        if (c is TomlSyntax.NEWLINE_CARRIAGE_RETURN_CHARACTER)
+        {
+            if ((cur = ConsumeChar()) >= 0)
+            {
+                c = (char)cur;
+                if (c is TomlSyntax.NEWLINE_CHARACTER)
+                    return $"{TomlSyntax.NEWLINE_CARRIAGE_RETURN_CHARACTER}{TomlSyntax.NEWLINE_CHARACTER}";
+                else
+                    return $"{TomlSyntax.NEWLINE_CARRIAGE_RETURN_CHARACTER}";
+            }
+            else
+                return null;
+        }
+        else if (c is TomlSyntax.NEWLINE_CHARACTER)
+        {
+            return $"{TomlSyntax.NEWLINE_CHARACTER}";
+        }
+        return null;
+    }
 
     private string ParseComment()
     {
@@ -1376,6 +1411,29 @@ public class TomlParser : IDisposable
         if (commentLine.Any(ch => TomlSyntax.MustBeEscaped(ch)))
             AddError("注释不能包含除制表符以外的控制字符。", false);
         return commentLine;
+    }
+
+    private string TryParseInlineComment()
+    {
+        int cur;
+        while ((cur = _reader.Peek()) >= 0)
+        {
+            var c = (char)cur;
+            if (c is TomlSyntax.COMMENT_SYMBOL)
+            {
+                return ParseInlineComment();
+            }
+            else if (TomlSyntax.IsNewLine(c) || TomlSyntax.IsEmptySpace(c) is false)
+            {
+                break;
+            }
+            else
+            {
+                ConsumeChar();
+            }
+        }
+
+        return string.Empty;
     }
 
     private string ParseInlineComment()

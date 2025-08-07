@@ -23,20 +23,37 @@ internal class Program
         //using var sr = new StringReader(Example.TomlExampleBeautifulData);
         //var t = Tommy.TOML.Parse(sr);
         var tomlData = """    
-            key1 = 1 # 和行尾注释
-            key2 = 11 # 和行尾注释
-            key3 = 111 
-            key4 = 1111 # 和行尾注释
-            key5 = 11111 # 和行尾注释
+            [clients]
+            [clients.data]
+            name = "Google"
+            hosts = ["alpha", "omega"]
+
+            [clients.hosts]
+            alpha = "10.0.0.1"
+            omega = "10.0.0.2"      
             """;
         //var parser = new Tomlet.TomlParser();
-        //var tomlet = parser.Parse(Example.TomlExampleData);
+        //var tomlet = parser.Parse(Example.TomlExampleBeautifulData);
         //Console.WriteLine(tomlet.SerializedValue);
-        //var tomlyn = Tomlyn.Toml.Parse(Example.TomlExampleData);
+        //var tomlyn = Tomlyn.Toml.Parse(Example.TomlExampleBeautifulData);
         //Console.WriteLine(tomlyn.ToString());
-        var toml = TOML.Parse(tomlData);
-        var str = toml.ToTomlString();
-        Console.WriteLine(str);
+        var toml = TOML.Parse(Example.TomlExampleData);
+        var str = toml.ToTomlStringAsync().GetAwaiter().GetResult();
+        //Console.WriteLine(str);
+        Console.WriteLine(
+            TomlObjectGenerator.Generate(
+                toml,
+                "ExampleObject",
+                new()
+                {
+                    AddComment = true,
+                    AddITomlClassCommentInterface = true,
+                    AddTomlPropertyOrderAttribute = true,
+                    AddTomlPropertyNameAttribute = true,
+                    RemoveKeyWordSeparator = true,
+                }
+            )
+        );
         //toml.WriteToAsync(Console.Out, null!).GetAwaiter().GetResult();
         //Console.WriteLine(TOMLAsClasses.Generate(toml, "BenchmarkObject"));
         //var text = TOMLSerializer.Serialize(BenchmarkSerialize.Obj);
