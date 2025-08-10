@@ -7,7 +7,7 @@ namespace HKW.HKWTOML.Benchmark.Resources;
 /// <summary>
 /// 本地资源
 /// </summary>
-internal class NativeResources
+internal static class NativeResources
 {
     /// <summary>
     /// 资源根目录

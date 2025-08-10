@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace HKW.HKWTOML.Benchmark.Benchmark;
 
+#pragma warning disable CS8618
+
 public class BenchmarkObject
 {
     public Dictionary<string, object> CachedLoadedAndDatedArcs { get; set; }

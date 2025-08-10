@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HKW.TOML\HKW.TOML.csproj" />
-    <ProjectReference Include="..\HKW.TOMLBenchmarkData\HKW.TOMLBenchmark.csproj" />
+    <ProjectReference Include="..\HKW.TOMLBenchmark\HKW.TOMLBenchmark.csproj" />
   </ItemGroup>
 
   <ItemGroup>

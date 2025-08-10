@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using HKW.FastMember;
 using HKW.HKWTOML.Attributes;
 using HKW.HKWTOML.Interfaces;
+using HKW.HKWUtils.Collections;
 using HKW.HKWUtils.Extensions;
 
 namespace HKW.HKWTOML.Deserializer;
@@ -321,6 +322,9 @@ public class TomlDeserializer
     /// </summary>
     private readonly TomlDeserializerOptions _options;
 
+    private readonly Dictionary<Type, PropertyInfo[]> _propertiesCache = [];
+    private readonly Dictionary<PropertyInfo, AttributeDictionary> _attributeDictionaryCache = [];
+
     private readonly List<TomlDeserializePropertyException> _exceptions = [];
 
     private readonly HashSet<string> _missingRequiredProperties = [];
@@ -399,8 +403,10 @@ public class TomlDeserializer
             iTomlClass.ObjectComment = table.Comment;
             iTomlClass.PropertyComments ??= [];
         }
-
-        var properties = type.GetPropertiesWithoutIgnore(_propertyBindingFlags);
+        if (_propertiesCache.TryGetValue(type, out var properties) is false)
+            properties = _propertiesCache[type] = type.GetPropertiesWithoutIgnore(
+                _propertyBindingFlags
+            );
         for (var i = 0; i < properties.Length; i++)
         {
             var propertyInfo = properties[i];
@@ -535,21 +541,28 @@ public class TomlDeserializer
             else if (propertyInfo.Name == nameof(ITomlObjectComment.PropertyComments))
                 return true;
         }
+        if (
+            _attributeDictionaryCache.TryGetValue(propertyInfo, out var attributeDictionary)
+            is false
+        )
+        {
+            _attributeDictionaryCache[propertyInfo] = attributeDictionary =
+                propertyInfo.GetAttributeDictionary();
+        }
 
         // 获取属性名
-        var name = GetPropertyName(propertyInfo);
-
+        var name = GetPropertyName(propertyInfo, attributeDictionary);
         if (table.TryGetValue(name, out var node) is false)
         {
             // 如果这是必要属性, 则返回失败
-            if (propertyInfo.GetCustomAttribute<TomlRequiredAttribute>() is not null)
+            if (attributeDictionary.IsDefined<TomlRequiredAttribute>())
                 return false;
             return true;
         }
 
         // 设置注释
         iTomlClassComment?.PropertyComments.TryAdd(name, node.Comment);
-        DeserializePropertyValue(accessor, node, propertyInfo);
+        DeserializePropertyValue(accessor, node, propertyInfo, attributeDictionary);
         return true;
     }
 
@@ -559,10 +572,12 @@ public class TomlDeserializer
     /// <param name="accessor">访问器</param>
     /// <param name="node">值</param>
     /// <param name="propertyInfo">属性信息</param>
+    /// <param name="attributeDictionary">特性字典</param>
     private void DeserializePropertyValue(
         ObjectAccessor accessor,
         TomlNode node,
-        PropertyInfo propertyInfo
+        PropertyInfo propertyInfo,
+        AttributeDictionary attributeDictionary
     )
     {
         var propertyType = propertyInfo.PropertyType;
@@ -570,9 +585,8 @@ public class TomlDeserializer
 
         // 检测TomlConverter
         if (
-            propertyInfo.IsDefined<TomlConverterAttribute>()
-            && propertyInfo.GetCustomAttribute<TomlConverterAttribute>()
-                is TomlConverterAttribute tomlConverter
+            attributeDictionary.GetAttribute<TomlConverterAttribute>()
+            is TomlConverterAttribute tomlConverter
         )
         {
             SetPropertyValue(accessor, propertyInfo, tomlConverter.Converter.Converte(node));
@@ -631,16 +645,19 @@ public class TomlDeserializer
     /// 获取属性名称
     /// </summary>
     /// <param name="propertyInfo">属性信息</param>
+    /// <param name="attributeDictionary">特性字典</param>
     /// <returns>属性名称</returns>
-    private static string GetPropertyName(PropertyInfo propertyInfo)
+    private static string GetPropertyName(
+        PropertyInfo propertyInfo,
+        AttributeDictionary attributeDictionary
+    )
     {
         // 获取TomlKeyName
         if (
-            propertyInfo.IsDefined<TomlPropertyNameAttribute>()
-            && propertyInfo.GetCustomAttribute<TomlPropertyNameAttribute>()
-                is TomlPropertyNameAttribute keyName
+            attributeDictionary.GetAttribute<TomlPropertyNameAttribute>()
+            is TomlPropertyNameAttribute propertyName
         )
-            return keyName.Value;
+            return propertyName.Value;
         else
             return propertyInfo.Name;
     }

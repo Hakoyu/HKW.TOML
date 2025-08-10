@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using BenchmarkDotNet.Running;
 using HKW.HKWTOML.Benchmark.Benchmark;
+using HKW.HKWTOML.Benchmark.Resources;
+using HKW.HKWTOML.Deserializer;
 using HKW.HKWTOML.ObjectGenerator;
 using HKW.HKWTOML.Serializer;
 
@@ -38,22 +40,24 @@ internal class Program
         //var tomlyn = Tomlyn.Toml.Parse(Example.TomlExampleBeautifulData);
         //Console.WriteLine(tomlyn.ToString());
         var toml = TOML.Parse(Example.TomlExampleData);
-        var str = toml.ToTomlStringAsync().GetAwaiter().GetResult();
-        //Console.WriteLine(str);
-        Console.WriteLine(
-            TomlObjectGenerator.Generate(
-                toml,
-                "ExampleObject",
-                new()
-                {
-                    AddComment = true,
-                    AddITomlClassCommentInterface = true,
-                    AddTomlPropertyOrderAttribute = true,
-                    AddTomlPropertyNameAttribute = true,
-                    RemoveKeyWordSeparator = true,
-                }
-            )
-        );
+        Console.WriteLine(toml.ToTomlString());
+        //var obj = TomlDeserializer.Deserialize<BenchmarkObject>(toml);
+        //var str = toml.ToTomlStringAsync().GetAwaiter().GetResult();
+        ////Console.WriteLine(str);
+        //Console.WriteLine(
+        //    TomlObjectGenerator.Generate(
+        //        toml,
+        //        "ExampleObject",
+        //        new()
+        //        {
+        //            AddComment = true,
+        //            AddITomlClassCommentInterface = true,
+        //            AddTomlPropertyOrderAttribute = true,
+        //            AddTomlPropertyNameAttribute = true,
+        //            RemoveKeyWordSeparator = true,
+        //        }
+        //    )
+        //);
         //toml.WriteToAsync(Console.Out, null!).GetAwaiter().GetResult();
         //Console.WriteLine(TOMLAsClasses.Generate(toml, "BenchmarkObject"));
         //var text = TOMLSerializer.Serialize(BenchmarkSerialize.Obj);
@@ -65,21 +69,14 @@ internal class Program
         //    length += toml?.Comment?.Length ?? 1;
         //}
         //var toml = TomlSerializer.Serialize(BenchmarkSerialize.Obj);
+        //var s = NativeResources.GetAllText(NativeResources.TomlData);
 #elif !DEBUG
-
-        //var length = 0;
-        //for (var i = 0; i < 10; i++)
-        //{
-        //    //var toml = TOMLSerializer.Serialize(BenchmarkSerialize.Obj);
-        //    var toml = Deserializer.TOMLDeserializer.Deserialize<BenchmarkObject>(
-        //        BenchmarkParse.TomlData
-        //    );
-        //    length += toml?.GetHashCode() ?? 1;
-        //}
+        //var toml = TOML.Parse(NativeResources.GetAllText(NativeResources.TomlData));
+        //var obj = TomlDeserializer.Deserialize<BenchmarkObject>(toml);
+        //var benchmark = BenchmarkRunner.Run(typeof(Program).Assembly);
+        //var benchmark1 = BenchmarkRunner.Run<BenchmarkParse>();
         //var benchmark2 = BenchmarkRunner.Run<BenchmarkDeserialize>();
-        //var benchmark1 = BenchmarkRunner.Run<BenchmarkSerialize>();
-        var benchmark3 = BenchmarkRunner.Run<BenchmarkParse>();
-
+        //var benchmark3 = BenchmarkRunner.Run<BenchmarkSerialize>();
 #endif
     }
 }

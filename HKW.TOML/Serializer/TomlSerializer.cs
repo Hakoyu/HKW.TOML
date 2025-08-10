@@ -62,9 +62,8 @@ public class TomlSerializer
     private readonly BindingFlags _propertyBindingFlags =
         BindingFlags.Public | BindingFlags.Instance;
 
-    private readonly CacheDictionary<Type, PropertyInfo[]> _propertiesCache = new(16);
-    private readonly CacheDictionary<PropertyInfo, AttributeDictionary> _attributeDictionaryCache =
-        new(32);
+    private readonly Dictionary<Type, PropertyInfo[]> _propertiesCache = [];
+    private readonly Dictionary<PropertyInfo, AttributeDictionary> _attributeDictionaryCache = [];
 
     /// <inheritdoc/>
     /// <param name="options">设置</param>

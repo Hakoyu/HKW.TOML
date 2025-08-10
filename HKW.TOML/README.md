@@ -15,11 +15,10 @@
 
 ## 如何使用
 
-[测试文件](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOMLBenchmark/Example.toml)  
-[测试 Toml 数据](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/TomlExample.cs)  
-[测试类](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/ClassExample.cs)
+[测试文件](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOMLBenchmark/Example.toml)
+[测试类](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOMLBenchmark/ExampleObject.cs)
 
-### [解析 Toml 文件](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/Parse/TomlParseTests.cs)
+### [解析 Toml 文件](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOMLTests/TomlParseTests.cs)
 
 ```csharp
 TomlTable table = TOML.Parse(TomlExample.ExampleData);
@@ -44,7 +43,7 @@ TomlTable table =
     };
 ```
 
-### [从 TOML 文件 生成 C# 的类](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/ObjectGenerator/TomlObjectGeneratorTests.cs)
+### [从 TOML 文件 生成 C# 的类](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOMLTests/TomlObjectGeneratorTests.cs)
 
 生成相关设置请查看[TomlObjectGeneratorOptions](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/ObjectGenerator/TomlObjectGenerator.cs)
 
@@ -54,7 +53,7 @@ string classString = TomlObjectGenerator.Generate(table, "ClassExample");
 Console.WriteLine(classString);
 ```
 
-### [TOML 反序列化](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/Deserializer/TomlDeserializerTests.cs)
+### [TOML 反序列化](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOMLTests/TomlDeserializerTests.cs)
 
 反序列化相关设置请查看[TomlDeserializerOptions](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/Deserializer/TomlDeserializerOptions.cs)
 
@@ -63,7 +62,7 @@ TomlTable table = TOML.Parse(TomlExample.ExampleData);
 ClassExample example = TomlDeserializer.Deserialize<ClassExample>(table);
 ```
 
-### [TOML 序列化](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML.Tests/Serializer/TomlSerializerTests.cs)
+### [TOML 序列化](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOMLTests/TomlSerializerTests.cs)
 
 序列化相关设置请查看[TomlSerializerOptions](https://github.com/Hakoyu/HKW.TOML/blob/master/HKW.TOML/Serializer/TomlSerializerOptions.cs)
 

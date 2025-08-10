@@ -13,22 +13,6 @@ namespace HKW.HKWTOML.Benchmark.Benchmark;
 [MemoryDiagnoser]
 public class BenchmarkSerialize
 {
-    public static int Test()
-    {
-        var deserialize = new BenchmarkSerialize();
-        var count = 0;
-        foreach (
-            var method in typeof(BenchmarkSerialize)
-                .GetMethods()
-                .Where(m => Attribute.IsDefined(m, typeof(BenchmarkAttribute)))
-        )
-        {
-            if (method.Invoke(deserialize, null) is not null)
-                count++;
-        }
-        return count;
-    }
-
     public static BenchmarkObject Obj { get; } =
         Newtonsoft.Json.JsonConvert.DeserializeObject<BenchmarkObject>(BenchmarkParse.JsonData)!;
 
