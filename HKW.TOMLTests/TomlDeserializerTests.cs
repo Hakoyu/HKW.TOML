@@ -27,10 +27,10 @@ public class TomlDeserializerTests
             [
                 nameof(ITomlObjectComment.ObjectComment),
                 nameof(ITomlObjectComment.PropertyComments),
-                nameof(ExampleObject.Empty_array),
-                nameof(ExampleObject.Nested_array),
-                nameof(ExampleObject.Mixed_array),
-                nameof(ExampleObject.Array_of_arrays)
+                nameof(ExampleObject.EmptyArray),
+                nameof(ExampleObject.NestedArray),
+                nameof(ExampleObject.MixedArray),
+                nameof(ExampleObject.ArrayOfArrays)
             ]
         );
         var result = compareLogic.Compare(example1, example2);
@@ -51,10 +51,10 @@ public class TomlDeserializerTests
             [
                 nameof(ITomlObjectComment.ObjectComment),
                 nameof(ITomlObjectComment.PropertyComments),
-                nameof(ExampleObject.Empty_array),
-                nameof(ExampleObject.Nested_array),
-                nameof(ExampleObject.Mixed_array),
-                nameof(ExampleObject.Array_of_arrays)
+                nameof(ExampleObject.EmptyArray),
+                nameof(ExampleObject.NestedArray),
+                nameof(ExampleObject.MixedArray),
+                nameof(ExampleObject.ArrayOfArrays)
             ]
         );
         var result = compareLogic.Compare(example1, example2);

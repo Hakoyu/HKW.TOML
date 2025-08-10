@@ -1,4 +1,5 @@
-﻿using HKW.HKWTOML.Attributes;
+﻿using System.Buffers;
+using HKW.HKWTOML.Attributes;
 using HKW.HKWTOML.Interfaces;
 
 namespace HKW.HKWTOML.ObjectGenerator;
@@ -136,9 +137,10 @@ public class TomlObjectGeneratorOptions
 
     /// <summary>
     /// 单词分隔符
-    /// <para>默认为 '<see langword=" "/>'</para>
+    /// <para>默认为 <c>[' ', '-', '_']</c></para>
     /// </summary>
-    public char KeyWordSeparator { get; set; } = ' ';
+    public SearchValues<char> KeyWordSeparators { get; set; } =
+        SearchValues.Create([' ', '-', '_']);
 
     #endregion KeyWordSeparator
 

@@ -6,6 +6,7 @@
 
 #endregion
 
+using System.ComponentModel;
 using System.Text;
 
 namespace HKW.HKWTOML;
@@ -23,16 +24,18 @@ public static class TOML
     /// <summary>
     /// 强制ASCII编码
     /// </summary>
+    [DefaultValue(false)]
     public static bool ForceASCII { get; set; } = false;
 
     /// <summary>
     /// 从文本读取器解析
     /// </summary>
     /// <param name="reader">读取器</param>
+    /// <param name="options">Toml解析设置</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static TomlTable Parse(TextReader reader)
+    public static TomlTable Parse(TextReader reader, TomlParserOptions? options = null)
     {
-        using var parser = new TomlParser(reader) { ForceASCII = ForceASCII };
+        using var parser = new TomlParser(reader, options);
         return parser.Parse();
     }
 
@@ -40,11 +43,12 @@ public static class TOML
     /// 从字符串解析
     /// </summary>
     /// <param name="tomlData">Toml数据</param>
+    /// <param name="options">Toml解析设置</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static TomlTable Parse(string tomlData)
+    public static TomlTable Parse(string tomlData, TomlParserOptions? options = null)
     {
         using var sr = new StringReader(tomlData);
-        using var parser = new TomlParser(sr) { ForceASCII = ForceASCII };
+        using var parser = new TomlParser(sr, options);
         return parser.Parse();
     }
 
@@ -52,11 +56,12 @@ public static class TOML
     /// 从文件解析
     /// </summary>
     /// <param name="tomlFile">Toml文件</param>
+    /// <param name="options">Toml解析设置</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static TomlTable ParseFromFile(string tomlFile)
+    public static TomlTable ParseFromFile(string tomlFile, TomlParserOptions? options = null)
     {
         using var reader = File.OpenText(tomlFile);
-        using var parser = new TomlParser(reader) { ForceASCII = ForceASCII };
+        using var parser = new TomlParser(reader, options);
         return parser.Parse();
     }
 
@@ -64,30 +69,36 @@ public static class TOML
     /// 从文本读取器异步解析
     /// </summary>
     /// <param name="reader">读取器</param>
+    /// <param name="options">Toml解析设置</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static Task<TomlTable> ParseAsync(TextReader reader)
+    public static Task<TomlTable> ParseAsync(TextReader reader, TomlParserOptions? options = null)
     {
-        return Task.FromResult(Parse(reader));
+        return Task.FromResult(Parse(reader, options));
     }
 
     /// <summary>
     /// 从字符串异步解析
     /// </summary>
     /// <param name="tomlData">Toml数据</param>
+    /// <param name="options">Toml解析设置</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static Task<TomlTable> ParseAsync(string tomlData)
+    public static Task<TomlTable> ParseAsync(string tomlData, TomlParserOptions? options = null)
     {
-        return Task.FromResult(Parse(tomlData));
+        return Task.FromResult(Parse(tomlData, options));
     }
 
     /// <summary>
     /// 从文件异步解析
     /// </summary>
     /// <param name="tomlFile">Toml文件</param>
+    /// <param name="options">Toml解析设置</param>
     /// <returns>解析完成的Toml表格</returns>
-    public static Task<TomlTable> ParseFromFileAsync(string tomlFile)
+    public static Task<TomlTable> ParseFromFileAsync(
+        string tomlFile,
+        TomlParserOptions? options = null
+    )
     {
-        return Task.FromResult(ParseFromFile(tomlFile));
+        return Task.FromResult(ParseFromFile(tomlFile, options));
     }
 
     /// <summary>

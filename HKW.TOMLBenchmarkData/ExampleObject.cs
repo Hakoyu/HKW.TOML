@@ -10,6 +10,8 @@ using Newtonsoft.Json;
 
 namespace HKW.HKWTOML.Benchmark;
 
+#pragma warning disable CS8618
+
 /// <summary>
 /// TOML 测试数据 - 覆盖所有数据类型和格式
 /// <para>基于 TOML v1.0.0 规范</para>
@@ -27,141 +29,171 @@ public class ExampleObject : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(0)]
     [TomlPropertyName("title")]
+    [JsonProperty("title")]
     public string Title { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("description")]
+    [JsonProperty("description")]
     public string Description { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("basic_string")]
-    public string Basic_string { get; set; }
+    [JsonProperty("basic_string")]
+    public string BasicString { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("unicode_string")]
-    public string Unicode_string { get; set; }
+    [JsonProperty("unicode_string")]
+    public string UnicodeString { get; set; }
 
     [TomlPropertyOrder(4)]
     [TomlPropertyName("empty_string")]
-    public string Empty_string { get; set; }
+    [JsonProperty("empty_string")]
+    public string EmptyString { get; set; }
 
     /// <summary>
     /// ============ 多行字符串 ============
     /// </summary>
     [TomlPropertyOrder(5)]
     [TomlPropertyName("multiline_basic1")]
-    public string Multiline_basic1 { get; set; }
+    [JsonProperty("multiline_basic1")]
+    public string MultilineBasic1 { get; set; }
 
     [TomlPropertyOrder(6)]
     [TomlPropertyName("multiline_basic2")]
-    public string Multiline_basic2 { get; set; }
+    [JsonProperty("multiline_basic2")]
+    public string MultilineBasic2 { get; set; }
 
     [TomlPropertyOrder(7)]
     [TomlPropertyName("multiline_literal")]
-    public string Multiline_literal { get; set; }
+    [JsonProperty("multiline_literal")]
+    public string MultilineLiteral { get; set; }
 
     /// <summary>
     /// ============ 字面字符串 ============
     /// </summary>
     [TomlPropertyOrder(8)]
     [TomlPropertyName("literal_string")]
-    public string Literal_string { get; set; }
+    [JsonProperty("literal_string")]
+    public string LiteralString { get; set; }
 
     [TomlPropertyOrder(9)]
     [TomlPropertyName("windows_path")]
-    public string Windows_path { get; set; }
+    [JsonProperty("windows_path")]
+    public string WindowsPath { get; set; }
 
     [TomlPropertyOrder(10)]
     [TomlPropertyName("regex_pattern")]
-    public string Regex_pattern { get; set; }
+    [JsonProperty("regex_pattern")]
+    public string RegexPattern { get; set; }
 
     /// <summary>
     /// ============ 转义字符串 ============
     /// </summary>
     [TomlPropertyOrder(11)]
     [TomlPropertyName("escaped_string")]
-    public string Escaped_string { get; set; }
+    [JsonProperty("escaped_string")]
+    public string EscapedString { get; set; }
 
     [TomlPropertyOrder(12)]
     [TomlPropertyName("unicode_escape")]
-    public string Unicode_escape { get; set; }
+    [JsonProperty("unicode_escape")]
+    public string UnicodeEscape { get; set; }
 
     /// <summary>
     /// ============ 整数 ============
     /// </summary>
     [TomlPropertyOrder(13)]
     [TomlPropertyName("positive_int")]
-    public int Positive_int { get; set; }
+    [JsonProperty("positive_int")]
+    public int PositiveInt { get; set; }
 
     [TomlPropertyOrder(14)]
     [TomlPropertyName("negative_int")]
-    public int Negative_int { get; set; }
+    [JsonProperty("negative_int")]
+    public int NegativeInt { get; set; }
 
     [TomlPropertyOrder(15)]
     [TomlPropertyName("zero_int")]
-    public int Zero_int { get; set; }
+    [JsonProperty("zero_int")]
+    public int ZeroInt { get; set; }
 
     [TomlPropertyOrder(16)]
     [TomlPropertyName("underscore_int")]
-    public int Underscore_int { get; set; }
+    [JsonProperty("underscore_int")]
+    public int UnderscoreInt { get; set; }
 
     [TomlPropertyOrder(17)]
     [TomlPropertyName("hex_int")]
-    public long Hex_int { get; set; }
+    [JsonProperty("hex_int")]
+    public long HexInt { get; set; }
 
     [TomlPropertyOrder(18)]
     [TomlPropertyName("octal_int")]
-    public int Octal_int { get; set; }
+    [JsonProperty("octal_int")]
+    public int OctalInt { get; set; }
 
     [TomlPropertyOrder(19)]
     [TomlPropertyName("binary_int")]
-    public int Binary_int { get; set; }
+    [JsonProperty("binary_int")]
+    public int BinaryInt { get; set; }
 
     /// <summary>
     /// ============ 浮点数 ============
     /// </summary>
     [TomlPropertyOrder(20)]
     [TomlPropertyName("positive_float")]
-    public double Positive_float { get; set; }
+    [JsonProperty("positive_float")]
+    public double PositiveFloat { get; set; }
 
     [TomlPropertyOrder(21)]
     [TomlPropertyName("negative_float")]
-    public double Negative_float { get; set; }
+    [JsonProperty("negative_float")]
+    public double NegativeFloat { get; set; }
 
     [TomlPropertyOrder(22)]
     [TomlPropertyName("exponent_float")]
-    public double Exponent_float { get; set; }
+    [JsonProperty("exponent_float")]
+    public double ExponentFloat { get; set; }
 
     [TomlPropertyOrder(23)]
     [TomlPropertyName("negative_exponent")]
-    public double Negative_exponent { get; set; }
+    [JsonProperty("negative_exponent")]
+    public double NegativeExponent { get; set; }
 
     [TomlPropertyOrder(24)]
     [TomlPropertyName("underscore_float")]
-    public double Underscore_float { get; set; }
+    [JsonProperty("underscore_float")]
+    public double UnderscoreFloat { get; set; }
 
     [TomlPropertyOrder(25)]
     [TomlPropertyName("infinity")]
+    [JsonProperty("infinity")]
     public double Infinity { get; set; }
 
     [TomlPropertyOrder(26)]
     [TomlPropertyName("negative_infinity")]
-    public double Negative_infinity { get; set; }
+    [JsonProperty("negative_infinity")]
+    public double NegativeInfinity { get; set; }
 
     [TomlPropertyOrder(27)]
     [TomlPropertyName("not_a_number")]
-    public double Not_a_number { get; set; }
+    [JsonProperty("not_a_number")]
+    public double NotANumber { get; set; }
 
     /// <summary>
     /// ============ 布尔值 ============
     /// </summary>
     [TomlPropertyOrder(28)]
     [TomlPropertyName("is_enabled")]
-    public bool Is_enabled { get; set; }
+    [JsonProperty("is_enabled")]
+    public bool IsEnabled { get; set; }
 
     [TomlPropertyOrder(29)]
     [TomlPropertyName("is_disabled")]
-    public bool Is_disabled { get; set; }
+    [JsonProperty("is_disabled")]
+    public bool IsDisabled { get; set; }
 
     /// <summary>
     /// ============ 日期时间 ============
@@ -169,74 +201,89 @@ public class ExampleObject : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(30)]
     [TomlPropertyName("offset_datetime")]
-    public DateTimeOffset Offset_datetime { get; set; }
+    [JsonProperty("offset_datetime")]
+    public DateTimeOffset OffsetDatetime { get; set; }
 
     [TomlPropertyOrder(31)]
     [TomlPropertyName("local_datetime")]
-    public DateTime Local_datetime { get; set; }
+    [JsonProperty("local_datetime")]
+    public DateTime LocalDatetime { get; set; }
 
     [TomlPropertyOrder(32)]
     [TomlPropertyName("local_date")]
-    public DateTime Local_date { get; set; }
+    [JsonProperty("local_date")]
+    public DateTime LocalDate { get; set; }
 
     [TomlPropertyOrder(33)]
     [TomlPropertyName("local_time")]
-    public DateTime Local_time { get; set; }
+    [JsonProperty("local_time")]
+    public DateTime LocalTime { get; set; }
 
     /// <summary>
     /// 带毫秒的日期时间
     /// </summary>
     [TomlPropertyOrder(34)]
     [TomlPropertyName("precise_datetime")]
-    public DateTimeOffset Precise_datetime { get; set; }
+    [JsonProperty("precise_datetime")]
+    public DateTimeOffset PreciseDatetime { get; set; }
 
     [TomlPropertyOrder(35)]
     [TomlPropertyName("timezone_datetime")]
-    public DateTimeOffset Timezone_datetime { get; set; }
+    [JsonProperty("timezone_datetime")]
+    public DateTimeOffset TimezoneDatetime { get; set; }
 
     /// <summary>
     /// ============ 数组 ============
     /// </summary>
     [TomlPropertyOrder(36)]
     [TomlPropertyName("simple_array")]
-    public List<int> Simple_array { get; set; }
+    [JsonProperty("simple_array")]
+    public List<int> SimpleArray { get; set; }
 
     [TomlPropertyOrder(37)]
     [TomlPropertyName("string_array")]
-    public List<string> String_array { get; set; }
+    [JsonProperty("string_array")]
+    public List<string> StringArray { get; set; }
 
     [TomlPropertyOrder(38)]
     [TomlPropertyName("nested_array")]
-    public List<List<TomlNode>> Nested_array { get; set; }
+    [JsonProperty("nested_array")]
+    public List<List<TomlNode>> NestedArray { get; set; }
 
     [TomlPropertyOrder(39)]
     [TomlPropertyName("mixed_array")]
-    public List<TomlNode> Mixed_array { get; set; }
+    [JsonProperty("mixed_array")]
+    public List<TomlNode> MixedArray { get; set; }
 
     [TomlPropertyOrder(40)]
     [TomlPropertyName("empty_array")]
-    public List<TomlNode> Empty_array { get; set; }
+    [JsonProperty("empty_array")]
+    public List<TomlNode> EmptyArray { get; set; }
 
     /// <summary>
     /// 多行数组
     /// </summary>
     [TomlPropertyOrder(41)]
     [TomlPropertyName("multiline_array")]
-    public List<int> Multiline_array { get; set; }
+    [JsonProperty("multiline_array")]
+    public List<int> MultilineArray { get; set; }
 
     /// <summary>
     /// 数组中的数组
     /// </summary>
     [TomlPropertyOrder(42)]
     [TomlPropertyName("array_of_arrays")]
-    public List<List<TomlNode>> Array_of_arrays { get; set; }
+    [JsonProperty("array_of_arrays")]
+    public List<List<TomlNode>> ArrayOfArrays { get; set; }
 
     [TomlPropertyOrder(43)]
     [TomlPropertyName("products")]
+    [JsonProperty("products")]
     public List<ProductsAnonymousClass> Products { get; set; }
 
     [TomlPropertyOrder(44)]
     [TomlPropertyName("fruit")]
+    [JsonProperty("fruit")]
     public List<FruitAnonymousClass> Fruit { get; set; }
 
     /// <summary>
@@ -244,6 +291,7 @@ public class ExampleObject : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(45)]
     [TomlPropertyName("database")]
+    [JsonProperty("database")]
     public DatabaseClass Database { get; set; }
 
     /// <summary>
@@ -251,6 +299,7 @@ public class ExampleObject : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(46)]
     [TomlPropertyName("clients")]
+    [JsonProperty("clients")]
     public ClientsClass Clients { get; set; }
 
     /// <summary>
@@ -258,6 +307,7 @@ public class ExampleObject : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(47)]
     [TomlPropertyName("servers")]
+    [JsonProperty("servers")]
     public ServersClass Servers { get; set; }
 
     /// <summary>
@@ -265,13 +315,15 @@ public class ExampleObject : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(48)]
     [TomlPropertyName("special_values")]
-    public Special_valuesClass Special_values { get; set; }
+    [JsonProperty("special_values")]
+    public SpecialValuesClass SpecialValues { get; set; }
 
     /// <summary>
     /// ============ 复杂数据结构 ============
     /// </summary>
     [TomlPropertyOrder(49)]
     [TomlPropertyName("config")]
+    [JsonProperty("config")]
     public ConfigClass Config { get; set; }
 
     /// <summary>
@@ -279,6 +331,7 @@ public class ExampleObject : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(50)]
     [TomlPropertyName("i18n")]
+    [JsonProperty("i18n")]
     public I18nClass I18n { get; set; }
 
     /// <summary>
@@ -286,6 +339,7 @@ public class ExampleObject : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(51)]
     [TomlPropertyName("boundaries")]
+    [JsonProperty("boundaries")]
     public BoundariesClass Boundaries { get; set; }
 
     /// <summary>
@@ -293,25 +347,30 @@ public class ExampleObject : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(52)]
     [TomlPropertyName("quotes_and_escapes")]
-    public Quotes_and_escapesClass Quotes_and_escapes { get; set; }
+    [JsonProperty("quotes_and_escapes")]
+    public QuotesAndEscapesClass QuotesAndEscapes { get; set; }
 }
 
 public class ProductsAnonymousClass
 {
     [TomlPropertyOrder(0)]
     [TomlPropertyName("name")]
+    [JsonProperty("name")]
     public string Name { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("sku")]
+    [JsonProperty("sku")]
     public int Sku { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("price")]
+    [JsonProperty("price")]
     public double Price { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("tags")]
+    [JsonProperty("tags")]
     public List<string> Tags { get; set; }
 }
 
@@ -319,18 +378,22 @@ public class FruitAnonymousClass
 {
     [TomlPropertyOrder(0)]
     [TomlPropertyName("name")]
+    [JsonProperty("name")]
     public string Name { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("color")]
+    [JsonProperty("color")]
     public string Color { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("shape")]
+    [JsonProperty("shape")]
     public string Shape { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("variety")]
+    [JsonProperty("variety")]
     public List<VarietyAnonymousClass> Variety { get; set; }
 }
 
@@ -338,29 +401,34 @@ public class VarietyAnonymousClass
 {
     [TomlPropertyOrder(0)]
     [TomlPropertyName("name")]
+    [JsonProperty("name")]
     public string Name { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("sweetness")]
+    [JsonProperty("sweetness")]
     public int Sweetness { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("inline_table")]
-    public Inline_tableClass Inline_table { get; set; }
+    [JsonProperty("inline_table")]
+    public InlineTableClass InlineTable { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("empty_inline_table")]
-    public Empty_inline_tableClass Empty_inline_table { get; set; }
+    [JsonProperty("empty_inline_table")]
+    public EmptyInlineTableClass EmptyInlineTable { get; set; }
 
     [TomlPropertyOrder(4)]
     [TomlPropertyName("nested_inline")]
-    public Nested_inlineClass Nested_inline { get; set; }
+    [JsonProperty("nested_inline")]
+    public NestedInlineClass NestedInline { get; set; }
 }
 
 /// <summary>
 /// ============ 内联表 ============
 /// </summary>
-public class Inline_tableClass : ITomlObjectComment
+public class InlineTableClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public TomlComment ObjectComment { get; set; } = new();
@@ -370,18 +438,21 @@ public class Inline_tableClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("name")]
+    [JsonProperty("name")]
     public string Name { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("age")]
+    [JsonProperty("age")]
     public int Age { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("city")]
+    [JsonProperty("city")]
     public string City { get; set; }
 }
 
-public class Empty_inline_tableClass : ITomlObjectComment
+public class EmptyInlineTableClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public TomlComment ObjectComment { get; set; } = new();
@@ -390,7 +461,7 @@ public class Empty_inline_tableClass : ITomlObjectComment
     public Dictionary<string, TomlComment> PropertyComments { get; set; } = new();
 }
 
-public class Nested_inlineClass : ITomlObjectComment
+public class NestedInlineClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public TomlComment ObjectComment { get; set; } = new();
@@ -400,10 +471,12 @@ public class Nested_inlineClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("point")]
+    [JsonProperty("point")]
     public PointClass Point { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("color")]
+    [JsonProperty("color")]
     public string Color { get; set; }
 }
 
@@ -417,10 +490,12 @@ public class PointClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("x")]
+    [JsonProperty("x")]
     public int X { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("y")]
+    [JsonProperty("y")]
     public int Y { get; set; }
 }
 
@@ -437,22 +512,27 @@ public class DatabaseClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("server")]
+    [JsonProperty("server")]
     public string Server { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("ports")]
+    [JsonProperty("ports")]
     public List<int> Ports { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("connection_max")]
-    public int Connection_max { get; set; }
+    [JsonProperty("connection_max")]
+    public int ConnectionMax { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("enabled")]
+    [JsonProperty("enabled")]
     public bool Enabled { get; set; }
 
     [TomlPropertyOrder(4)]
     [TomlPropertyName("credentials")]
+    [JsonProperty("credentials")]
     public CredentialsClass Credentials { get; set; }
 }
 
@@ -466,10 +546,12 @@ public class CredentialsClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("username")]
+    [JsonProperty("username")]
     public string Username { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("password")]
+    [JsonProperty("password")]
     public string Password { get; set; }
 }
 
@@ -486,10 +568,12 @@ public class ClientsClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("data")]
+    [JsonProperty("data")]
     public DataClass Data { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("hosts")]
+    [JsonProperty("hosts")]
     public HostsClass Hosts { get; set; }
 }
 
@@ -503,10 +587,12 @@ public class DataClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("name")]
+    [JsonProperty("name")]
     public string Name { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("hosts")]
+    [JsonProperty("hosts")]
     public List<string> Hosts { get; set; }
 }
 
@@ -520,10 +606,12 @@ public class HostsClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("alpha")]
+    [JsonProperty("alpha")]
     public string Alpha { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("omega")]
+    [JsonProperty("omega")]
     public string Omega { get; set; }
 }
 
@@ -540,10 +628,12 @@ public class ServersClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("alpha")]
+    [JsonProperty("alpha")]
     public AlphaClass Alpha { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("beta")]
+    [JsonProperty("beta")]
     public BetaClass Beta { get; set; }
 }
 
@@ -557,14 +647,17 @@ public class AlphaClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("ip")]
+    [JsonProperty("ip")]
     public string Ip { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("dc")]
+    [JsonProperty("dc")]
     public string Dc { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("country")]
+    [JsonProperty("country")]
     public string Country { get; set; }
 }
 
@@ -578,21 +671,24 @@ public class BetaClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("ip")]
+    [JsonProperty("ip")]
     public string Ip { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("dc")]
+    [JsonProperty("dc")]
     public string Dc { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("country")]
+    [JsonProperty("country")]
     public string Country { get; set; }
 }
 
 /// <summary>
 /// ============ 特殊值测试 ============
 /// </summary>
-public class Special_valuesClass : ITomlObjectComment
+public class SpecialValuesClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public TomlComment ObjectComment { get; set; } = new();
@@ -602,39 +698,48 @@ public class Special_valuesClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("empty_string")]
-    public string Empty_string { get; set; }
+    [JsonProperty("empty_string")]
+    public string EmptyString { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("zero_integer")]
-    public int Zero_integer { get; set; }
+    [JsonProperty("zero_integer")]
+    public int ZeroInteger { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("zero_float")]
-    public int Zero_float { get; set; }
+    [JsonProperty("zero_float")]
+    public int ZeroFloat { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("positive_infinity")]
-    public double Positive_infinity { get; set; }
+    [JsonProperty("positive_infinity")]
+    public double PositiveInfinity { get; set; }
 
     [TomlPropertyOrder(4)]
     [TomlPropertyName("negative_infinity")]
-    public double Negative_infinity { get; set; }
+    [JsonProperty("negative_infinity")]
+    public double NegativeInfinity { get; set; }
 
     [TomlPropertyOrder(5)]
     [TomlPropertyName("not_a_number")]
-    public double Not_a_number { get; set; }
+    [JsonProperty("not_a_number")]
+    public double NotANumber { get; set; }
 
     [TomlPropertyOrder(6)]
     [TomlPropertyName("true_boolean")]
-    public bool True_boolean { get; set; }
+    [JsonProperty("true_boolean")]
+    public bool TrueBoolean { get; set; }
 
     [TomlPropertyOrder(7)]
     [TomlPropertyName("false_boolean")]
-    public bool False_boolean { get; set; }
+    [JsonProperty("false_boolean")]
+    public bool FalseBoolean { get; set; }
 
     [TomlPropertyOrder(8)]
     [TomlPropertyName("empty_array")]
-    public List<TomlNode> Empty_array { get; set; }
+    [JsonProperty("empty_array")]
+    public List<TomlNode> EmptyArray { get; set; }
 
     /// <summary>
     /// ============ 注释测试 ============
@@ -642,11 +747,13 @@ public class Special_valuesClass : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(9)]
     [TomlPropertyName("commented_key1")]
-    public string Commented_key1 { get; set; }
+    [JsonProperty("commented_key1")]
+    public string CommentedKey1 { get; set; }
 
     [TomlPropertyOrder(10)]
     [TomlPropertyName("commented_key2")]
-    public string Commented_key2 { get; set; }
+    [JsonProperty("commented_key2")]
+    public string CommentedKey2 { get; set; }
 
     /// <summary>
     /// 多行注释
@@ -655,7 +762,8 @@ public class Special_valuesClass : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(11)]
     [TomlPropertyName("commented_key3")]
-    public string Commented_key3 { get; set; }
+    [JsonProperty("commented_key3")]
+    public string CommentedKey3 { get; set; }
 
     /// <summary>
     /// 注释
@@ -663,7 +771,8 @@ public class Special_valuesClass : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(12)]
     [TomlPropertyName("commented_key4")]
-    public string Commented_key4 { get; set; }
+    [JsonProperty("commented_key4")]
+    public string CommentedKey4 { get; set; }
 
     /// <summary>
     /// 这是一个带有注释的数组
@@ -671,31 +780,35 @@ public class Special_valuesClass : ITomlObjectComment
     /// </summary>
     [TomlPropertyOrder(13)]
     [TomlPropertyName("commented_array1")]
-    public List<int> Commented_array1 { get; set; }
+    [JsonProperty("commented_array1")]
+    public List<int> CommentedArray1 { get; set; }
 
     /// <summary>
     /// 单行数组可以有行尾注释
     /// </summary>
     [TomlPropertyOrder(14)]
     [TomlPropertyName("commented_array2")]
-    public List<int> Commented_array2 { get; set; }
+    [JsonProperty("commented_array2")]
+    public List<int> CommentedArray2 { get; set; }
 
     [TomlPropertyOrder(15)]
     [TomlPropertyName("empty_inline_table")]
-    public Empty_inline_tableClass Empty_inline_table { get; set; }
+    [JsonProperty("empty_inline_table")]
+    public EmptyInlineTableClass EmptyInlineTable { get; set; }
 
     /// <summary>
     /// 单行表格可以有行尾注释
     /// </summary>
     [TomlPropertyOrder(16)]
     [TomlPropertyName("commented_table")]
-    public Commented_tableClass Commented_table { get; set; }
+    [JsonProperty("commented_table")]
+    public CommentedTableClass CommentedTable { get; set; }
 }
 
 /// <summary>
 /// 单行表格可以有行尾注释
 /// </summary>
-public class Commented_tableClass : ITomlObjectComment
+public class CommentedTableClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public TomlComment ObjectComment { get; set; } = new();
@@ -705,6 +818,7 @@ public class Commented_tableClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("value")]
+    [JsonProperty("value")]
     public int Value { get; set; }
 }
 
@@ -721,30 +835,37 @@ public class ConfigClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("version")]
+    [JsonProperty("version")]
     public string Version { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("debug")]
+    [JsonProperty("debug")]
     public bool Debug { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("max_connections")]
-    public int Max_connections { get; set; }
+    [JsonProperty("max_connections")]
+    public int MaxConnections { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("timeout")]
+    [JsonProperty("timeout")]
     public double Timeout { get; set; }
 
     [TomlPropertyOrder(4)]
     [TomlPropertyName("endpoints")]
+    [JsonProperty("endpoints")]
     public List<EndpointsAnonymousClass> Endpoints { get; set; }
 
     [TomlPropertyOrder(5)]
     [TomlPropertyName("logging")]
+    [JsonProperty("logging")]
     public LoggingClass Logging { get; set; }
 
     [TomlPropertyOrder(6)]
     [TomlPropertyName("features")]
+    [JsonProperty("features")]
     public FeaturesClass Features { get; set; }
 }
 
@@ -752,18 +873,22 @@ public class EndpointsAnonymousClass
 {
     [TomlPropertyOrder(0)]
     [TomlPropertyName("name")]
+    [JsonProperty("name")]
     public string Name { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("url")]
+    [JsonProperty("url")]
     public string Url { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("methods")]
+    [JsonProperty("methods")]
     public List<string> Methods { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("timeout")]
+    [JsonProperty("timeout")]
     public int Timeout { get; set; }
 }
 
@@ -777,19 +902,23 @@ public class LoggingClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("level")]
+    [JsonProperty("level")]
     public string Level { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("file")]
+    [JsonProperty("file")]
     public string File { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("rotate")]
+    [JsonProperty("rotate")]
     public bool Rotate { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("max_size")]
-    public string Max_size { get; set; }
+    [JsonProperty("max_size")]
+    public string MaxSize { get; set; }
 }
 
 public class FeaturesClass : ITomlObjectComment
@@ -802,14 +931,17 @@ public class FeaturesClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("authentication")]
+    [JsonProperty("authentication")]
     public bool Authentication { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("caching")]
+    [JsonProperty("caching")]
     public bool Caching { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("compression")]
+    [JsonProperty("compression")]
     public bool Compression { get; set; }
 }
 
@@ -826,30 +958,37 @@ public class I18nClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("english")]
+    [JsonProperty("english")]
     public string English { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("chinese")]
+    [JsonProperty("chinese")]
     public string Chinese { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("japanese")]
+    [JsonProperty("japanese")]
     public string Japanese { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("korean")]
+    [JsonProperty("korean")]
     public string Korean { get; set; }
 
     [TomlPropertyOrder(4)]
     [TomlPropertyName("arabic")]
+    [JsonProperty("arabic")]
     public string Arabic { get; set; }
 
     [TomlPropertyOrder(5)]
     [TomlPropertyName("russian")]
+    [JsonProperty("russian")]
     public string Russian { get; set; }
 
     [TomlPropertyOrder(6)]
     [TomlPropertyName("emoji")]
+    [JsonProperty("emoji")]
     public string Emoji { get; set; }
 }
 
@@ -866,29 +1005,34 @@ public class BoundariesClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("max_int")]
-    public long Max_int { get; set; }
+    [JsonProperty("max_int")]
+    public long MaxInt { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("min_int")]
-    public long Min_int { get; set; }
+    [JsonProperty("min_int")]
+    public long MinInt { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("small_float")]
-    public double Small_float { get; set; }
+    [JsonProperty("small_float")]
+    public double SmallFloat { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("large_float")]
-    public long Large_float { get; set; }
+    [JsonProperty("large_float")]
+    public long LargeFloat { get; set; }
 
     [TomlPropertyOrder(4)]
     [TomlPropertyName("very_long_string")]
-    public string Very_long_string { get; set; }
+    [JsonProperty("very_long_string")]
+    public string VeryLongString { get; set; }
 }
 
 /// <summary>
 /// ============ 引用和转义测试 ============
 /// </summary>
-public class Quotes_and_escapesClass : ITomlObjectComment
+public class QuotesAndEscapesClass : ITomlObjectComment
 {
     /// <inheritdoc/>
     public TomlComment ObjectComment { get; set; } = new();
@@ -898,29 +1042,36 @@ public class Quotes_and_escapesClass : ITomlObjectComment
 
     [TomlPropertyOrder(0)]
     [TomlPropertyName("single_quote")]
-    public string Single_quote { get; set; }
+    [JsonProperty("single_quote")]
+    public string SingleQuote { get; set; }
 
     [TomlPropertyOrder(1)]
     [TomlPropertyName("double_quote")]
-    public string Double_quote { get; set; }
+    [JsonProperty("double_quote")]
+    public string DoubleQuote { get; set; }
 
     [TomlPropertyOrder(2)]
     [TomlPropertyName("backslash")]
+    [JsonProperty("backslash")]
     public string Backslash { get; set; }
 
     [TomlPropertyOrder(3)]
     [TomlPropertyName("newline")]
+    [JsonProperty("newline")]
     public string Newline { get; set; }
 
     [TomlPropertyOrder(4)]
     [TomlPropertyName("tab")]
+    [JsonProperty("tab")]
     public string Tab { get; set; }
 
     [TomlPropertyOrder(5)]
     [TomlPropertyName("carriage_return")]
-    public string Carriage_return { get; set; }
+    [JsonProperty("carriage_return")]
+    public string CarriageReturn { get; set; }
 
     [TomlPropertyOrder(6)]
     [TomlPropertyName("unicode")]
+    [JsonProperty("unicode")]
     public string Unicode { get; set; }
 }

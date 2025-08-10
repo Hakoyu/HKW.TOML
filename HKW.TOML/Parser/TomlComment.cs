@@ -30,95 +30,33 @@ public class TomlComment
         set
         {
             if (value.Any(TomlSyntax.IsNewLine))
-                throw new TomlFormatException("行内注释无法添加换行符");
+                throw new TomlFormatException("Line breaks cannot be added to inline comments");
 
             _inlineComment = value;
         }
     }
 
     /// <summary>
+    /// 有顶部注释
+    /// </summary>
+    public bool HasPrecedingComment => string.IsNullOrWhiteSpace(PrecedingComment) is false;
+
+    /// <summary>
+    /// 有行内注释
+    /// </summary>
+    public bool HasInlineComment => string.IsNullOrWhiteSpace(InlineComment) is false;
+
+    /// <summary>
     /// 有注释
     /// </summary>
-    public bool HasComments =>
-        string.IsNullOrWhiteSpace(PrecedingComment) is false
-        || string.IsNullOrWhiteSpace(InlineComment) is false;
+    public bool HasComments => HasPrecedingComment || HasInlineComment;
 
     /// <inheritdoc/>
     public override string ToString()
     {
-        if (string.IsNullOrWhiteSpace(InlineComment))
-            return $"{PrecedingComment}";
-        else
+        if (HasInlineComment)
             return $"{PrecedingComment}{Environment.NewLine}{InlineComment}";
+        else
+            return $"{PrecedingComment}";
     }
 }
-
-
-//public class TomlCommentData
-//{
-//    private string? _inlineComment;
-
-//    public string? PrecedingComment { get; set; }
-
-//    public string? InlineComment
-//    {
-//        get
-//        {
-//            return _inlineComment;
-//        }
-//        set
-//        {
-//            if (value == null)
-//            {
-//                _inlineComment = null;
-//                return;
-//            }
-
-//            if (value.Contains("\n") || value.Contains("\r"))
-//            {
-//                throw new TomlNewlineInInlineCommentException();
-//            }
-
-//            _inlineComment = value;
-//        }
-//    }
-
-//    public bool ThereAreNoComments
-//    {
-//        get
-//        {
-//            if (InlineComment == null)
-//            {
-//                return PrecedingComment == null;
-//            }
-
-//            return false;
-//        }
-//    }
-
-//    internal string FormatPrecedingComment(int indentCount = 0)
-//    {
-//        if (PrecedingComment == null)
-//        {
-//            throw new Exception("Preceding comment is null");
-//        }
-
-//        StringBuilder stringBuilder = new StringBuilder();
-//        string[] array = PrecedingComment.Split('\n');
-//        bool flag = true;
-//        string[] array2 = array;
-//        foreach (string value in array2)
-//        {
-//            if (!flag)
-//            {
-//                stringBuilder.Append('\n');
-//            }
-
-//            flag = false;
-//            string value2 = new string('\t', indentCount);
-//            stringBuilder.Append(value2).Append("# ").Append(value);
-//        }
-
-//        return stringBuilder.ToString();
-//    }
-//}

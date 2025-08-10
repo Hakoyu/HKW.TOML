@@ -135,7 +135,7 @@ public partial class TomlObjectGenerator
     /// <param name="className">类名称</param>
     /// <param name="parentClassName">父类名称</param>
     /// <param name="table">表格</param>
-    /// <exception cref="Exceptions">toml中使用的Csharp的关键字</exception>
+    /// <exception cref="TomlObjectGeneratorException">toml中使用的Csharp的关键字</exception>
     private void ParseTable(string className, string? parentClassName, TomlTable table)
     {
         var isAnonymousClass =
@@ -149,11 +149,13 @@ public partial class TomlObjectGenerator
             if (_options.KeyNameConverterFunc is not null)
                 name = _options.KeyNameConverterFunc(name);
             else if (_options.KeyNameToPascal)
-                name = name.ToPascal(_options.KeyWordSeparator);
+                name = name.ToPascal(_options.KeyWordSeparators);
 
             // 检测关键词
             if (TomlUtils.CsharpKeywords.Contains(name))
-                throw new TomlException($"Used CsharpKeywords \"{name}\" in \"{className}\"");
+                throw new TomlObjectGeneratorException(
+                    $"Do not use Csharp keywords as class names\nClassName = \"{className}\", ParentClassName = {parentClassName}, Table = {table}"
+                );
             // 解析表格的值
             ParseTableValue(tomlClass, name, node);
             ChackOptions(isAnonymousClass, name, kv.Key, ref index, node, tomlClass);
@@ -211,7 +213,9 @@ public partial class TomlObjectGenerator
     {
         // 检测关键字
         if (TomlUtils.CsharpKeywords.Contains(className))
-            throw new TomlException($"Used CsharpKeywords \"{className}\"");
+            throw new TomlObjectGeneratorException(
+                $"Do not use Csharp keywords as class names\nClassName = \"{className}\", ParentClassName = {parentClassName}, Table = {table}"
+            );
         // 获取已存在的类
         if (_objectValues.TryGetValue(className, out var tomlClass) is false)
         {

@@ -11,27 +11,18 @@ namespace HKW.HKWTOML;
 /// <summary>
 /// Toml解析错误
 /// </summary>
-public class TomlParseException : Exception
+/// <param name="parsed">解析过的表格</param>
+/// <param name="exceptions">语法错误</param>
+public class TomlParseException(TomlTable parsed, List<TomlSyntaxException> exceptions)
+    : Exception("Toml parse error")
 {
     /// <summary>
     /// 解析过的表格
     /// </summary>
-    public TomlTable ParsedTable { get; }
+    public TomlTable ParsedTable { get; } = parsed;
 
     /// <summary>
     /// 语法错误
     /// </summary>
-    public IEnumerable<TomlSyntaxException> SyntaxErrors { get; }
-
-    /// <summary>
-    /// Toml解析错误
-    /// </summary>
-    /// <param name="parsed">解析过的表格</param>
-    /// <param name="exceptions">语法错误</param>
-    public TomlParseException(TomlTable parsed, IEnumerable<TomlSyntaxException> exceptions)
-        : base("HKWTOML file contains format errors")
-    {
-        ParsedTable = parsed;
-        SyntaxErrors = exceptions;
-    }
+    public List<TomlSyntaxException> SyntaxErrors { get; } = exceptions;
 }

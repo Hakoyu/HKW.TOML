@@ -4,7 +4,6 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using HKW.FastMember;
 using HKW.HKWTOML.Attributes;
-using HKW.HKWTOML.Exceptions;
 using HKW.HKWTOML.Interfaces;
 using HKW.HKWUtils.Extensions;
 
@@ -322,10 +321,9 @@ public class TomlDeserializer
     /// </summary>
     private readonly TomlDeserializerOptions _options;
 
-    /// <summary>
-    /// 是默认设置
-    /// </summary>
-    private readonly bool _isDefaultOptions = false;
+    private readonly List<TomlDeserializePropertyException> _exceptions = [];
+
+    private readonly HashSet<string> _missingRequiredProperties = [];
 
     /// <summary>
     /// 属性标识符
@@ -337,8 +335,6 @@ public class TomlDeserializer
     /// <param name="options">设置</param>
     private TomlDeserializer(TomlDeserializerOptions? options)
     {
-        if (options is null)
-            _isDefaultOptions = true;
         _options = options ?? new();
 
         if (_options.AllowStaticProperty)
@@ -365,19 +361,25 @@ public class TomlDeserializer
         {
             if (_options.AllowStaticProperty is false)
                 throw new TomlDeserializeException(
-                    "如果要反序列化静态对象请将选项中的 AllowStaticProperty 设置为 true"
+                    "If you want to deserialize static objects, set AllowStaticProperty to true, than Deserialize(typeof(StaticObject), tomlData)"
                 );
             type = staticType;
         }
 
         DeserializeTable(target, type, table);
 
-        // 检查缺失的必要属性
-        if (_options.MissingPequiredProperties.Count != 0 && _isDefaultOptions)
+        if (
+            _options.ThrowException
+            && (_exceptions.Count > 0 || _missingRequiredProperties.Count > 0)
+        )
         {
             throw new TomlDeserializeException(
-                "反序列化时缺少必需属性" + Environment.NewLine + "请向反序列化器传递选项以获取缺少的必需属性。"
-            );
+                $"Deserialization completed, but an exception was caught or a required attribute was missing"
+            )
+            {
+                Exceptions = _exceptions,
+                MissingRequiredProperties = _missingRequiredProperties,
+            };
         }
     }
 
@@ -405,20 +407,17 @@ public class TomlDeserializer
             try
             {
                 if (DeserializeProperty(accessor, propertyInfo, table, iTomlClass) is false)
-                    _options.MissingPequiredProperties.Add($"{type.FullName}.{propertyInfo.Name}");
+                    _missingRequiredProperties.Add($"{type.FullName}.{propertyInfo.Name}");
             }
             catch (Exception ex)
             {
-                switch (_options.ExceptionHandling)
-                {
-                    case ExceptionHandlingMode.Ignore:
-                        return;
-                    case ExceptionHandlingMode.Throw:
-                        throw;
-                    case ExceptionHandlingMode.Record:
-                        _options.Exceptions.TryAdd($"{type.FullName}.{propertyInfo.Name}", ex);
-                        break;
-                }
+                var fullName = $"{type.FullName}.{propertyInfo.Name}";
+                _exceptions.Add(
+                    new($"Property \"{fullName}\" deserialize error", ex)
+                    {
+                        PropertyFullName = fullName
+                    }
+                );
             }
         }
     }
@@ -701,7 +700,9 @@ public class TomlDeserializer
             return Enum.ToObject(enumType, node.AsInt64);
         }
         else
-            throw new NotSupportedException($"不支持的TomlNode类型 {node.GetType().Name} 用于枚举转换");
+            throw new NotSupportedException(
+                $"\"{node.GetType().Name}\" type is not supported for enumeration conversion"
+            );
     }
 
     #endregion

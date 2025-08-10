@@ -3,7 +3,7 @@
 /// <summary>
 /// Toml类
 /// </summary>
-public class TomlType
+public static class TomlType
 {
     /// <summary>
     /// 获取Toml类型代码

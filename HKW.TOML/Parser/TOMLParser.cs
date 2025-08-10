@@ -43,14 +43,14 @@ public class TomlParser : IDisposable
     }
 
     /// <summary>
-    /// 强制ASCII编码
-    /// </summary>
-    public bool ForceASCII { get; set; }
-
-    /// <summary>
     /// 文本读取器
     /// </summary>
     private readonly TextReader _reader;
+
+    /// <summary>
+    /// Toml解析设置
+    /// </summary>
+    private readonly TomlParserOptions _options;
 
     /// <summary>
     /// 空字符
@@ -78,8 +78,10 @@ public class TomlParser : IDisposable
     /// 从文本读取器解析
     /// </summary>
     /// <param name="reader">文本读取器</param>
-    public TomlParser(TextReader reader)
+    /// <param name="options">解析设置</param>
+    public TomlParser(TextReader reader, TomlParserOptions? options = null)
     {
+        _options = options ?? new();
         _reader = reader;
         _line = _column = 0;
     }
@@ -173,9 +175,9 @@ public class TomlParser : IDisposable
         }
 
         if (_currentState != ParseState.None && _currentState != ParseState.SkipToNextLine)
-            AddError("意外的文件结尾！");
+            AddError("Unexpected end of file!");
 
-        if (_syntaxErrors.Count > 0)
+        if (_options.ThrowException && _syntaxErrors.Count > 0)
             throw new TomlParseException(rootTable, _syntaxErrors);
 
         return rootTable;
@@ -241,7 +243,7 @@ public class TomlParser : IDisposable
         }
         else
         {
-            AddError($"意外的字符 \"{c}\"");
+            AddError($"Unexpected character \"{c}\"");
             return false;
         }
     }
@@ -267,7 +269,7 @@ public class TomlParser : IDisposable
             keyParts.Clear();
 
             if (_currentState != ParseState.None)
-                AddError("解析键值对失败！");
+                AddError("Failed to parse key-value pair!");
             return true;
         }
 
@@ -319,7 +321,7 @@ public class TomlParser : IDisposable
 
             if (keyParts.Count is 0)
             {
-                AddError("表格名称为空。");
+                AddError("Table name is empty.");
                 isArrayTable = false;
                 latestComment = null;
                 keyParts.Clear();
@@ -337,7 +339,7 @@ public class TomlParser : IDisposable
                 var nextChar = _reader.Peek();
                 if (nextChar < 0 || (char)nextChar != TomlSyntax.TABLE_END_SYMBOL)
                 {
-                    AddError($"数组表格 {".".Join(keyParts)} 只有一个结束括号。");
+                    AddError($"Array table {".".Join(keyParts)} has only one closing bracket.");
                     keyParts.Clear();
                     isArrayTable = false;
                     latestComment = null;
@@ -359,7 +361,7 @@ public class TomlParser : IDisposable
             if (currentTable is null)
             {
                 if (_currentState != ParseState.None)
-                    AddError("创建表格数组时出错！");
+                    AddError("Error creating table array!");
                 // 将节点重置为根节点，以便尝试继续解析
                 currentTable = rootTable;
                 return false;
@@ -371,7 +373,7 @@ public class TomlParser : IDisposable
 
         if (keyParts.Count is not 0)
         {
-            AddError($"意外的字符 \"{c}\"");
+            AddError($"Unexpected character \"{c}\"");
             keyParts.Clear();
             isArrayTable = false;
             latestComment = null;
@@ -404,7 +406,7 @@ public class TomlParser : IDisposable
             return true;
         }
 
-        AddError($"在行尾遇到意外字符 \"{c}\"。");
+        AddError($"Unexpected character \"{c}\" at end of line.");
         return null;
     }
 
@@ -414,10 +416,11 @@ public class TomlParser : IDisposable
     /// 读取单个键值对。
     /// 假设光标位于属于该对的第一个字符（包括可能的空白字符）。
     /// 消耗属于键和值的所有字符（忽略末尾可能的尾随空白字符）。
-    ///
+    /// <![CDATA[
     /// 示例：
     /// foo = "bar"  ==> foo = "bar"
     /// ^                           ^
+    /// ]]>
     /// </summary>
     private TomlNode? ReadKeyValuePair(List<string> keyParts)
     {
@@ -430,7 +433,7 @@ public class TomlParser : IDisposable
             {
                 if (keyParts.Count != 0)
                 {
-                    AddError("在键定义中遇到额外字符！");
+                    AddError("Extra characters encountered in key definition!");
                     return null;
                 }
 
@@ -452,7 +455,7 @@ public class TomlParser : IDisposable
                 return ReadValue();
             }
 
-            AddError($"在键名中遇到意外字符 \"{c}\"。");
+            AddError($"Unexpected character \"{c}\" in key name.");
             return null;
         }
 
@@ -463,10 +466,11 @@ public class TomlParser : IDisposable
     /// 读取单个值。
     /// 假设光标位于属于值的第一个字符（包括可能的起始空白字符）。
     /// 消耗属于值的所有字符（忽略末尾可能的尾随空白字符）。
-    ///
+    /// <![CDATA[
     /// 示例：
     /// "Test"  ==> "Test"
     /// ^                 ^
+    /// ]]>
     /// </summary>
     private TomlNode? ReadValue(bool skipNewlines = false)
     {
@@ -483,7 +487,7 @@ public class TomlParser : IDisposable
 
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                AddError("未找到值！");
+                AddError("No value found!");
                 return null;
             }
 
@@ -496,7 +500,7 @@ public class TomlParser : IDisposable
                     continue;
                 }
 
-                AddError("期望值时遇到换行符！");
+                AddError("Newline encountered when expecting value!");
                 return null;
             }
 
@@ -540,7 +544,7 @@ public class TomlParser : IDisposable
     /// 读取单个键名。
     /// 假设光标位于属于键的第一个字符（如果 `skipWhitespace = true`，则可能有尾随空白字符）。
     /// 消耗所有字符，直到遇到 `until` 字符为止（但不消耗该字符本身）。
-    ///
+    /// <![CDATA[
     /// 示例 1：
     /// foo.bar  ==>  foo.bar           (`skipWhitespace = false`, `until = ' '`)
     /// ^                    ^
@@ -548,6 +552,7 @@ public class TomlParser : IDisposable
     /// 示例 2：
     /// [ foo . bar ] ==>  [ foo . bar ]     (`skipWhitespace = true`, `until = ']'`)
     /// ^                             ^
+    /// ]]>
     /// </summary>
     private bool ReadKeyName(ref List<string> parts, char until)
     {
@@ -576,7 +581,7 @@ public class TomlParser : IDisposable
             if (c is TomlSyntax.SUBKEY_SEPARATOR)
             {
                 if (buffer.Length == 0 && quoted is false)
-                    return AddError($"在 {".".Join(parts)}... 中发现额外的子键分隔符");
+                    return AddError($"Extra subkey separator found in {".".Join(parts)}...");
 
                 parts.Add(buffer.ToString());
                 buffer.Length = 0;
@@ -587,15 +592,15 @@ public class TomlParser : IDisposable
             }
 
             if (prevWasSpace)
-                return AddError("键名中的空格无效");
+                return AddError("Whitespace in key name is invalid");
 
             if (TomlSyntax.IsQuoted(c))
             {
                 if (quoted)
-                    return AddError("期望子键分隔符，但得到了额外数据！");
+                    return AddError("Expected subkey separator but got extra data!");
 
                 if (buffer.Length != 0)
-                    return AddError("在子键名中间遇到引号！");
+                    return AddError("Quote encountered in the middle of subkey name!");
 
                 // 消耗引号字符并读取键名
                 _column++;
@@ -616,7 +621,7 @@ public class TomlParser : IDisposable
         }
 
         if (buffer.Length == 0 && quoted is false)
-            return AddError($"在 {".".Join(parts)}... 中发现额外的子键分隔符");
+            return AddError($"Extra subkey separator found in {".".Join(parts)}...");
 
         parts.Add(buffer.ToString());
 
@@ -630,10 +635,11 @@ public class TomlParser : IDisposable
     /// <summary>
     /// 读取整个原始值，直到遇到第一个非值字符。
     /// 假设光标起始位置在第一个值字符处，并消耗所有可能与值相关的字符。
-    ///
+    /// <![CDATA[
     /// 示例：
     /// 1_0_0_0  ==>  1_0_0_0
     /// ^                    ^
+    /// ]]>
     /// </summary>
     private string ReadRawValue()
     {
@@ -660,13 +666,14 @@ public class TomlParser : IDisposable
     /// 读取并解析非字符串、非复合的 TOML 值。
     /// 假设光标位于与值相关的第一个字符（可能有空格）。
     /// 消耗与值相关的所有字符。
-    ///
+    /// <![CDATA[
     /// 示例：
     /// 1_0_0_0 # 这是一个注释
     /// &lt;newline&gt;
     ///     ==>  1_0_0_0 # 这是一个注释
-    ///     ^                                                  ^
+    ///     ^
     /// &lt;/newline&gt;
+    /// ]]>
     /// </summary>
     private TomlNode? ReadTomlValue()
     {
@@ -758,23 +765,24 @@ public class TomlParser : IDisposable
         )
             return new TomlDateTimeOffset(dateTimeOffsetResult) { SecondsPrecision = precision };
 
-        AddError($"值 \"{value}\" 不是有效的 TOML 值！");
+        AddError($"Value \"{value}\" is not a valid TOML value!");
         return null;
     }
 
     /// <summary>
     /// 读取数组值。
     /// 假设光标位于数组定义的开始。读取所有字符直到数组结束括号。
-    ///
+    /// <![CDATA[
     /// 示例：
     /// [1, 2, 3]  ==>  [1, 2, 3]
     /// ^                        ^
+    /// ]]>
     /// </summary>
     private TomlArray? ReadArray()
     {
         // 消耗数组开始字符
         ConsumeChar();
-        var result = new TomlArray();
+        var result = _options.CreateTomlArray?.Invoke() ?? [];
         TomlNode? currentValue = null;
         var expectValue = true;
         string? latestComment = null;
@@ -812,7 +820,7 @@ public class TomlParser : IDisposable
             {
                 if (currentValue is null)
                 {
-                    AddError("遇到多个值分隔符");
+                    AddError("Multiple value separators encountered");
                     return null;
                 }
                 if (latestComment is not null)
@@ -838,14 +846,14 @@ public class TomlParser : IDisposable
 
             if (expectValue is false)
             {
-                AddError("值之间缺少分隔符");
+                AddError("Missing separator between values");
                 return null;
             }
             currentValue = ReadValue(true);
             if (currentValue is null)
             {
                 if (_currentState != ParseState.None)
-                    AddError("无法确定和解析值！");
+                    AddError("Unable to determine and parse value!");
                 return null;
             }
             expectValue = false;
@@ -860,15 +868,17 @@ public class TomlParser : IDisposable
     /// <summary>
     /// 读取内联表格。
     /// 假设光标位于表格定义的开始。读取所有字符直到表格结束括号。
-    ///
+    /// <![CDATA[
     /// 示例：
     /// { Test = "foo", value = 1 }  ==>  { Test = "foo", value = 1 }
     /// ^                                                            ^
+    /// ]]>
     /// </summary>
     private TomlTable? ReadInlineTable()
     {
         ConsumeChar();
-        var result = new TomlTable { IsInline = true };
+        var result = _options.CreateTomlTable?.Invoke() ?? [];
+        result.IsInline = true;
         TomlNode? currentValue = null;
         var separator = false;
         var keyParts = new List<string>();
@@ -886,13 +896,13 @@ public class TomlParser : IDisposable
 
             if (c is TomlSyntax.COMMENT_SYMBOL)
             {
-                AddError("内联表格定义不完整！");
+                AddError("Incomplete inline table definition!");
                 return null;
             }
 
             if (TomlSyntax.IsNewLine(c))
             {
-                AddError("内联表格只能在单行上");
+                AddError("Inline table can only be on a single line");
                 return null;
             }
 
@@ -906,7 +916,7 @@ public class TomlParser : IDisposable
             {
                 if (currentValue is null)
                 {
-                    AddError("在内联表格中遇到多个值分隔符！");
+                    AddError("Multiple value separators encountered in inline table!");
                     return null;
                 }
 
@@ -925,7 +935,7 @@ public class TomlParser : IDisposable
 
         if (separator)
         {
-            AddError("内联表格中不允许尾随逗号。");
+            AddError("Trailing comma not allowed in inline table.");
             return null;
         }
 
@@ -944,7 +954,7 @@ public class TomlParser : IDisposable
     /// 假设光标位于第一个引号字符。消耗确定字符串是否为多行所需的最少字符数。
     ///
     /// 如果结果为 false，则通过 `excess` 变量返回消耗的字符。
-    ///
+    /// <![CDATA[
     /// 示例 1：
     /// """Test"""  ==>  """Test"""
     /// ^                   ^
@@ -956,6 +966,7 @@ public class TomlParser : IDisposable
     /// 示例 3：
     /// ""  ==>  ""        （通过 `excess` 变量返回额外的 `"`）
     /// ^          ^
+    /// ]]>
     /// </summary>
     private bool IsTripleQuote(char quote, out char excess)
     {
@@ -967,7 +978,7 @@ public class TomlParser : IDisposable
         if ((cur = _reader.Peek()) < 0)
         {
             excess = NULL_CHAR;
-            return AddError("意外的文件结尾！");
+            return AddError("Unexpected end of file!");
         }
 
         if ((char)cur != quote)
@@ -999,7 +1010,7 @@ public class TomlParser : IDisposable
     )
     {
         if (TomlSyntax.MustBeEscaped(c))
-            return AddError($"字符 U+{(int)c:X8} 必须在字符串中进行转义！");
+            return AddError($"Character U+{(int)c:X8} must be escaped in string!");
 
         if (escaped)
         {
@@ -1013,7 +1024,7 @@ public class TomlParser : IDisposable
         if (isNonLiteral && c is TomlSyntax.ESCAPE_SYMBOL)
             escaped = true;
         if (c is TomlSyntax.NEWLINE_CHARACTER)
-            return AddError("在单行字符串中遇到换行符！");
+            return AddError("Newline encountered in single-line string!");
 
         sb.Append(c);
         return false;
@@ -1023,10 +1034,11 @@ public class TomlParser : IDisposable
     /// 读取单行字符串。
     /// 假设光标位于属于字符串的第一个字符。
     /// 消耗属于字符串的所有字符（包括结束引号）。
-    ///
+    /// <![CDATA[
     /// 示例：
     /// "Test"  ==>  "Test"
     /// ^                 ^
+    /// ]]>
     /// </summary>
     private string? ReadQuotedValueSingleLine(char quote, char initialData = NULL_CHAR)
     {
@@ -1075,7 +1087,7 @@ public class TomlParser : IDisposable
 
         if (readDone is false)
         {
-            AddError("未闭合的字符串。");
+            AddError("Unclosed string.");
             return null;
         }
 
@@ -1091,10 +1103,11 @@ public class TomlParser : IDisposable
     /// 读取多行字符串。
     /// 假设光标位于属于字符串的第一个字符。
     /// 消耗属于字符串的所有字符和三个结束引号。
-    ///
+    /// <![CDATA[
     /// 示例：
     /// """Test"""  ==>  """Test"""
     /// ^                       ^
+    /// ]]>
     /// </summary>
     private string? ReadQuotedValueMultiLine(char quote)
     {
@@ -1133,7 +1146,7 @@ public class TomlParser : IDisposable
 
             if (TomlSyntax.MustBeEscaped(c, true))
             {
-                AddError($"字符 U+{(int)c:X8} 必须进行转义！");
+                AddError($"Character U+{(int)c:X8} must be escaped!");
                 return null;
             }
 
@@ -1161,7 +1174,7 @@ public class TomlParser : IDisposable
 
                 if (skipWhitespaceLineSkipped is false)
                 {
-                    AddError("修剪标记后的非空白字符。");
+                    AddError("Non-whitespace character after line-ending trim marker.");
                     return null;
                 }
 
@@ -1242,22 +1255,26 @@ public class TomlParser : IDisposable
                 if (latestNode.TryGetNode(subkey, out var currentNode))
                 {
                     if (currentNode.HasValue)
-                        return AddError($"键 {".".Join(path)} 已经有分配给它的值！");
+                        return AddError(
+                            $"Key {".".Join(path)} already has a value assigned to it!"
+                        );
                 }
                 else
                 {
-                    currentNode = new TomlTable();
+                    currentNode = _options.CreateTomlTable?.Invoke() ?? [];
                     latestNode[subkey] = currentNode;
                 }
 
                 latestNode = currentNode;
                 if (latestNode is TomlTable { IsInline: true })
-                    return AddError($"无法分配 {".".Join(path)}，因为它将编辑不可变表格。");
+                    return AddError(
+                        $"Cannot assign {".".Join(path)} because it would edit an immutable table."
+                    );
             }
         }
 
         if (latestNode.HasKey(path[^1]))
-            return AddError($"键 {".".Join(path)} 已经定义！");
+            return AddError($"Key {".".Join(path)} is already defined!");
         latestNode[path[^1]] = node;
         node.CollapseLevel = path.Count - 1;
         return true;
@@ -1280,13 +1297,13 @@ public class TomlParser : IDisposable
 
                     if (arr.IsTableArray is false)
                     {
-                        AddError($"数组 {".".Join(path)} 无法重新定义为数组表格！");
+                        AddError($"Array {".".Join(path)} cannot be redefined as table array!");
                         return null;
                     }
 
                     if (index == path.Count - 1)
                     {
-                        latestNode = new TomlTable();
+                        latestNode = _options.CreateTomlTable?.Invoke() ?? [];
                         arr.Add(latestNode);
                         break;
                     }
@@ -1297,7 +1314,9 @@ public class TomlParser : IDisposable
 
                 if (node is TomlTable { IsInline: true })
                 {
-                    AddError($"无法创建表格 {".".Join(path)}，因为它将编辑不可变表格。");
+                    AddError(
+                        $"Cannot create table {".".Join(path)} because it would edit an immutable table."
+                    );
                     return null;
                 }
 
@@ -1305,7 +1324,7 @@ public class TomlParser : IDisposable
                 {
                     if (node is not TomlArray { IsTableArray: true } array)
                     {
-                        AddError($"键 {".".Join(path)} 有分配给它的值！");
+                        AddError($"Key {".".Join(path)} has a value assigned to it!");
                         return null;
                     }
 
@@ -1317,13 +1336,13 @@ public class TomlParser : IDisposable
                 {
                     if (arrayTable && !node.IsTomlArray)
                     {
-                        AddError($"表格 {".".Join(path)} 无法重新定义为数组表格！");
+                        AddError($"Table {".".Join(path)} cannot be redefined as table array!");
                         return null;
                     }
 
                     if (node is TomlTable { isImplicit: false })
                     {
-                        AddError($"表格 {".".Join(path)} 被多次定义！");
+                        AddError($"Table {".".Join(path)} is defined multiple times!");
                         return null;
                     }
                 }
@@ -1332,15 +1351,17 @@ public class TomlParser : IDisposable
             {
                 if (index == path.Count - 1 && arrayTable)
                 {
-                    var table = new TomlTable();
-                    var arr = new TomlArray { IsTableArray = true };
+                    var table = _options.CreateTomlTable?.Invoke() ?? [];
+                    var arr = _options.CreateTomlArray?.Invoke() ?? [];
+                    arr.IsTableArray = true;
                     arr.Add(table);
                     latestNode[subkey] = arr;
                     latestNode = table;
                     break;
                 }
 
-                node = new TomlTable { isImplicit = true };
+                node = _options.CreateTomlTable?.Invoke() ?? [];
+                ((TomlTable)node).isImplicit = true;
                 latestNode[subkey] = node;
             }
 
@@ -1409,7 +1430,7 @@ public class TomlParser : IDisposable
         ConsumeChar();
         var commentLine = _reader.ReadLine()?.Trim() ?? string.Empty;
         if (commentLine.Any(ch => TomlSyntax.MustBeEscaped(ch)))
-            AddError("注释不能包含除制表符以外的控制字符。", false);
+            AddError("Comments cannot contain control characters other than tab.", false);
         return commentLine;
     }
 
@@ -1449,7 +1470,7 @@ public class TomlParser : IDisposable
                 break;
             else if (TomlSyntax.MustBeEscaped(c))
             {
-                AddError("注释不能包含除制表符以外的控制字符。", false);
+                AddError("Comments cannot contain control characters other than tab.", false);
                 break;
             }
             sb.Append(c);

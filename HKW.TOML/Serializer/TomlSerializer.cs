@@ -4,7 +4,6 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using HKW.FastMember;
 using HKW.HKWTOML.Attributes;
-using HKW.HKWTOML.Exceptions;
 using HKW.HKWTOML.Interfaces;
 using HKW.HKWUtils;
 using HKW.HKWUtils.Collections;
@@ -32,8 +31,6 @@ public class TomlSerializer
     {
         var serializer = new TomlSerializer(options);
         var result = serializer.SerializeObject(source);
-        serializer._propertiesCache.Clear();
-        serializer._attributeDictionaryCache.Clear();
         return result;
     }
 
@@ -57,10 +54,7 @@ public class TomlSerializer
     /// </summary>
     private readonly TomlSerializerOptions _options;
 
-    /// <summary>
-    /// 是默认设置
-    /// </summary>
-    //private readonly bool _isDefaultOptions = false;
+    private readonly List<TomlSerializePropertyException> _exceptions = [];
 
     /// <summary>
     /// 属性标识符
@@ -76,8 +70,6 @@ public class TomlSerializer
     /// <param name="options">设置</param>
     private TomlSerializer(TomlSerializerOptions? options)
     {
-        //if (options is null)
-        //    _isDefaultOptions = true;
         _options = options ?? new();
 
         if (_options.AllowStaticProperty)
@@ -102,18 +94,29 @@ public class TomlSerializer
         if (source is Type staticType && staticType.IsSealed && staticType.IsAbstract)
         {
             if (_options.AllowStaticProperty is false)
+            {
                 throw new TomlSerializeException(
-                    "Target is static object but Options.AllowStaticProperty is false"
-                        + Environment.NewLine
-                        + "If you want to serialize a static object please set Options.AllowStaticProperty to true"
+                    "If you want to serialize static objects, set AllowStaticProperty to true, than Serialize(typeof(StaticObject))"
                 );
+            }
             type = staticType;
         }
         else
         {
             type = source.GetType();
         }
-        return SerializeTomlTable(source, type);
+        var tomlTable = SerializeTomlTable(source, type);
+
+        if (_options.ThrowException && (_exceptions.Count > 0))
+        {
+            throw new TomlSerializeException(
+                $"Serialization completed, but an exception was caught"
+            )
+            {
+                Exceptions = _exceptions
+            };
+        }
+        return tomlTable;
     }
 
     /// <summary>
@@ -151,12 +154,13 @@ public class TomlSerializer
             }
             catch (Exception ex)
             {
-                if (_options.ExceptionHandling is ExceptionHandlingMode.Ignore)
-                    continue;
-                else if (_options.ExceptionHandling is ExceptionHandlingMode.Throw)
-                    throw;
-                else if (_options.ExceptionHandling is ExceptionHandlingMode.Record)
-                    _options.Exceptions.TryAdd($"{type.FullName}.{propertyInfo.Name}", ex);
+                var fullName = $"{type.FullName}.{propertyInfo.Name}";
+                _exceptions.Add(
+                    new($"Property \"{fullName}\" serialize error", ex)
+                    {
+                        PropertyFullName = fullName
+                    }
+                );
             }
         }
 
@@ -241,14 +245,14 @@ public class TomlSerializer
             DateTime dt => new TomlDateTimeLocal(dt),
             DateTimeOffset dto => new TomlDateTimeOffset(dto),
             // 对象
-            TomlNode node when source is TomlNode => node,
-            IDictionary dictionary when source is IDictionary => SerializeDictionary(dictionary),
-            IEnumerable list when source is IEnumerable => SerializeList(list),
+            TomlNode node => node,
+            IDictionary dictionary => SerializeDictionary(dictionary),
+            IEnumerable list => SerializeList(list),
             _ when type.IsClass || type.IsInterface => SerializeTomlTable(source, type),
             // 其他类型
             _
                 => throw new NotSupportedException(
-                    $"Unknown source type!\nType = {type.Name}, Source = {source}"
+                    $"Unknown source type!\nType = {type.FullName}, Source = {source}"
                 )
         };
     }

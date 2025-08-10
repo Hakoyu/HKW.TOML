@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
-using HKW.HKWTOML.Exceptions;
 
 namespace HKW.HKWTOML.Serializer;
 
@@ -39,18 +38,10 @@ public class TomlSerializerOptions
     public bool EnumToInteger { get; set; } = false;
 
     /// <summary>
-    /// 异常处理模式
+    /// 抛出异常
     /// </summary>
-    [DefaultValue(ExceptionHandlingMode.Throw)]
-    public ExceptionHandlingMode ExceptionHandling { get; set; } = ExceptionHandlingMode.Throw;
-
-    /// <summary>
-    /// 所有异常
-    /// <para>
-    /// (PropertyFullName, Exception)
-    /// </para>
-    /// </summary>
-    public Dictionary<string, Exception> Exceptions { get; set; } = new();
+    [DefaultValue(true)]
+    public bool ThrowException { get; set; } = true;
 }
 
 /// <summary>

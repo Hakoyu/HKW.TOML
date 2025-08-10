@@ -23,17 +23,17 @@ public class TomlSerializerTests
         var newExample = TomlDeserializer.Deserialize<ExampleObject>(serializeTableString);
         var compareLogic = new CompareLogic();
         compareLogic.Config.TypesToIgnore.AddRange(
-            [typeof(TomlNode), typeof(Empty_inline_tableClass)]
+            [typeof(TomlNode), typeof(EmptyInlineTableClass)]
         );
         compareLogic.Config.MembersToIgnore.AddRange(
             [
                 nameof(ITomlObjectComment.ObjectComment),
                 nameof(ITomlObjectComment.PropertyComments),
-                nameof(ExampleObject.Empty_array),
-                nameof(ExampleObject.Nested_array),
-                nameof(ExampleObject.Mixed_array),
-                nameof(ExampleObject.Array_of_arrays),
-                nameof(ExampleObject.Precise_datetime)
+                nameof(ExampleObject.EmptyArray),
+                nameof(ExampleObject.NestedArray),
+                nameof(ExampleObject.MixedArray),
+                nameof(ExampleObject.ArrayOfArrays),
+                nameof(ExampleObject.PreciseDatetime)
             ]
         );
         var result = compareLogic.Compare(newExample, example);
@@ -50,17 +50,17 @@ public class TomlSerializerTests
         var newExample = TomlDeserializer.Deserialize<ExampleObject>(serializeTableString);
         var compareLogic = new CompareLogic();
         compareLogic.Config.TypesToIgnore.AddRange(
-            [typeof(TomlNode), typeof(Empty_inline_tableClass)]
+            [typeof(TomlNode), typeof(EmptyInlineTableClass)]
         );
         compareLogic.Config.MembersToIgnore.AddRange(
             [
                 nameof(ITomlObjectComment.ObjectComment),
                 nameof(ITomlObjectComment.PropertyComments),
-                nameof(ExampleObject.Empty_array),
-                nameof(ExampleObject.Nested_array),
-                nameof(ExampleObject.Mixed_array),
-                nameof(ExampleObject.Array_of_arrays),
-                nameof(ExampleObject.Precise_datetime)
+                nameof(ExampleObject.EmptyArray),
+                nameof(ExampleObject.NestedArray),
+                nameof(ExampleObject.MixedArray),
+                nameof(ExampleObject.ArrayOfArrays),
+                nameof(ExampleObject.PreciseDatetime)
             ]
         );
         var result = compareLogic.Compare(newExample, example);

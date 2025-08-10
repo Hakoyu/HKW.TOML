@@ -1,4 +1,4 @@
-﻿namespace HKW.HKWTOML.Exceptions;
+﻿namespace HKW.HKWTOML;
 
 /// <summary>
 /// 异常处理方式
@@ -9,11 +9,6 @@ public enum ExceptionHandlingMode
     /// 抛出
     /// </summary>
     Throw,
-
-    /// <summary>
-    /// 忽视
-    /// </summary>
-    Ignore,
 
     /// <summary>
     /// 记录
